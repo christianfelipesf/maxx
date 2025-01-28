@@ -51,6 +51,13 @@
                     </div>
                 </div>
 
+                <div class="field">
+                    <label class="label">🗓️ Data da Fatura</label>
+                    <div class="control">
+                        <input id="data-fatura" class="input" type="date">
+                    </div>
+                </div>
+
                 <form id="copy-form">
                     <div class="field">
                         <label class="label">📄 DOC</label>
@@ -92,12 +99,13 @@
     <script>
         document.getElementById('copy-button').addEventListener('click', function() {
             const formaPagamento = document.getElementById('forma-pagamento').value;
+            const dataFatura = document.getElementById('data-fatura').value;
             const doc = document.getElementById('doc').value;
             const serial = document.getElementById('serial').value;
             const contrato = document.getElementById('contrato').value;
             const valor = document.getElementById('valor').value;
 
-            if (!doc || !serial || !contrato || !valor) {
+            if (!dataFatura || !doc || !serial || !contrato || !valor) {
                 const errorNotification = document.getElementById('error-notification');
                 errorNotification.style.display = 'block';
                 setTimeout(() => {
@@ -112,7 +120,7 @@
             const formattedDate = currentDate.toLocaleDateString('pt-BR');
             const formattedTime = currentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-            const textToCopy = `Pagamento: ${formaPagamento}\nFatura : (selecionar data) \nDOC: ${doc} \nSERIAL: ${serial} \nCONTRATO: ${contrato}\nData: ${formattedDate} ${formattedTime} \nVALOR: R$${valor}`;
+            const textToCopy = `Pagamento: ${formaPagamento}\nFatura : ${dataFatura} \nDOC: ${doc} \nSERIAL: ${serial} \nCONTRATO: ${contrato}\nData: ${formattedDate} ${formattedTime} \nVALOR: R$${valor}`;
 
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const notification = document.getElementById('notification');
