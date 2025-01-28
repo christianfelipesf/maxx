@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boletos para Denilson</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma/css/bulma.min.css">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" type="image/png">
+    <style>
+        #notification {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48c774;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        #error-notification {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f14668;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <div class="box" style="max-width: 600px; margin: 0 auto;">
+                <div class="field">
+                    <label class="label">💳 Forma de Pagamento</label>
+                    <div class="control">
+                        <div class="select">
+                            <select id="forma-pagamento">
+                                <option value="DÉBITO" selected>DÉBITO</option>
+                                <option value="PIX">PIX</option>
+                                <option value="CRÉDITO">CRÉDITO</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="copy-form">
+                    <div class="field">
+                        <label class="label">📄 DOC</label>
+                        <div class="control">
+                            <input id="doc" class="input" type="text" placeholder="Insira o DOC">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">🔢 SERIAL</label>
+                        <div class="control">
+                            <input id="serial" class="input" type="text" placeholder="Insira o SERIAL">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">📜 CONTRATO</label>
+                        <div class="control">
+                            <input id="contrato" class="input" type="text" placeholder="Insira o CONTRATO">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">💰 VALOR (R$)</label>
+                        <div class="control">
+                            <input id="valor" class="input" type="text" placeholder="Insira o valor em reais">
+                        </div>
+                    </div>
+
+                    <button id="copy-button" type="button" class="button is-primary">Copiar Texto</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <div id="notification">✅ Texto copiado com sucesso!</div>
+    <div id="error-notification">❌ Preencha todos os campos antes de copiar!</div>
+
+    <script>
+        document.getElementById('copy-button').addEventListener('click', function() {
+            const formaPagamento = document.getElementById('forma-pagamento').value;
+            const doc = document.getElementById('doc').value;
+            const serial = document.getElementById('serial').value;
+            const contrato = document.getElementById('contrato').value;
+            const valor = document.getElementById('valor').value;
+
+            if (!doc || !serial || !contrato || !valor) {
+                const errorNotification = document.getElementById('error-notification');
+                errorNotification.style.display = 'block';
+                setTimeout(() => {
+                    errorNotification.style.display = 'none';
+                }, 2000);
+
+                navigator.clipboard.writeText("0");
+                return;
+            }
+
+            const currentDate = new Date();
+            const formattedDate = currentDate.toLocaleDateString('pt-BR');
+            const formattedTime = currentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+            const textToCopy = `Pagamento: ${formaPagamento}\nFatura : (selecionar data) \nDOC: ${doc} \nSERIAL: ${serial} \nCONTRATO: ${contrato}\nData: ${formattedDate} ${formattedTime} \nVALOR: R$${valor}`;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const notification = document.getElementById('notification');
+                notification.style.display = 'block';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 2000);
+            }).catch(err => {
+                console.error('Falha ao copiar o texto:', err);
+            });
+        });
+    </script>
+</body>
+</html>
