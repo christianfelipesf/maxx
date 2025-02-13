@@ -3,152 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boletos para Denilson</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma/css/bulma.min.css">
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1828/1828817.png" type="image/png">
-    <style>
-        #notification, #error-notification {
-            display: none;
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-        }
-        #notification { background: #48c774; }
-        #error-notification { background: #f14668; }
-        #historico { margin-top: 20px; }
-    </style>
+    <title>Plataforma Serviços</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
 </head>
 <body>
     <section class="section">
-        <div class="container">
-            <div class="box" style="max-width: 600px; margin: 0 auto;">
-                <form id="copy-form">
-                    <div class="field">
-                        <label class="label">💳 Forma de Pagamento</label>
-                        <div class="control">
-                            <div class="select">
-                                <select id="forma-pagamento">
-                                    <option value="DÉBITO" selected>DÉBITO</option>
-                                    <option value="PIX">PIX</option>
-                                    <option value="CRÉDITO">CRÉDITO</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    
-
-                    <div class="field">
-                        <label class="label">🗓️ Data da Fatura</label>
-                        <div class="control">
-                            <input id="data-fatura" class="input" type="date">
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label">📄 DOC</label>
-                        <div class="control">
-                            <input id="doc" class="input" type="text" placeholder="Insira o DOC" maxlength="6">
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label">🔢 SERIAL</label>
-                        <div class="control">
-                            <input id="serial" class="input" type="text" placeholder="Insira o SERIAL" maxlength="4">
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label">📜 CONTRATO</label>
-                        <div class="control">
-                            <input id="contrato" class="input" type="text" placeholder="Insira o CONTRATO">
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label">🕒 Data e Hora</label>
-                        <div class="control">
-                            <input id="data-hora" class="input" type="datetime-local" readonly>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="label">💰 VALOR (R$)</label>
-                        <div class="control">
-                            <input id="valor" class="input" type="text" placeholder="Insira o valor em reais">
-                        </div>
-                    </div>
-
-                    <div class="buttons">
-                        <button id="copy-button" type="button" class="button is-primary">Copiar Texto</button>
-                        <button id="clear-button" type="button" class="button is-danger">Zerar Campos (3)</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="box" id="historico">
-                <h2 class="title is-4">📜 Histórico</h2>
-                <div id="historico-lista"></div>
+        <div class="container has-text-centered">
+            <h1 class="title">Plataforma Serviços</h1>
+            <div class="buttons is-centered">
+                <a href="servicos/boletos.html" class="button is-primary is-large">Boletos</a>
+                <a href="servicos/statusdiario.html" class="button is-info is-large">Status Diário</a>
             </div>
         </div>
     </section>
-
-    <div id="notification">✅ Texto copiado com sucesso!</div>
-    <div id="error-notification">❌ Preencha todos os campos antes de copiar!</div>
-
-    <script>
-        let clearCount = 3;
-        let lastClickTime = 0;
-        let resetTimer;
-
-        function atualizarDataHora() {
-            const agora = new Date();
-            const ano = agora.getFullYear();
-            const mes = String(agora.getMonth() + 1).padStart(2, '0');
-            const dia = String(agora.getDate()).padStart(2, '0');
-            const horas = String(agora.getHours()).padStart(2, '0');
-            const minutos = String(agora.getMinutes()).padStart(2, '0');
-            const segundos = String(agora.getSeconds()).padStart(2, '0');
-            document.getElementById('data-hora').value = `${ano}-${mes}-${dia}T${horas}:${minutos}`;
-        }
-        
-        document.addEventListener("DOMContentLoaded", () => {
-            atualizarDataHora();
-            setInterval(atualizarDataHora, 1000);
-        });
-        
-        document.getElementById('copy-button').addEventListener('click', function() {
-            const formaPagamento = document.getElementById('forma-pagamento').value;
-            const dataFatura = document.getElementById('data-fatura').value;
-            const dataHora = document.getElementById('data-hora').value.replace('T', ' ');
-            const doc = document.getElementById('doc').value;
-            const serial = document.getElementById('serial').value;
-            const contrato = document.getElementById('contrato').value;
-            const valor = document.getElementById('valor').value;
-
-            if (!dataFatura || !dataHora || !doc || !serial || !contrato || !valor) {
-                const errorNotification = document.getElementById('error-notification');
-                errorNotification.style.display = 'block';
-                setTimeout(() => { errorNotification.style.display = 'none'; }, 2000);
-                return;
-            }
-
-            const textToCopy = `Pagamento: ${formaPagamento}\nFatura: ${dataFatura}\nDOC: ${doc}\nSERIAL: ${serial}\nCONTRATO: ${contrato}\nData: ${dataHora}\nVALOR: R$${valor}`;
-
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                const notification = document.getElementById('notification');
-                notification.style.display = 'block';
-                setTimeout(() => { notification.style.display = 'none'; }, 2000);
-            }).catch(err => {
-                console.error('Falha ao copiar o texto:', err);
-            });
-        });
-    </script>
 </body>
 </html>
