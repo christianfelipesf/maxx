@@ -21,7 +21,7 @@
                         <i class="fas fa-store"></i>
                     </span>
                 </div>
-                <button class="button is-small is-primary" onclick="trancarDestrancar()">Salvar nome da loja</button>
+                <button class="button is-small is-primary" onclick="trancarDestrancar()">Editar nome da loja</button>
             </div>
             
             <!-- Contador de Clientes em Loja e WhatsApp lado a lado -->
@@ -125,11 +125,11 @@
 
             if (nomeLojaInput.disabled) {
                 nomeLojaInput.disabled = false;
-                nomeLojaBotao.innerText = "Trancar Nome";
+                nomeLojaBotao.innerText = "Salvar Nome";
             } else {
                 nomeLojaInput.disabled = true;
                 localStorage.setItem("nomeLoja", nomeLojaInput.value);
-                nomeLojaBotao.innerText = "Destrancar Nome";
+                nomeLojaBotao.innerText = "Alterar Nome";
             }
         }
 
@@ -249,6 +249,9 @@ ${servicosTexto}
             localStorage.setItem("servicos", JSON.stringify(servicos));
 
             // Atualizar a tela
+            document.getElementById("nomeLoja").value = ""; // Desabilita o input
+            document.getElementById("nomeLoja").disabled = false; // Desabilita o input
+
             document.getElementById("contador").innerText = contador;
             document.getElementById("whatsappContador").innerText = atendimentosWhatsApp;
             document.getElementById("indicacoes").value = indicacoes;
