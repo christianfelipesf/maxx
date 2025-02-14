@@ -5,14 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma Serviços</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        .card-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .card.status {
+            background-color: #209cee;
+            color: white;
+        }
+        .card.boletos {
+            background-color: #ffdd57;
+            color: black;
+        }
+    </style>
 </head>
 <body>
     <section class="section">
         <div class="container has-text-centered">
             <h1 class="title">Plataforma Serviços</h1>
-            <div class="buttons is-centered">
-                <a href="servicos/statusdiario.html" class="button is-info is-large">Status Diário</a>
-                <a href="servicos/boletos.html" class="button is-primary is-large">Boletos</a>
+            <div class="columns is-centered">
+                <div class="column is-4">
+                    <a href="servicos/statusdiario.html" class="card-link">
+                        <div class="card status">
+                            <div class="card-content">
+                                <p class="title">Status Diário</p>
+                                <p class="subtitle">Acompanhe o status atualizado diariamente.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="column is-4">
+                    <a href="servicos/boletos.html" class="card-link">
+                        <div class="card boletos">
+                            <div class="card-content">
+                                <p class="title">Boletos</p>
+                                <p class="subtitle">Gerencie seus boletos de forma rápida e segura.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
         </div>
     </section>
