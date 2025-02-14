@@ -236,8 +236,11 @@ ${servicosTexto}
             link.click();
         }
 
-        // Zerar todos os dados
         function zerarTudo() {
+        // Exibir um aviso antes de apagar os dados
+        let confirmar = confirm("Tem certeza de que deseja apagar todos os dados? Esta ação não pode ser desfeita.");
+
+        if (confirmar) {
             localStorage.clear();
             contador = 0;
             atendimentosWhatsApp = 0;
@@ -249,14 +252,20 @@ ${servicosTexto}
             localStorage.setItem("servicos", JSON.stringify(servicos));
 
             // Atualizar a tela
-            document.getElementById("nomeLoja").value = ""; // Desabilita o input
-            document.getElementById("nomeLoja").disabled = false; // Desabilita o input
+            document.getElementById("nomeLoja").value = ""; 
+            document.getElementById("nomeLoja").disabled = false; 
 
             document.getElementById("contador").innerText = contador;
             document.getElementById("whatsappContador").innerText = atendimentosWhatsApp;
             document.getElementById("indicacoes").value = indicacoes;
             carregarServicos();
-        }
+
+            //alert("Todos os dados foram apagados com sucesso!");
+        } /*else {
+            alert("Ação cancelada. Nenhum dado foi apagado.");
+        }*/
+    }
+
     </script>
 </body>
 </html>
