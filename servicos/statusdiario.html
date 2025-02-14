@@ -6,266 +6,93 @@
     <title>Controle Diário</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        .menu-container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button-group {
+            margin-top: 15px;
+        }
+        .icon {
+            margin-right: 5px;
+        }
+    </style>
 </head>
 <body>
     <section class="section">
         <div class="container has-text-centered">
             <h1 class="title">Controle Diário de Clientes</h1>
             
-            <!-- Nome da Loja -->
-            <div class="field">
-                <label class="label">Nome da Loja</label>
-                <div class="control has-icons-left">
-                    <input class="input" type="text" id="nomeLoja" placeholder="Digite o nome da loja" />
-                    <span class="icon is-small is-left">
-                        <i class="fas fa-store"></i>
-                    </span>
+            <div class="menu-container">
+                <div class="field has-addons">
+                    <div class="control has-icons-left is-expanded">
+                        <input class="input" type="text" id="nomeLoja" placeholder="Digite o nome da loja" />
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-store"></i>
+                        </span>
+                    </div>
+                    <div class="control">
+                        <button class="button is-primary" onclick="trancarDestrancar()">
+                            <i class="fas fa-edit"></i> Editar Nome
+                        </button>
+                    </div>
                 </div>
-                <button class="button is-small is-primary" onclick="trancarDestrancar()">Editar nome da loja</button>
-            </div>
-            
-            <!-- Contador de Clientes em Loja e WhatsApp lado a lado -->
-            <div class="columns is-vcentered">
-                <div class="column">
-                    <h2 class="title is-4">Clientes em Loja</h2>
-                    <p class="title is-2" id="contador">0</p>
-                    <button class="button is-success is-large" onclick="adicionar()">Adicionar Cliente</button>
-                    <button class="button is-danger is-large" onclick="diminuir()">Diminuir Cliente</button>
+                
+                <div class="columns is-vcentered">
+                    <div class="column">
+                        <h2 class="title is-4">Clientes em Loja</h2>
+                        <p class="title is-2" id="contador">0</p>
+                        <button class="button is-success is-large" onclick="adicionar()">
+                            <i class="fas fa-plus-circle"></i> Adicionar
+                        </button>
+                        <button class="button is-danger is-large" onclick="diminuir()">
+                            <i class="fas fa-minus-circle"></i> Diminuir
+                        </button>
+                    </div>
+                    <div class="column">
+                        <h2 class="title is-4">Atendimentos via WhatsApp</h2>
+                        <p class="title is-5" id="whatsappContador">0</p>
+                        <button class="button is-success is-large" onclick="adicionarWhatsApp()">
+                            <i class="fas fa-plus-circle"></i> Adicionar
+                        </button>
+                        <button class="button is-danger is-large" onclick="diminuirWhatsApp()">
+                            <i class="fas fa-minus-circle"></i> Diminuir
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="field">
+                    <h2 class="title is-4">Indicações no Dia</h2>
+                    <div class="control">
+                        <input class="input" type="number" id="indicacoes" min="0" value="0">
+                    </div>
                 </div>
 
-                <div class="column">
-                    <h2 class="title is-4">Atendimentos via WhatsApp</h2>
-                    <p class="title is-5" id="whatsappContador">0</p>
-                    <button class="button is-success is-large" onclick="adicionarWhatsApp()">Adicionar WhatsApp</button>
-                    <button class="button is-danger is-large" onclick="diminuirWhatsApp()">Diminuir WhatsApp</button>
+                <div class="button-group">
+                    <button class="button is-primary" onclick="adicionarServico()">
+                        <i class="fas fa-plus"></i> Adicionar Serviço
+                    </button>
+                    <button class="button is-info" onclick="copiarDados()">
+                        <i class="fas fa-copy"></i> Copiar Dados
+                    </button>
+                    <button class="button is-warning" onclick="exportarDados()">
+                        <i class="fas fa-file-export"></i> Exportar Dados
+                    </button>
+                    <button class="button is-danger" onclick="zerarTudo()">
+                        <i class="fas fa-trash"></i> Zerar Tudo
+                    </button>
                 </div>
             </div>
 
-            <!-- Indicações no Dia -->
-            <div class="field">
-                <h2 class="title is-4">Indicações no Dia</h2>
-                <div class="control">
-                    <input class="input" type="number" id="indicacoes" min="0" value="0">
-                </div>
-            </div>
-
-            <!-- Adicionar Serviço -->
-            <button class="button is-primary" onclick="adicionarServico()">Adicionar Serviço</button>
-            <button class="button is-info" onclick="copiarDados()">Copiar Dados</button>
-            <button class="button is-warning" onclick="exportarDados()">Exportar Dados</button>
-            <button class="button is-danger" onclick="zerarTudo()">Zerar Tudo</button>
-            <br><br>
-            
-            <!-- Serviços do Dia -->
+            <br>
             <h2 class="title is-4">Serviços do Dia</h2>
             <div id="servicos"></div>
         </div>
     </section>
     
-    <script>
-        // Carregar dados do LocalStorage
-        let contador = localStorage.getItem("contador") ? parseInt(localStorage.getItem("contador")) : 0;
-        let atendimentosWhatsApp = localStorage.getItem("atendimentosWhatsApp") ? parseInt(localStorage.getItem("atendimentosWhatsApp")) : 0;
-        let indicacoes = localStorage.getItem("indicacoes") ? parseInt(localStorage.getItem("indicacoes")) : 0;
-        let servicos = JSON.parse(localStorage.getItem("servicos")) || [];
-        let nomeLoja = localStorage.getItem("nomeLoja") || "";
-
-        if (nomeLoja) {
-        // Atribua a função que você deseja chamar aqui
-            document.getElementById("nomeLoja").disabled = true; // Desabilita o input
-        }
-
-        // Carregar nome da loja e exibir
-        document.getElementById("nomeLoja").value = nomeLoja;
-        document.getElementById("contador").innerText = contador;
-        document.getElementById("whatsappContador").innerText = atendimentosWhatsApp;
-        document.getElementById("indicacoes").value = indicacoes;
-        carregarServicos();
-
-        // Funções de adicionar e diminuir clientes
-        function adicionar() {
-            contador++;
-            localStorage.setItem("contador", contador);
-            document.getElementById("contador").innerText = contador;
-        }
-
-        function diminuir() {
-            if (contador > 0) {
-                contador--;
-                localStorage.setItem("contador", contador);
-            }
-            document.getElementById("contador").innerText = contador;
-        }
-
-        // Funções de adicionar e diminuir atendimentos via WhatsApp
-        function adicionarWhatsApp() {
-            atendimentosWhatsApp++;
-            localStorage.setItem("atendimentosWhatsApp", atendimentosWhatsApp);
-            document.getElementById("whatsappContador").innerText = atendimentosWhatsApp;
-        }
-
-        function diminuirWhatsApp() {
-            if (atendimentosWhatsApp > 0) {
-                atendimentosWhatsApp--;
-                localStorage.setItem("atendimentosWhatsApp", atendimentosWhatsApp);
-            }
-            document.getElementById("whatsappContador").innerText = atendimentosWhatsApp;
-        }
-
-        // Salvar e carregar o número de indicações
-        document.getElementById("indicacoes").addEventListener("input", function() {
-            indicacoes = parseInt(document.getElementById("indicacoes").value);
-            localStorage.setItem("indicacoes", indicacoes);
-        });
-
-        // Trancar ou destrancar o campo de nome da loja
-        function trancarDestrancar() {
-            const nomeLojaInput = document.getElementById("nomeLoja");
-            const nomeLojaBotao = document.querySelector("button.is-small.is-primary");
-
-            if (nomeLojaInput.disabled) {
-                nomeLojaInput.disabled = false;
-                nomeLojaBotao.innerText = "Salvar Nome";
-            } else {
-                nomeLojaInput.disabled = true;
-                localStorage.setItem("nomeLoja", nomeLojaInput.value);
-                nomeLojaBotao.innerText = "Alterar Nome";
-            }
-        }
-
-        // Adicionar serviço ao dia
-        function adicionarServico() {
-            const tipoServico = prompt("Digite o tipo de serviço:");
-
-            if (tipoServico) {
-                // Adiciona o serviço com quantidade 0
-                servicos.push({ tipo: tipoServico, quantidade: 0 });
-                localStorage.setItem("servicos", JSON.stringify(servicos));
-                carregarServicos();
-            }
-        }
-
-        // Carregar e exibir os serviços
-        function carregarServicos() {
-            const container = document.getElementById("servicos");
-            container.innerHTML = ""; // Limpar serviços exibidos
-
-            servicos.forEach((servico, index) => {
-                const div = document.createElement("div");
-                div.classList.add("field");
-                div.innerHTML = `
-                    <label class="label">${servico.tipo}</label>
-                    <div class="control">
-                        <input class="input" type="text" value="${servico.tipo}" disabled>
-                    </div>
-                    <label class="label">Quantidade</label>
-                    <div class="control">
-                        <input class="input" type="number" value="${servico.quantidade}" onchange="atualizarQuantidade(${index}, this.value)">
-                        <button class="button is-small is-info" onclick="alterarQuantidade(${index}, 1)">+</button>
-                        <button class="button is-small is-danger" onclick="alterarQuantidade(${index}, -1)">-</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // Alterar a quantidade de um serviço específico
-        function alterarQuantidade(index, valor) {
-            servicos[index].quantidade += valor;
-            if (servicos[index].quantidade < 0) servicos[index].quantidade = 0; // Não permite quantidade negativa
-            localStorage.setItem("servicos", JSON.stringify(servicos));
-            carregarServicos();
-        }
-
-        // Atualizar a quantidade de um serviço específico via input
-        function atualizarQuantidade(index, novaQuantidade) {
-            servicos[index].quantidade = parseInt(novaQuantidade);
-            localStorage.setItem("servicos", JSON.stringify(servicos));
-        }
-
-        // Copiar dados para o clipboard
-        function copiarDados() {
-        const nomeLoja = document.getElementById("nomeLoja").value || "Loja Desconhecida";
-        const dataAtual = new Date().toLocaleDateString('pt-BR');
-        const servicosTexto = servicos.map(servico => `${servico.tipo}: ${servico.quantidade}`).join("\n");
-
-        const texto = `✅Data: ${dataAtual}
-
-✅Quantidade de atendimento: ${atendimentosWhatsApp} via WhatsApp
-${contador - atendimentosWhatsApp} em loja
-
-✅Serviços prestados:
-${servicosTexto}
-
-✅Indicação: ${indicacoes} até o momento
-
-✅Nome da Loja: ${nomeLoja}`;
-
-                navigator.clipboard.writeText(texto).then(() => {
-                    alert("Dados copiados com sucesso!");
-                }).catch(err => {
-                    console.error("Erro ao copiar: ", err);
-                });
-            }
-
-        // Exportar dados como arquivo de texto
-        function exportarDados() {
-            const nomeLoja = prompt("Digite o nome da loja para exportar os dados:");
-            if (!nomeLoja) {
-                alert("Nome da loja é obrigatório!");
-                return;
-            }
-
-            const dataAtual = new Date().toLocaleDateString('pt-BR');
-            const servicosTexto = servicos.map(servico => `${servico.tipo}: ${servico.quantidade}`).join("\n");
-
-            const texto = `✅Data: ${dataAtual}
-
-✅Quantidade de atendimento: ${atendimentosWhatsApp} via WhatsApp
-${contador} em loja
-
-✅Serviços prestados:
-${servicosTexto}
-
-✅Indicação: ${indicacoes} até o momento`;
-
-            const blob = new Blob([texto], { type: "text/plain" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Controle_Diario_${nomeLoja.replace(/\s+/g, '_')}_${dataAtual.replace(/\//g, '-')}.txt`;
-            link.click();
-        }
-
-        function zerarTudo() {
-        // Exibir um aviso antes de apagar os dados
-        let confirmar = confirm("Tem certeza de que deseja apagar todos os dados? Esta ação não pode ser desfeita.");
-
-        if (confirmar) {
-            localStorage.clear();
-            contador = 0;
-            atendimentosWhatsApp = 0;
-            indicacoes = 0;
-            servicos = [];
-            localStorage.setItem("contador", contador);
-            localStorage.setItem("atendimentosWhatsApp", atendimentosWhatsApp);
-            localStorage.setItem("indicacoes", indicacoes);
-            localStorage.setItem("servicos", JSON.stringify(servicos));
-
-            // Atualizar a tela
-            document.getElementById("nomeLoja").value = ""; 
-            document.getElementById("nomeLoja").disabled = false; 
-
-            document.getElementById("contador").innerText = contador;
-            document.getElementById("whatsappContador").innerText = atendimentosWhatsApp;
-            document.getElementById("indicacoes").value = indicacoes;
-            carregarServicos();
-
-            //alert("Todos os dados foram apagados com sucesso!");
-        } /*else {
-            alert("Ação cancelada. Nenhum dado foi apagado.");
-        }*/
-    }
-
-    </script>
+    <script src="script.js" defer></script>
 </body>
 </html>
