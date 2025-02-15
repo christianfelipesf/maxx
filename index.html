@@ -12,11 +12,13 @@
             color: inherit;
         }
         .card {
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-radius: 10px;
+            overflow: hidden;
         }
         .card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transform: scale(1.08);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
         .card.status {
             background-color: #209cee;
@@ -25,6 +27,16 @@
         .card.boletos {
             background-color: #ffdd57;
             color: black;
+        }
+        .card.cupons {
+            background-color: #57ff65;
+            color: black;
+        }
+        .columns.is-centered {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
         }
     </style>
 </head>
@@ -49,6 +61,16 @@
                             <div class="card-content">
                                 <p class="title">Boletos</p>
                                 <p class="subtitle">Gerencie seus boletos de forma rápida e segura.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="column is-4">
+                    <a href="servicos/cupons.html" class="card-link">
+                        <div class="card cupons">
+                            <div class="card-content">
+                                <p class="title">Cupons</p>
+                                <p class="subtitle">Gerencie a quantidade de cupons.</p>
                             </div>
                         </div>
                     </a>

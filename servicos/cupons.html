@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Diário</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        .menu-container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button-group {
+            margin-top: 15px;
+        }
+        .icon {
+            margin-right: 5px;
+        }
+        .bottom-button {
+            margin-top: 30px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container has-text-centered">
+            <h1 class="title">Controle Diário de Cupons</h1>
+            
+            <div class="menu-container">
+                <div class="columns is-vcentered">
+                    <div class="column">
+                        <h2 class="title is-4">Contagem de cupons.</h2>
+                        <p class="title is-2" id="cupon">0</p>
+                        <button class="button is-success is-large" onclick="adicionar()">
+                            <i class="fas fa-plus-circle"></i> Adicionar
+                        </button>
+                        <button class="button is-danger is-large" onclick="diminuir()">
+                            <i class="fas fa-minus-circle"></i> Diminuir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div class="bottom-button">
+        <button class="button is-link is-medium" onclick="voltar()">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+    </div>
+    
+    <script>
+        let cupon = localStorage.getItem("cupon");
+        cupon = cupon !== null ? parseInt(cupon) : 0;  // Garante que não será NaN
+
+        console.log('Valor do cupon:', cupon);
+
+        // Exibir valor inicial corretamente
+        document.getElementById("cupon").innerText = cupon;
+
+        // Funções de adicionar e diminuir clientes
+        function adicionar() {
+            cupon++;
+            localStorage.setItem("cupon", cupon);
+            document.getElementById("cupon").innerText = cupon;
+        }
+
+        function diminuir() {
+            if (cupon > 0) {
+                cupon--;
+                localStorage.setItem("cupon", cupon);
+            }
+            document.getElementById("cupon").innerText = cupon;
+        }
+
+        function voltar() {
+            window.location.href = "../index.html";
+        }
+    </script>
+</body>
+</html>

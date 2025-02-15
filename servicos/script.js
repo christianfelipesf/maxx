@@ -200,3 +200,6 @@ if (confirmar) {
     alert("Ação cancelada. Nenhum dado foi apagado.");
 }*/
 }
+function voltar() {
+    window.location.href = "../index.html";
+}

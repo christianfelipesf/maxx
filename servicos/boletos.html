@@ -18,6 +18,13 @@
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
             z-index: 1000;
         }
+        .bottom-button {
+            margin-top: 30px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
         #notification { background: #48c774; }
         #error-notification { background: #f14668; }
         #historico { margin-top: 20px; }
@@ -90,18 +97,27 @@
                         <button id="clear-button" type="button" class="button is-danger">Zerar Campos (3)</button>
                     </div>
                 </form>
+                
             </div>
-
+            
             <div class="box" id="historico">
                 <h2 class="title is-4">📜 Histórico</h2>
                 <div id="historico-lista"></div>
             </div>
+            <br>
+            <div class="bottom-button">
+                <button class="button is-link is-medium" onclick="voltar()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
         </div>
+        
     </section>
+    
 
     <div id="notification">✅ Texto copiado com sucesso!</div>
     <div id="error-notification">❌ Preencha todos os campos antes de copiar!</div>
-
+    
     <script>
         let clearCount = 3;
         let lastClickTime = 0;
@@ -149,6 +165,9 @@
                 console.error('Falha ao copiar o texto:', err);
             });
         });
+        function voltar() {
+            window.location.href = "../index.html";
+        }
     </script>
 </body>
 </html>
