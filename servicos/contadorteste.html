@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador Simples</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css">
+    <script>
+        function incrementar() {
+            let contador = document.getElementById('contador');
+            contador.innerText = parseInt(contador.innerText) + 1;
+        }
+        function decrementar() {
+            let contador = document.getElementById('contador');
+            contador.innerText = parseInt(contador.innerText) - 1;
+        }
+    </script>
+</head>
+<body>
+    <section class="section">
+        <div class="container has-text-centered">
+            <h1 class="title">Contador</h1>
+            <p class="subtitle">Clique nos botões para alterar o valor</p>
+            <div class="box">
+                <h2 id="contador" class="title is-2">0</h2>
+                <button class="button is-success" onclick="incrementar()">+</button>
+                <button class="button is-danger" onclick="decrementar()">-</button>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
