@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formatador de ONU</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        .popup {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .bottom-button {
+            margin-top: 30px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Formatador de ONU</h1>
+            <div class="field">
+                <label class="label">Insira os dados da ONU</label>
+                <div class="control">
+                    <textarea id="inputData" class="textarea" placeholder="Cole os dados aqui..."></textarea>
+                </div>
+            </div>
+            <div class="control">
+                <button class="button is-primary" onclick="processData()">Formatar</button>
+            </div>
+            <div class="field mt-4">
+                <label class="label">Resultado</label>
+                <div class="control">
+                    <input type="text" id="outputData" class="input" readonly>
+                </div>
+            </div>
+            <div id="popup" class="popup">Copiado para a área de transferência!</div>
+            <div class="bottom-button">
+                <button class="button is-link is-medium" onclick="voltar()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
+        </div>
+        
+    </section>
+
+    <script>
+        function parseONUData(data) {
+            const lines = data.split('\n');
+            let formattedData = {};
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line) continue;
+                
+                if (line.includes('MAC ONU')) {
+                    const [mac, olt, slot, pon, status] = lines[i + 1].split('\t');
+                    formattedData = { MAC: mac, OLT: olt, SLOT: slot, PON: pon, STATUS: status };
+                } else if (line.includes('ADMINSTATE')) {
+                    const headers = line.split('\t');
+                    const values = lines[i + 1].split('\t');
+                    
+                    headers.forEach((header, index) => {
+                        formattedData[header.trim()] = values[index].trim();
+                    });
+                } else {
+                    const [key, value] = line.split(':\t');
+                    if (key && value) {
+                        formattedData[key.trim()] = value.trim();
+                    }
+                }
+            }
+            return formattedData;
+        }
+
+        function formatInline(dataObj) {
+            return Object.entries(dataObj)
+                .filter(([_, value]) => value !== undefined && value !== '')
+                .map(([key, value]) => `${key}: ${value}`)
+                .join(', ');
+        }
+
+        function processData() {
+            const inputText = document.getElementById('inputData').value;
+            const parsedData = parseONUData(inputText);
+            const formattedText = formatInline(parsedData);
+            
+            document.getElementById('outputData').value = formattedText;
+            copyToClipboard(formattedText);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showPopup();
+            }).catch(err => console.error('Erro ao copiar:', err));
+        }
+
+
+        function showPopup() {
+            const popup = document.getElementById('popup');
+            popup.style.display = 'block';
+            setTimeout(() => { popup.style.display = 'none'; }, 2000);
+        }
+    </script>
+</body>
+</html>
