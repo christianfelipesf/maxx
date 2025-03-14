@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Atendimentos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        const servicosLista = [
+            "2ª via de boleto",
+            "Atendimento técnico",
+            "Negociação",
+            "Pagamentos em loja",
+            "Reconexão presencial",
+            "Reconexão remota",
+            "Desbloqueio de sinal",
+            "Troca de titularidade",
+            "Mudança de endereço"
+        ];
+
+        function atualizarTexto() {
+            const data = document.getElementById("data").value;
+            const quantidade = document.getElementById("quantidade").value;
+            const cidade = document.getElementById("cidade").value;
+            let servicos = "";
+            
+            document.querySelectorAll(".servico").forEach(servico => {
+                const label = servico.dataset.label;
+                const input = servico.querySelector("input[type=number]");
+                let emoji = input.value > 0 ? "🟢" : "🔴";
+                servicos += `${emoji} ${label}: ${input.value}\n`;
+            });
+
+            const texto = `✨ ✅ Boa tarde! ✨\n\n📅 Data: ${data}\n📊 Quantidade de atendimentos: ${quantidade}\n\n🛠️ Serviços prestados:\n${servicos}\n❌ Nenhuma indicação.\n\n🏪 Loja - ${cidade} 👍🏽`;
+            document.getElementById("resultado").value = texto;
+        }
+
+        function copiarTexto() {
+            const resultado = document.getElementById("resultado");
+            resultado.select();
+            document.execCommand("copy");
+            mostrarPopup();
+        }
+
+        function mostrarPopup() {
+            const popup = document.createElement("div");
+            popup.innerText = "Texto copiado!";
+            popup.style.position = "fixed";
+            popup.style.bottom = "20px";
+            popup.style.right = "20px";
+            popup.style.backgroundColor = "#28a745";
+            popup.style.color = "white";
+            popup.style.padding = "10px 20px";
+            popup.style.borderRadius = "5px";
+            popup.style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.1)";
+            document.body.appendChild(popup);
+            setTimeout(() => { popup.remove(); }, 2000);
+        }
+
+        function definirDataAtual() {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById("data").value = hoje;
+            atualizarTexto();
+        }
+
+        function obterLocalizacao() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const resposta = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                    const dados = await resposta.json();
+                    document.getElementById("cidade").value = dados.address.city || "Santa Rita/MA";
+                    atualizarTexto();
+                });
+            }
+        }
+
+        function criarServicos() {
+            const container = document.getElementById("servicos-container");
+            container.innerHTML = "";
+            
+            servicosLista.forEach(servico => {
+                const div = document.createElement("div");
+                div.classList.add("servico", "d-flex", "align-items-center", "mb-2");
+                div.dataset.label = servico;
+                div.innerHTML = `
+                    <span class="me-2">${servico}:</span>
+                    <button class="btn btn-danger btn-sm me-2" onclick="alterarQuantidade(this, -1)">-</button>
+                    <input type="number" class="form-control text-center" style="width: 60px;" value="0" min="0" readonly>
+                    <button class="btn btn-success btn-sm ms-2" onclick="alterarQuantidade(this, 1)">+</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function alterarQuantidade(botao, valor) {
+            const input = botao.parentNode.querySelector("input[type=number]");
+            let novoValor = parseInt(input.value) + valor;
+            if (novoValor < 0) novoValor = 0;
+            input.value = novoValor;
+            atualizarTexto();
+        }
+
+        window.onload = function() {
+            definirDataAtual();
+            obterLocalizacao();
+            criarServicos();
+        };
+    </script>
+</head>
+<body class="container py-4">
+    <h2 class="text-center">Gerar Relatório</h2>
+    <div class="mb-3">
+        <label class="form-label">Data:</label>
+        <input type="date" id="data" class="form-control" onchange="atualizarTexto()">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Quantidade de atendimentos:</label>
+        <input type="number" id="quantidade" class="form-control" value="0" oninput="atualizarTexto()">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Cidade:</label>
+        <select id="cidade" class="form-select" onchange="atualizarTexto()">
+            <option value="SANTA INÊS/MA - Feriado Municipal">SANTA INÊS/MA - Feriado Municipal</option>
+            <option value="SANTA RITA/MA">SANTA RITA/MA</option>
+            <option value="ROSÁRIO/MA">ROSÁRIO/MA</option>
+            <option value="CHAPADINHA/MA">CHAPADINHA/MA</option>
+            <option value="VARGEM GRANDE/MA">VARGEM GRANDE/MA</option>
+            <option value="SÃO LUÍS/MA">SÃO LUÍS/MA</option>
+            <option value="ITAPECURU MIRIM/MA">ITAPECURU MIRIM/MA</option>
+        </select>
+    </div>
+    
+    <h3 class="mt-4">Serviços Prestados:</h3>
+    <div id="servicos-container"></div>
+    
+    <h3 class="mt-4">Resultado:</h3>
+    <textarea id="resultado" class="form-control" rows="6" readonly></textarea>
+    <button class="btn btn-primary mt-3" onclick="copiarTexto()">Copiar Texto</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
