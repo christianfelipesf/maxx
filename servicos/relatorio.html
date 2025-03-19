@@ -37,7 +37,12 @@
         }
 
         function atualizarTexto() {
-            const data = document.getElementById("data").value;
+            const data = document.getElementById("data").value; // pode usar este.
+            console.log(data)
+            const partes = data.split("-");
+            console.log(partes)
+            const dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            
             const quantidade = document.getElementById("quantidade").value;
             const cidade = document.getElementById("cidade").value;
             localStorage.setItem("cidadeSelecionada", cidade);
@@ -54,7 +59,7 @@
                 }
             });
 
-            const texto = `✅ ${saudacao()} \n\n📅 Data: \`${data}\`\n📊 Quantidade de atendimentos: *${quantidade}*\n\n🛠️ Serviços prestados:\n${servicos}\n❌ ~Nenhuma indicação~\n\n🏪 Loja - ${cidade} ✅`;
+            const texto = `✅ ${saudacao()} \n\n📅 Data: \`${dataFormatada}\`\n📊 Quantidade de atendimentos: *${quantidade}*\n\n🛠️ Serviços prestados:\n${servicos}\n❌ ~Nenhuma indicação~\n\n🏪 Loja - ${cidade} ✅`;
             document.getElementById("resultado").value = texto;
         }
 
