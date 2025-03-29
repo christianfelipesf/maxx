@@ -24,6 +24,25 @@
             justify-content: center;
             align-items: center;
         }
+        #history {
+            margin-top: 20px;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .history-item {
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+            border-bottom: 1px solid #ccc;
+            padding: 5px 0;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -38,6 +57,7 @@
             </div>
             <div class="control">
                 <button class="button is-primary" onclick="processData()">Formatar</button>
+                <button class="button is-info" onclick="copyOutput()">Copiar</button>
             </div>
             <div class="field mt-4">
                 <label class="label">Resultado</label>
@@ -46,16 +66,25 @@
                 </div>
             </div>
             <div id="popup" class="popup">Copiado para a área de transferência!</div>
+            <div id="history" class="box">
+                <h2 class="subtitle">Histórico</h2>
+                <ul id="historyList"></ul>
+                <button class="button is-danger mt-3" onclick="clearHistory()">Apagar Histórico</button>
+            </div>
             <div class="bottom-button">
                 <button class="button is-link is-medium" onclick="voltar()">
                     <i class="fas fa-arrow-left"></i> Voltar
                 </button>
             </div>
         </div>
-        
     </section>
 
     <script>
+        function clearHistory() {
+            localStorage.removeItem('onuHistory');
+            renderHistory();
+        }
+
         function parseONUData(data) {
             const lines = data.split('\n');
             let formattedData = {};
@@ -75,7 +104,7 @@
                         formattedData[header.trim()] = values[index].trim();
                     });
                 } else {
-                    const [key, value] = line.split(':\t');
+                    const [key, value] = line.split(':	');
                     if (key && value) {
                         formattedData[key.trim()] = value.trim();
                     }
@@ -94,18 +123,20 @@
         function processData() {
             const inputText = document.getElementById('inputData').value;
             const parsedData = parseONUData(inputText);
-            const formattedText = formatInline(parsedData);
+            const formattedText = `Osiris: ${formatInline(parsedData)}`;
             
             document.getElementById('outputData').value = formattedText;
-            copyToClipboard(formattedText);
+            saveToHistory(formattedText);
         }
 
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
+        function copyOutput() {
+            const text = document.getElementById('outputData').value;
+            const timestamp = new Date().toLocaleString();
+            const textWithTimestamp = `${text} (${timestamp})`;
+            navigator.clipboard.writeText(textWithTimestamp).then(() => {
                 showPopup();
             }).catch(err => console.error('Erro ao copiar:', err));
         }
-
 
         function showPopup() {
             const popup = document.getElementById('popup');
@@ -113,9 +144,32 @@
             setTimeout(() => { popup.style.display = 'none'; }, 2000);
         }
 
+        function saveToHistory(text) {
+            if (!text) return;
+            let history = JSON.parse(localStorage.getItem('onuHistory')) || [];
+            const timestamp = new Date().toLocaleString();
+            history.unshift({ text, timestamp });
+            localStorage.setItem('onuHistory', JSON.stringify(history.slice(0, 10))); // Mantém os últimos 10 registros
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            let history = JSON.parse(localStorage.getItem('onuHistory')) || [];
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.classList.add('history-item');
+                li.textContent = `${item.timestamp} - ${item.text}`;
+                historyList.appendChild(li);
+            });
+        }
+
         function voltar() {
             window.location.href = "../index.html";
         }
+
+        document.addEventListener("DOMContentLoaded", renderHistory);
     </script>
 </body>
 </html>
