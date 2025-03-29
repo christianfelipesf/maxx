@@ -123,26 +123,39 @@
         function processData() {
             const inputText = document.getElementById('inputData').value;
             const parsedData = parseONUData(inputText);
-            const formattedText = `Osiris: ${formatInline(parsedData)}`;
+            console.log(Object.keys(parsedData).length > 0)
+            if(Object.keys(parsedData).length > 0){
+                const formattedText = `Osiris: ${formatInline(parsedData)}`;
+                document.getElementById('outputData').value = formattedText;
+                saveToHistory(formattedText);
+            }
             
-            document.getElementById('outputData').value = formattedText;
-            saveToHistory(formattedText);
         }
 
         function copyOutput() {
-            const text = document.getElementById('outputData').value;
-            const timestamp = new Date().toLocaleString();
-            const textWithTimestamp = `${text} (${timestamp})`;
-            navigator.clipboard.writeText(textWithTimestamp).then(() => {
-                showPopup();
-            }).catch(err => console.error('Erro ao copiar:', err));
+        const text = document.getElementById('outputData').value;
+        if (!text.trim()) {
+            showError("Nenhum texto formatado recentemente!");
+            return;
         }
+        
+        const timestamp = new Date().toLocaleString();
+        const textWithTimestamp = `${text} (${timestamp})`;
+        navigator.clipboard.writeText(textWithTimestamp).then(() => {
+            showPopup("Copiado para a área de transferência!", "#4CAF50");
+        }).catch(err => console.error('Erro ao copiar:', err));
+    }
 
-        function showPopup() {
-            const popup = document.getElementById('popup');
-            popup.style.display = 'block';
-            setTimeout(() => { popup.style.display = 'none'; }, 2000);
-        }
+    function showPopup(message, color) {
+        const popup = document.getElementById('popup');
+        popup.textContent = message;
+        popup.style.background = color;
+        popup.style.display = 'block';
+        setTimeout(() => { popup.style.display = 'none'; }, 2000);
+    }
+    function showError(message) {
+        showPopup(message, "#D9534F");
+    }
 
         function saveToHistory(text) {
             if (!text) return;
