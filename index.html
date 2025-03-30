@@ -15,38 +15,17 @@
             transition: transform 0.3s, box-shadow 0.3s;
             border-radius: 10px;
             overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
         .card:hover {
             transform: scale(1.08);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-        }
-        .card.status {
-            background-color: #209cee;
-            color: white;
-        }
-        .card.boletos {
-            background-color: #ffdd57;
-            color: black;
-        }
-        .card.cupons {
-            background-color: #57ff65;
-            color: black;
-        }
-        .card.osiris {
-            background-color: #ff57ab;
-            color: black;
-        }
-        .card.telegram {
-            background-color: #57d8ff;
-            color: black;
-        }
-        .card.senha {
-            background-color: #57ffa3;
-            color: black;
-        }
-        .card.servicosv2 {
-            background-color: #ff9a57;
-            color: black;
         }
         .columns.is-centered {
             display: flex;
@@ -54,13 +33,31 @@
             flex-wrap: wrap;
             gap: 20px;
         }
+        .card.status { background-color: #209cee; color: white; }
+        .card.boletos { background-color: #ffdd57; color: black; }
+        .card.cupons { background-color: #57ff65; color: black; }
+        .card.osiris { background-color: #ff57ab; color: black; }
+        .card.telegram { background-color: #57d8ff; color: black; }
+        .card.senha { background-color: #57ffa3; color: black; }
+        .card.servicosv2 { background-color: #ff9a57; color: black; }
+        
+        @media screen and (max-width: 768px) {
+            .columns {
+                flex-direction: column;
+                align-items: center;
+            }
+            .column {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
     </style>
 </head>
 <body>
     <section class="section">
         <div class="container has-text-centered">
             <h1 class="title">Plataforma Serviços</h1>
-            <div class="columns is-centered">
+            <div class="columns is-centered is-multiline">
                 <div class="column is-4">
                     <a href="servicos/relatorio.html" class="card-link">
                         <div class="card servicosv2">
@@ -132,8 +129,17 @@
                     </a>
                 </div>
             </div>
-            
         </div>
     </section>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const cards = document.querySelectorAll(".card");
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add("visible");
+                }, index * 40);
+            });
+        });
+    </script>
 </body>
 </html>
