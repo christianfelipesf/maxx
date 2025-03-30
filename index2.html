@@ -6,19 +6,31 @@
     <title>Plataforma Serviços</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <style>
-        
+        @keyframes gradientAnimation {
+            0% { background: white; }
+            33% { background: rgb(255, 171, 122); }
+            66% { background: orange; }
+            100% { background: white; }
+        }
+        body {
+            background: linear-gradient(270deg, white, yellow, orange);
+            background-size: 400% 400%;
+            animation: gradientAnimation 50s infinite alternate ease-in-out;
+            min-height: 100vh;
+        }
         .card-link {
             display: block;
             text-decoration: none;
             color: inherit;
         }
+        @keyframes cardColorAnimation {
+            0% { background-color: #ffde22; }
+            33% { background-color: #fffffd; }
+            66% { background-color: #ffffff; }
+            100% { background-color: #fffab0; }
+        }
         .card {
-            transition: transform 0.3s, box-shadow 0.3s;
-            border-radius: 10px;
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            animation: cardColorAnimation 50s infinite alternate ease-in-out;
         }
         .card.visible {
             opacity: 1;
