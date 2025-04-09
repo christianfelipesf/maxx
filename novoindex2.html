@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Serviços</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        /* --- Basic Styling --- */
+        body {
+            background-color: #f5f5f5; /* Light background for contrast */
+        }
+
+        .section {
+            padding: 3rem 1.5rem;
+        }
+
+        /* --- Card Styling and Animations --- */
+        .card-link {
+            display: block; /* Make the whole card clickable */
+            text-decoration: none;
+            color: inherit; /* Inherit text color from the card's style */
+            height: 100%; /* Ensure link fills the column space */
+        }
+
+        .card {
+            border-radius: 10px; /* Rounded corners */
+            overflow: hidden; /* Ensure content respects border radius */
+            opacity: 0; /* Start hidden for animation */
+            transform: translateY(20px); /* Start slightly lower for animation */
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out, box-shadow 0.3s ease-in-out; /* Smooth transitions */
+            min-height: 150px; /* Minimum height for consistency */
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center content vertically */
+            height: 100%; /* Make card fill its container */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+
+        .card.visible {
+            opacity: 1; /* Fade in */
+            transform: translateY(0); /* Move up to final position */
+        }
+
+        .card:hover {
+            transform: scale(1.05) translateY(-5px); /* Slightly enlarge and lift on hover */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* More prominent shadow on hover */
+        }
+
+        /* --- Layout --- */
+        .columns.is-centered {
+            /* Bulma handles centering */
+            flex-wrap: wrap; /* Allow cards to wrap */
+            gap: 1.5rem; /* Space between cards */
+        }
+
+        .column {
+            display: flex; /* Ensure columns stretch vertically if needed */
+        }
+
+        /* --- Responsive Adjustments --- */
+        @media screen and (max-width: 768px) {
+            .columns.is-multiline > .column {
+                /* On smaller screens, make columns take more width */
+                flex-basis: 80%; /* Example: Adjust as needed */
+                max-width: 80%;
+                min-width: 300px; /* Ensure a minimum width */
+            }
+            .title.is-4 {
+                font-size: 1.25rem; /* Adjust title size on mobile */
+            }
+            .subtitle.is-6 {
+                font-size: 0.9rem; /* Adjust subtitle size on mobile */
+            }
+        }
+         @media screen and (min-width: 769px) and (max-width: 1023px) {
+             .columns.is-multiline > .column.is-4 {
+                /* On tablets, maybe 2 columns */
+                flex-basis: calc(50% - 1.5rem); /* Adjust for gap */
+                max-width: calc(50% - 1.5rem);
+             }
+         }
+
+        /* --- Utility --- */
+        .has-text-centered {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title has-text-centered">Plataforma Serviços</h1>
+            <div id="cards-container" class="columns is-centered is-multiline">
+                <div id="loading-message" class="column is-full has-text-centered">
+                    <p class="is-size-5">Carregando serviços...</p>
+                    </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // ****** CONFIGURATION ******
+            // Replace with your GitHub details
+            const GITHUB_OWNER = 'christianfelipesf'; // Your GitHub Username
+            const GITHUB_REPO = 'maxx';             // Your Repository Name
+            const GITHUB_PATH = 'servicos';         // The folder containing the HTML files
+            // ***************************
+
+            // --- Color Palette Definition ---
+            // Define pairs of background and text colors for the cards.
+            // Colors are applied sequentially and cycle through the list.
+            const COLOR_PAIRS = [
+                { bg: '#209cee', text: '#ffffff' }, // Bulma Primary (Info)
+                { bg: '#48c78e', text: '#ffffff' }, // Bulma Success
+                { bg: '#ffdd57', text: '#363636' }, // Bulma Warning (dark text)
+                { bg: '#ff3860', text: '#ffffff' }, // Bulma Danger
+                { bg: '#7957d5', text: '#ffffff' }, // Vibrant Purple
+                { bg: '#3273dc', text: '#ffffff' }, // Bulma Link
+                { bg: '#00d1b2', text: '#ffffff' }, // Bulma Turquoise
+                { bg: '#f14668', text: '#ffffff' }, // Bulma Pinkish Red
+                { bg: '#23d160', text: '#ffffff' }, // Bulma Neon Green
+                { bg: '#ff9f43', text: '#363636' }, // Light Orange (dark text)
+                { bg: '#0984e3', text: '#ffffff' }, // Vivid Blue
+                { bg: '#fd79a8', text: '#ffffff' }, // Bubblegum Pink
+            ];
+            // --- End Color Palette ---
+
+            // --- DOM Element References ---
+            const cardsContainer = document.getElementById('cards-container');
+            const loadingMessage = document.getElementById('loading-message');
+            // --- End DOM References ---
+
+            // --- Helper Functions ---
+
+            /**
+             * Formats a filename (e.g., 'my-service_file.html') into a title
+             * (e.g., 'My Service File').
+             * @param {string} filename - The original filename.
+             * @returns {string} The formatted title.
+             */
+            function formatTitle(filename) {
+                // Remove .html extension
+                let title = filename.replace(/\.html$/i, '');
+                // Replace hyphens and underscores with spaces
+                title = title.replace(/[-_]/g, ' ');
+                // Capitalize the first letter of each word
+                title = title.split(' ')
+                             .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : '')
+                             .join(' ');
+                return title.trim(); // Remove any leading/trailing whitespace
+            }
+
+            /**
+             * Creates a single service card element.
+             * @param {object} file - The file object from the GitHub API.
+             * @param {number} index - The index of the card (for animation delay and color selection).
+             * @returns {HTMLElement} The card column element.
+             */
+            function createCardElement(file, index) {
+                const title = formatTitle(file.name);
+                const url = `${GITHUB_PATH}/${file.name}`; // Construct the relative URL
+
+                // Select color pair based on index, cycling through the COLOR_PAIRS array
+                const colorIndex = index % COLOR_PAIRS.length;
+                const selectedColor = COLOR_PAIRS[colorIndex];
+
+                // Create elements
+                const cardColumn = document.createElement('div');
+                cardColumn.className = 'column is-4-desktop is-6-tablet'; // Responsive column sizing
+
+                const cardLink = document.createElement('a');
+                cardLink.href = url;
+                cardLink.className = 'card-link';
+                cardLink.setAttribute('aria-label', `Acessar ${title}`); // Accessibility
+
+                const cardDiv = document.createElement('div');
+                // Apply base class and dynamic background/text colors via inline styles
+                cardDiv.className = 'card';
+                cardDiv.style.backgroundColor = selectedColor.bg;
+                cardDiv.style.color = selectedColor.text;
+
+                const cardContent = document.createElement('div');
+                cardContent.className = 'card-content has-text-centered'; // Center text within card
+
+                const titleP = document.createElement('p');
+                titleP.className = 'title is-4';
+                titleP.textContent = title;
+
+                const subtitleP = document.createElement('p');
+                subtitleP.className = 'subtitle is-6';
+                // Make subtitle slightly transparent using the text color
+                subtitleP.style.color = `${selectedColor.text}b3`; // Add alpha (e.g., b3 for ~70% opacity)
+                subtitleP.textContent = `Acessar Serviço`; // Simpler subtitle
+
+                // Assemble the card structure
+                cardContent.appendChild(titleP);
+                cardContent.appendChild(subtitleP);
+                cardDiv.appendChild(cardContent);
+                cardLink.appendChild(cardDiv);
+                cardColumn.appendChild(cardLink);
+
+                // Apply staggered animation using a timeout
+                // The delay increases slightly for each card
+                setTimeout(() => {
+                    cardDiv.classList.add("visible");
+                }, index * 80); // Adjust delay (e.g., 80ms) as needed
+
+                return cardColumn;
+            }
+
+            /**
+             * Displays an error message in the cards container.
+             * @param {string} message - The primary error message.
+             * @param {string} [details=''] - Optional technical details.
+             */
+            function displayError(message, details = '') {
+                if (loadingMessage) loadingMessage.remove(); // Remove loading indicator
+                cardsContainer.innerHTML = `
+                    <div class="column is-full">
+                        <div class="notification is-danger">
+                            <p><strong>${message}</strong></p>
+                            ${details ? `<p><small>Detalhes: ${details}</small></p>` : ''}
+                            <p><small>Verifique a configuração do script e a estrutura do repositório no GitHub.</small></p>
+                        </div>
+                    </div>`;
+            }
+
+            // --- Main Fetch and Render Logic ---
+
+            /**
+             * Fetches the list of files from the GitHub repository path
+             * and generates the service cards.
+             */
+            async function fetchAndGenerateCards() {
+                const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
+                console.log(`Fetching data from: ${apiUrl}`); // Log API URL for debugging
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        headers: {
+                            // Optional: Add Accept header for better API interaction
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+
+                    // Check if the response status indicates an error
+                    if (!response.ok) {
+                        let errorMsg = `Erro ${response.status}: ${response.statusText}`;
+                        try {
+                            // Try to parse more detailed error from GitHub API response
+                            const errorData = await response.json();
+                            errorMsg += ` - ${errorData.message || JSON.stringify(errorData)}`;
+                        } catch (parseError) {
+                            // Ignore if response body cannot be parsed
+                            console.warn("Could not parse error response body:", parseError);
+                        }
+                        throw new Error(errorMsg); // Throw error to be caught below
+                    }
+
+                    const files = await response.json();
+                    console.log("API Response Data:", files); // Log received data
+
+                    // Ensure the response is an array (expected format for directory listing)
+                    if (!Array.isArray(files)) {
+                        throw new Error("Resposta inesperada da API do GitHub. Esperava um array de arquivos.");
+                    }
+
+                    // Filter out only HTML files directly within the specified path
+                    const htmlFiles = files.filter(file => file.type === 'file' && file.name.toLowerCase().endsWith('.html'));
+                    console.log("Filtered HTML files:", htmlFiles); // Log filtered files
+
+                    // Remove the loading message now that we have data (or know there's none)
+                    if (loadingMessage) loadingMessage.remove();
+
+                    if (htmlFiles.length === 0) {
+                        // Display a message if no HTML files are found
+                        cardsContainer.innerHTML = `
+                            <div class="column is-full has-text-centered">
+                                <p>Nenhum serviço (arquivo .html) encontrado na pasta '${GITHUB_PATH}'.</p>
+                            </div>`;
+                        return;
+                    }
+
+                    // Create a document fragment to batch DOM insertions (potentially more performant)
+                    const fragment = document.createDocumentFragment();
+                    htmlFiles.forEach((file, index) => {
+                        const cardElement = createCardElement(file, index);
+                        fragment.appendChild(cardElement);
+                    });
+
+                    // Append all cards at once to the container
+                    cardsContainer.appendChild(fragment);
+
+                } catch (error) {
+                    console.error('Falha ao buscar ou gerar os cards:', error);
+                    // Display a user-friendly error message on the page
+                    displayError('Erro ao carregar os serviços.', error.message);
+                }
+            }
+
+            // --- Initialize ---
+            fetchAndGenerateCards(); // Start the process
+        });
+    </script>
+</body>
+</html>
+```
+
+**Key Optimizations and Changes:**
+
+1.  **Configuration Constants:** Used `const` for GitHub configuration variables (`GITHUB_OWNER`, `GITHUB_REPO`, `GITHUB_PATH`) and `COLOR_PAIRS` for better code clarity and to indicate these values shouldn't change.
+2.  **DOM Element Caching:** Got references to `cardsContainer` and `loadingMessage` once at the beginning.
+3.  **Dedicated Functions:**
+    * `formatTitle`: Kept similar but slightly refined the regex and added `.toLowerCase()` for consistency before capitalizing. Added `trim()`.
+    * `createCardElement`: Encapsulated the entire logic for creating a single card column, making the main loop cleaner. This improves modularity.
+    * `displayError`: Created a dedicated function to show error messages consistently.
+4.  **Card Creation (`createCardElement`):**
+    * Builds the card structure step-by-step, which is generally readable and maintainable.
+    * Applies colors directly using `cardDiv.style.backgroundColor` and `cardDiv.style.color`.
+    * Sets `aria-label` on the link for better accessibility.
+    * Simplified the subtitle text.
+    * Added slight transparency to the subtitle using RGBA hex format (`#ffffffb3`).
+    * Uses responsive Bulma classes (`is-4-desktop is-6-tablet`) for better layout adjustments.
+5.  **Main Logic (`fetchAndGenerateCards`):**
+    * Uses `async/await` for cleaner asynchronous code.
+    * **Improved Error Handling:** Checks `response.ok` and attempts to parse the error message from the GitHub API response for more informative errors. Uses the `displayError` function.
+    * **API URL Logging:** Added `console.log` for the API URL being fetched.
+    * **Data Validation:** Explicitly checks if the fetched `files` data is an array.
+    * **Filtering:** Uses `.toLowerCase().endsWith('.html')` for case-insensitive file extension checking.
+    * **Document Fragment:** Creates a `DocumentFragment` to append all card elements at once. This can be slightly more performant than appending each card individually to the live DOM inside the loop, as it minimizes reflows/repaints.
+    * **Clearer Logging:** Added `console.log` statements to track the API response and filtered files during development/debugging.
+6.  **CSS:**
+    * Added a light background to `body` for better card contrast.
+    * Adjusted `min-height` and added `height: 100%` to `.card` and `.card-link` for better vertical alignment within columns.
+    * Refined hover effect (`translateY(-5px)`).
+    * Added `gap` to `.columns` for spacing instead of relying solely on Bulma's default padding.
+    * Included more specific media queries for tablet (`is-6-tablet`) and desktop (`is-4-desktop`) column sizes.
+    * Added basic font size adjustments in media queries.
+7.  **Comments:** Added more detailed comments explaining different sections of the code (configuration, color palette, helper functions, main logic, etc.).
+
+This version maintains the original functionality while improving code structure, readability, error handling, and applying some minor performance/best practice enhancemen
