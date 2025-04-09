@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cobrinhas Quadradas Laranjas Animadas</title>
+    <style>
+        /* Estilos gerais para o corpo e o canvas */
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            background-color: #FFFFFF;
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: pointer;
+        }
+        #logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: auto;
+            z-index: 10;
+            pointer-events: none;
+            animation: pulse 2s infinite alternate;
+        }
+        @keyframes pulse {
+          from {
+            transform: translate(-50%, -50%) scale(1);
+          }
+          to {
+            transform: translate(-50%, -50%) scale(1.1);
+          }
+        }
+        .maca {
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="cobrinhasCanvas"></canvas>
+    <img id="logo" src="images (21).png" alt="Logo">
+    <script>
+        // Obtém o elemento canvas e o contexto 2D
+        const canvas = document.getElementById('cobrinhasCanvas');
+        const ctx = canvas.getContext('2d');
+        const logoImg = document.getElementById('logo');
+
+        // Define as dimensões do canvas
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Configurações do grid
+        const tamanhoCelula = 10;
+        const numColunas = Math.floor(canvas.width / tamanhoCelula);
+        const numLinhas = Math.floor(canvas.height / tamanhoCelula);
+
+        // Ajusta o tamanho do canvas para ser múltiplo do tamanho da célula
+        canvas.width = numColunas * tamanhoCelula;
+        canvas.height = numLinhas * tamanhoCelula;
+
+        // Variáveis para controlar o comprimento e a velocidade das cobrinhas
+        const comprimentoInicialCobrinhas = 5;
+        const velocidadeCobrinhas = 0.1;
+        let corGrade = '#e0e0e0'; // Cor padrão da grade
+
+        // Array para armazenar as cobrinhas
+        const cobrinhas = [];
+        const numCobrinhas = 20;
+
+        // Função para gerar um número aleatório dentro de um intervalo
+        function randomRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Função para gerar uma cor laranja aleatória
+        function randomOrange(variacao = 0) {
+            const r = 255;
+            const g = Math.floor(randomRange(100 + variacao, 200 + variacao));
+            const b = 0;
+            return `rgb(${r},${g},${b})`;
+        }
+
+        // Classe para representar uma cobrinha
+        class Cobrinha {
+            constructor(x, y, cor) {
+                this.x = x || Math.floor(randomRange(0, numColunas)) * tamanhoCelula;
+                this.y = y || Math.floor(randomRange(0, numLinhas)) * tamanhoCelula;
+                this.cor = cor || randomOrange();
+                this.tamanho = tamanhoCelula;
+                this.velocidadeX = velocidadeCobrinhas;
+                this.velocidadeY = velocidadeCobrinhas;
+                this.historia = [{ x: this.x, y: this.y }];
+                this.tamanhoRastro = comprimentoInicialCobrinhas;
+                this.direcaoX = Math.random() < 0.5 ? 1 : -1;
+                this.direcaoY = Math.random() < 0.5 ? 1 : -1;
+                this.mudarDirecaoIntervalo = randomRange(10, 20);
+                this.contadorIntervalo = 0;
+                this.movimentoHorizontal = Math.random() < 0.5;
+                this.ultimaDirecaoX = this.direcaoX;
+                this.ultimaDirecaoY = this.direcaoY;
+                this.acelerada = false;
+                this.corOriginal = this.cor;
+                this.velocidadeOriginalX = this.velocidadeX;
+                this.velocidadeOriginalY = this.velocidadeY;
+                this.tempoAcelerada = 0;
+            }
+
+            atualizar() {
+                // Movimento da cobrinha
+                if (this.movimentoHorizontal) {
+                    this.x += this.velocidadeX * this.direcaoX * tamanhoCelula;
+                } else {
+                    this.y += this.velocidadeY * this.direcaoY * tamanhoCelula;
+                }
+
+                // Lógica para fazer a cobrinha atravessar a tela
+                if (this.x > canvas.width) {
+                    this.x = -this.tamanho;
+                } else if (this.x < -this.tamanho) {
+                    this.x = canvas.width - this.tamanho;
+                }
+                if (this.y > canvas.height) {
+                    this.y = -this.tamanho;
+                } else if (this.y < -this.tamanho) {
+                    this.y = canvas.height - this.tamanho;
+                }
+
+                this.historia.push({ x: this.x, y: this.y });
+                while (this.historia.length > this.tamanhoRastro) {
+                    this.historia.shift();
+                }
+
+                this.contadorIntervalo++;
+                if (this.contadorIntervalo >= this.mudarDirecaoIntervalo) {
+                    // Impede a cobrinha de voltar para trás
+                    if (this.movimentoHorizontal) {
+                        this.direcaoX = Math.random() < 0.5 ? (this.ultimaDirecaoX === 1 ? -1 : 1) : this.ultimaDirecaoX;
+                        this.ultimaDirecaoX = this.direcaoX;
+                    } else {
+                        this.direcaoY = Math.random() < 0.5 ? (this.ultimaDirecaoY === 1 ? -1 : 1) : this.ultimaDirecaoY;
+                        this.ultimaDirecaoY = this.direcaoY;
+                    }
+                    this.movimentoHorizontal = !this.movimentoHorizontal;
+                    this.contadorIntervalo = 0;
+                    this.mudarDirecaoIntervalo = randomRange(10, 20);
+                }
+                if (this.acelerada) {
+                    this.tempoAcelerada++;
+                    if (this.tempoAcelerada >= 300) {
+                        this.desacelerar();
+                        this.tempoAcelerada = 0;
+                    }
+                }
+            }
+
+            desenhar() {
+                // Desenha a cobrinha como uma sequência de quadrados
+                for (let i = 0; i < this.historia.length; i++) {
+                    const ponto = this.historia[i];
+                    ctx.fillStyle = this.cor;
+                    ctx.fillRect(ponto.x, ponto.y, this.tamanho, this.tamanho);
+                }
+            }
+            acelerar() {
+                this.acelerada = true;
+                this.velocidadeX *= 2;
+                this.velocidadeY *= 2;
+                this.cor = '#FF0000';
+            }
+
+            desacelerar() {
+                this.acelerada = false;
+                this.velocidadeX = this.velocidadeOriginalX;
+                this.velocidadeY = this.velocidadeOriginalY;
+                this.cor = this.corOriginal;
+            }
+
+            comerMaca() {
+                this.tamanhoRastro++;
+                this.acelerar();
+                this.tempoAcelerada = 0;
+            }
+        }
+
+        // Inicializa as cobrinhas
+        function initCobrinhas() {
+            for (let i = 0; i < numCobrinhas; i++) {
+                cobrinhas.push(new Cobrinha(undefined, undefined, undefined));
+            }
+        }
+
+        // Função de animação principal
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            for (let cobrinha of cobrinhas) {
+                cobrinha.atualizar();
+                cobrinha.desenhar();
+            }
+            handleCollisions();
+            drawMacas();
+            requestAnimationFrame(animate);
+        }
+
+        // Ajusta o tamanho do canvas quando a janela é redimensionada
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Recalcula o número de células
+            numColunas = Math.floor(canvas.width / tamanhoCelula);
+            numLinhas = Math.floor(canvas.height / tamanhoCelula);
+
+            // Ajusta o tamanho do canvas para ser múltiplo do tamanho da célula
+            canvas.width = numColunas * tamanhoCelula;
+            canvas.height = numLinhas * tamanhoCelula;
+        });
+
+        // --- Lógica das Maçãs ---
+        const macas = [];
+        const maxMacas = 5;
+        let logoDirecaoX = 1;
+        let logoDirecaoY = 1;
+
+        function drawMacas() {
+            macas.forEach(maca => {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(maca.x, maca.y, tamanhoCelula, tamanhoCelula);
+            });
+        }
+
+        function addMaca(x, y) {
+            if (macas.length < maxMacas) {
+                macas.push({ x, y });
+            } else {
+                macas.shift();
+                macas.push({ x, y });
+            }
+        }
+
+        canvas.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+             const x = Math.floor((event.clientX - rect.left) / tamanhoCelula) * tamanhoCelula;
+            const y = Math.floor((event.clientY - rect.top) / tamanhoCelula) * tamanhoCelula;
+            addMaca(x, y);
+        });
+
+        function checkCollision(cobrinha, maca) {
+            // Agora verifica se a cabeça da cobrinha colide com a maçã
+            const headX = cobrinha.historia[cobrinha.historia.length - 1].x;
+            const headY = cobrinha.historia[cobrinha.historia.length - 1].y;
+            return headX === maca.x && headY === maca.y;
+        }
+
+        function handleCollisions() {
+            for (let cobrinha of cobrinhas) {
+                for (let i = 0; i < macas.length; i++) {
+                    if (checkCollision(cobrinha, macas[i])) {
+                        cobrinha.comerMaca();
+                        macas.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Interação com o mouse
+        canvas.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            for (let cobrinha of cobrinhas) {
+                const distancia = Math.sqrt((mouseX - cobrinha.x) ** 2 + (mouseY - cobrinha.y) ** 2);
+                if (distancia < tamanhoCelula * 1.5) {
+                    cobrinha.acelerar();
+                } else {
+                    cobrinha.desacelerar();
+                }
+            }
+        });
+
+        // Interação com a logo
+        logoImg.addEventListener('click', () => {
+            logoDirecaoX *= -1;
+            logoDirecaoY *= -1;
+            logoImg.style.transform = `translate(-50%, -50%) scale(1.1) rotate(${logoDirecaoX * 180}deg)`;
+        });
+
+        function drawGrid() {
+            ctx.strokeStyle = corGrade; // Usa a variável corGrade
+            ctx.lineWidth = 0.5;
+
+            for (let x = 0; x <= canvas.width; x += tamanhoCelula) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            for (let y = 0; y <= canvas.height; y += tamanhoCelula) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        // Inicializa e inicia a animação
+        initCobrinhas();
+        animate();
+
+        setInterval(() => {
+            const x = Math.floor(randomRange(0, numColunas)) * tamanhoCelula;
+            const y = Math.floor(randomRange(0, numLinhas)) * tamanhoCelula;
+            addMaca(x, y);
+        }, 3000);
+
+        // Adiciona um listener de clique ao canvas para alternar a cor da grade
+        canvas.addEventListener('click', () => {
+            corGrade = corGrade === '#FFFFFF' ? '#FFFFFF' : '#e0e0e0'; // Alterna entre cinza e branco
+        });
+    </script>
+</body>
+</html>
