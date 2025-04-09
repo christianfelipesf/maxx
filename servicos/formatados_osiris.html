@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formatador de ONU</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
     <style>
         .popup {
             position: fixed;
@@ -17,6 +19,7 @@
             border-radius: 5px;
             display: none;
         }
+        
         .bottom-button {
             margin-top: 30px;
             text-align: center;
@@ -56,8 +59,18 @@
                 </div>
             </div>
             <div class="control">
-                <button class="button is-primary" onclick="processData()">Formatar</button>
-                <button class="button is-info" onclick="copyOutput()">Copiar</button>
+                <button class="button is-primary" onclick="processData(), copyOutput()">
+                    <i class="fas fa-sync-alt" style="color: blue;"></i> Formatar/Copiar
+                </button>
+                
+                <button class="button is-primary" onclick="processData()">
+                    <i class="fas fa-pencil-alt" style="color: blue;"></i> Formatar
+                </button>
+                
+                <button class="button is-info" onclick="copyOutput()">
+                    <i class="fas fa-copy" style="color: blue;"></i> Copiar
+                </button>
+                
             </div>
             <div class="field mt-4">
                 <label class="label">Resultado</label>
