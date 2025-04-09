@@ -1,249 +1,271 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formatador de ONU</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-
-    <style>
-        .popup {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #4CAF50;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-        }
-
-        .bottom-button {
-            margin-top: 30px;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #history {
-            margin-top: 20px;
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 5px;
-        }
-
-        .history-item {
-            opacity: 0;
-            animation: fadeIn 0.5s forwards;
-            border-bottom: 1px solid #ccc;
-            padding: 5px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s ease;
-        }
-
-        .history-item span {
-            flex-grow: 1;
-            transition: all 0.3s ease;
-        }
-
-        .history-item:hover {
-            background-color: #e6f7ff;
-            transform: translateX(5px);
-        }
-
-        .history-item:hover span {
-            font-weight: bold;
-        }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
-        .copy-btn {
-            margin-left: 15px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .history-item:hover .copy-btn {
-            opacity: 1;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formatador de ONU</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    .popup {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4CAF50;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+    }
+    .bottom-button {
+      margin-top: 30px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #history {
+      margin-top: 20px;
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .history-item {
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+      border-bottom: 1px solid #ccc;
+      padding: 5px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+    .history-item span {
+      flex-grow: 1;
+      transition: all 0.3s ease;
+    }
+    .history-item:hover {
+      background-color: #e6f7ff;
+      transform: translateX(5px);
+    }
+    .history-item:hover span {
+      font-weight: bold;
+    }
+    .history-item:last-child {
+      border-bottom: none;
+    }
+    .copy-btn {
+      margin-left: 15px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .history-item:hover .copy-btn {
+      opacity: 1;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
 <section class="section">
-    <div class="container">
-        <h1 class="title">Formatador de ONU</h1>
-        <div class="field">
-            <label class="label">Insira os dados da ONU</label>
-            <div class="control">
-                <textarea id="inputData" class="textarea" placeholder="Cole os dados aqui..."></textarea>
-            </div>
-        </div>
-        <div class="control">
-            <button class="button is-primary" onclick="processData(); copyOutput(); focusAndSelectOutput();">
-                <i class="fas fa-sync-alt" style="color: blue;"></i> Formatar/Copiar
-            </button>
-            <button class="button is-primary" onclick="processData()">
-                <i class="fas fa-pencil-alt" style="color: blue;"></i> Formatar
-            </button>
-            <button class="button is-info" onclick="copyOutput()">
-                <i class="fas fa-copy" style="color: blue;"></i> Copiar
-            </button>
-        </div>
-        <div class="field mt-4">
-            <label class="label">Resultado</label>
-            <div class="control">
-                <input type="text" id="outputData" class="input" readonly>
-            </div>
-        </div>
-        <div id="popup" class="popup">Copiado para a área de transferência!</div>
-        <div id="history" class="box">
-            <h2 class="subtitle">Histórico</h2>
-            <ul id="historyList"></ul>
-            <button class="button is-danger mt-3" onclick="clearHistory()">Apagar Histórico</button>
-        </div>
-        <div class="bottom-button">
-            <button class="button is-link is-medium" onclick="voltar()">
-                <i class="fas fa-arrow-left"></i> Voltar
-            </button>
-        </div>
+  <div class="container">
+    <h1 class="title">Formatador de ONU</h1>
+    <div class="field">
+      <label class="label">Insira os dados da ONU</label>
+      <div class="control">
+        <textarea id="inputData" class="textarea" placeholder="Cole os dados aqui..."></textarea>
+      </div>
+    </div> <!---
+    <div class="field">
+      <label class="label">Estilo de Animação</label>
+      <div class="select" aria-disabled="true">
+        <select id="animationStyle">
+          <option value="none">Sem efeitos</option>
+          <option value="typewriter">Digitando</option>
+          <option value="fade">Desaparecer e aparecer</option>
+        </select>
+      </div>
+    </div> -->
+    <div class="control mt-2">
+      <button class="button is-info" onclick="copyOutput(); saveOutputToHistory();">
+        <i class="fas fa-copy" style="color: blue;"></i> Copiar
+      </button>
     </div>
+    <div class="field mt-4">
+      <label class="label">Resultado</label>
+      <div class="control">
+        <input type="text" id="outputData" class="input" readonly>
+      </div>
+    </div>
+    <div id="popup" class="popup">Copiado para a área de transferência!</div>
+    <div id="history" class="box">
+      <h2 class="subtitle">Histórico</h2>
+      <ul id="historyList"></ul>
+      <button class="button is-danger mt-3" onclick="clearHistory()">Apagar Histórico</button>
+    </div>
+    <div class="bottom-button">
+      <button class="button is-link is-medium" onclick="voltar()">
+        <i class="fas fa-arrow-left"></i> Voltar
+      </button>
+    </div>
+  </div>
 </section>
 
 <script>
-    function clearHistory() {
-        localStorage.removeItem('onuHistory');
-        renderHistory();
-    }
+  function clearHistory() {
+    localStorage.removeItem('onuHistory');
+    renderHistory();
+  }
 
-    function parseONUData(data) {
-        const lines = data.split('\n');
-        let formattedData = {};
-
-        for (let i = 0; i < lines.length; i++) {
-            let line = lines[i].trim();
-            if (!line) continue;
-
-            if (line.includes('MAC ONU')) {
-                const [mac, olt, slot, pon, status] = lines[i + 1].split('\t');
-                formattedData = { MAC: mac, OLT: olt, SLOT: slot, PON: pon, STATUS: status };
-            } else if (line.includes('ADMINSTATE')) {
-                const headers = line.split('\t');
-                const values = lines[i + 1].split('\t');
-
-                headers.forEach((header, index) => {
-                    formattedData[header.trim()] = values[index].trim();
-                });
-            } else {
-                const [key, value] = line.split(':\t');
-                if (key && value) {
-                    formattedData[key.trim()] = value.trim();
-                }
-            }
+  function parseONUData(data) {
+    const lines = data.split('\n');
+    let formattedData = {};
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim();
+      if (!line) continue;
+      if (line.includes('MAC ONU')) {
+        const nextLine = lines[i + 1]?.trim();
+        if (nextLine && nextLine.includes('\t')) {
+          const [mac, olt, slot, pon, status] = nextLine.split('\t');
+          formattedData = { MAC: mac, OLT: olt, SLOT: slot, PON: pon, STATUS: status };
+          i++;
         }
-        return formattedData;
-    }
-
-    function formatInline(dataObj) {
-        return Object.entries(dataObj)
-            .filter(([_, value]) => value !== undefined && value !== '')
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(', ');
-    }
-
-    function processData() {
-        const timestamp = new Date().toLocaleString();
-        const inputText = document.getElementById('inputData').value;
-        const parsedData = parseONUData(inputText);
-        if (Object.keys(parsedData).length > 0) {
-            const formattedText = `Osiris: ${formatInline(parsedData)} (${timestamp})`;
-            document.getElementById('outputData').value = formattedText;
-            saveToHistory(formattedText);
+      } else if (line.includes('ADMINSTATE')) {
+        const headers = line.split('\t');
+        const values = lines[i + 1]?.split('\t');
+        if (values && values.length === headers.length) {
+          headers.forEach((header, index) => {
+            formattedData[header.trim()] = values[index].trim();
+          });
+          i++;
         }
-    }
-
-    function copyOutput() {
-        const text = document.getElementById('outputData').value;
-        if (!text.trim()) {
-            showError("Nenhum texto formatado recentemente!");
-            return;
+      } else if (line.includes(':\t')) {
+        const [key, value] = line.split(':\t');
+        if (key && value) {
+          formattedData[key.trim()] = value.trim();
         }
-        const timestamp = new Date().toLocaleString();
-        const textWithTimestamp = `${text} (${timestamp})`;
-        navigator.clipboard.writeText(textWithTimestamp).then(() => {
-            showPopup("Copiado para a área de transferência!", "#4CAF50");
-        }).catch(err => console.error('Erro ao copiar:', err));
+      }
+    }
+    return formattedData;
+  }
+
+  function formatInline(dataObj) {
+    return Object.entries(dataObj)
+      .filter(([_, value]) => value !== undefined && value !== '')
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(', ');
+  }
+
+  function animateOutput(text, duration = 3000, style = 'typewriter') {
+    const inputField = document.getElementById('inputData');
+    const outputField = document.getElementById('outputData');
+    const originalInput = inputField.value;
+
+    if (style === 'none') {
+      outputField.value = text;
+      return;
     }
 
-    function focusAndSelectOutput() {
-        const output = document.getElementById('outputData');
-        output.focus();
-        output.select();
+    let maxLength = Math.max(text.length, originalInput.length);
+    let delay = duration / maxLength;
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i <= maxLength) {
+        outputField.value = text.substring(0, i);
+        inputField.value = originalInput.substring(i);
+        i++;
+      } else {
+        clearInterval(interval);
+      }
+    }, delay);
+  }
+
+  function processData() {
+    const inputText = document.getElementById('inputData').value;
+    const parsedData = parseONUData(inputText);
+    if (Object.keys(parsedData).length > 0) {
+      const timestamp = new Date().toLocaleString();
+      const formattedText = `Osiris: ${formatInline(parsedData)} (${timestamp})`;
+      const style = document.getElementById('animationStyle')?.value ?? 'typewriter';
+      animateOutput(formattedText, 100, style);
     }
+  }
 
-    function showPopup(message, color) {
-        const popup = document.getElementById('popup');
-        popup.textContent = message;
-        popup.style.background = color;
-        popup.style.display = 'block';
-        setTimeout(() => { popup.style.display = 'none'; }, 2000);
+  function copyOutput() {
+    const text = document.getElementById('outputData').value;
+    if (!text.trim()) {
+      showError("Nenhum texto formatado recentemente!");
+      return;
     }
+    const timestamp = new Date().toLocaleString();
+    const textWithTimestamp = `${text} (${timestamp})`;
+    navigator.clipboard.writeText(textWithTimestamp).then(() => {
+      showPopup("Copiado para a área de transferência!", "#4CAF50");
+    }).catch(err => console.error('Erro ao copiar:', err));
+  }
 
-    function showError(message) {
-        showPopup(message, "#D9534F");
-    }
+  function showPopup(message, color) {
+    const popup = document.getElementById('popup');
+    popup.textContent = message;
+    popup.style.background = color;
+    popup.style.display = 'block';
+    setTimeout(() => { popup.style.display = 'none'; }, 2000);
+  }
 
-    function saveToHistory(text) {
-        if (!text) return;
-        let history = JSON.parse(localStorage.getItem('onuHistory')) || [];
-        const timestamp = new Date().toLocaleString();
-        history.unshift({ text, timestamp });
-        localStorage.setItem('onuHistory', JSON.stringify(history.slice(0, 10)));
-        renderHistory();
-    }
+  function showError(message) {
+    showPopup(message, "#D9534F");
+  }
 
-    function renderHistory() {
-        const historyList = document.getElementById('historyList');
-        historyList.innerHTML = '';
-        let history = JSON.parse(localStorage.getItem('onuHistory')) || [];
-        history.forEach(item => {
-            const li = document.createElement('li');
-            li.classList.add('history-item');
+  function saveToHistory(text) {
+    if (!text) return;
+    let history = JSON.parse(localStorage.getItem('onuHistory')) || [];
+    const timestamp = new Date().toLocaleString();
+    history.unshift({ text, timestamp });
+    localStorage.setItem('onuHistory', JSON.stringify(history.slice(0, 10)));
+    renderHistory();
+  }
 
-            const span = document.createElement('span');
-            span.textContent = `${item.timestamp} - ${item.text}`;
+  function saveOutputToHistory() {
+    const text = document.getElementById('outputData').value;
+    if (text) saveToHistory(text);
+  }
 
-            const button = document.createElement('button');
-            button.className = 'button is-small is-light copy-btn';
-            button.innerHTML = '<i class="fas fa-copy"></i>';
-            button.onclick = () => {
-                navigator.clipboard.writeText(item.text).then(() => {
-                    showPopup("Copiado do histórico!", "#4CAF50");
-                });
-            };
-
-            li.appendChild(span);
-            li.appendChild(button);
-            historyList.appendChild(li);
+  function renderHistory() {
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = '';
+    let history = JSON.parse(localStorage.getItem('onuHistory')) || [];
+    history.forEach(item => {
+      const li = document.createElement('li');
+      li.classList.add('history-item');
+      const span = document.createElement('span');
+      span.textContent = `${item.timestamp} - ${item.text}`;
+      const button = document.createElement('button');
+      button.className = 'button is-small is-light copy-btn';
+      button.innerHTML = '<i class="fas fa-copy"></i>';
+      button.onclick = () => {
+        navigator.clipboard.writeText(item.text).then(() => {
+          showPopup("Copiado do histórico!", "#4CAF50");
         });
-    }
+      };
+      li.appendChild(span);
+      li.appendChild(button);
+      historyList.appendChild(li);
+    });
+  }
 
-    function voltar() {
-        window.location.href = "../index.html";
-    }
+  function voltar() {
+    window.location.href = "../index.html";
+  }
 
-    document.addEventListener("DOMContentLoaded", renderHistory);
+  document.addEventListener("DOMContentLoaded", () => {
+    renderHistory();
+    document.getElementById('inputData').addEventListener('input', () => {
+      processData();
+    });
+  });
 </script>
 </body>
 </html>
