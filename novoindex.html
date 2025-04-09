@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Serviços</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        /* Seu CSS existente aqui... */
+        .card-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-radius: 10px;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            min-height: 150px; /* Garante altura mínima para consistência */
+            display: flex; /* Para centralizar conteúdo verticalmente */
+            flex-direction: column; /* Para centralizar conteúdo verticalmente */
+            justify-content: center; /* Para centralizar conteúdo verticalmente */
+        }
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .card:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        .columns.is-centered {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px; /* Espaçamento entre os cards */
+        }
+
+        /* --- Cores dos Cards (Exemplo de como aplicar dinamicamente) --- */
+        /* Você pode ter mais classes de cores aqui */
+        .card-color-1 { background-color: #209cee; color: white; }
+        .card-color-2 { background-color: #ffdd57; color: black; }
+        .card-color-3 { background-color: #48c78e; color: white; } /* Verde Bulma */
+        .card-color-4 { background-color: #ff3860; color: white; } /* Vermelho Bulma */
+        .card-color-5 { background-color: #f5f5f5; color: black; } /* Cinza claro Bulma */
+        .card-color-0 { background-color: #363636; color: white; } /* Cinza escuro Bulma */
+
+
+        @media screen and (max-width: 768px) {
+            .columns {
+                flex-direction: column;
+                align-items: center;
+            }
+            .column {
+                width: 100%;
+                max-width: 400px; /* Ou o que preferir */
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container has-text-centered">
+            <h1 class="title">Plataforma Serviços</h1>
+            <div id="cards-container" class="columns is-centered is-multiline">
+                <p id="loading-message">Carregando serviços...</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const owner = 'SEU_USUARIO_GITHUB'; // Substitua pelo seu usuário ou organização
+            const repo = 'NOME_DO_SEU_REPOSITORIO'; // Substitua pelo nome do seu repositório
+            const path = 'servicos'; // O nome da pasta
+            const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+            const container = document.getElementById('cards-container');
+            const loadingMessage = document.getElementById('loading-message');
+
+            // Lista de classes de cores para alternar
+            const colorClasses = [
+                'card-color-1', 'card-color-2', 'card-color-3',
+                'card-color-4', 'card-color-5', 'card-color-0'
+            ];
+            let colorIndex = 0;
+
+            // Função para formatar o nome do arquivo em um título legível
+            function formatTitle(filename) {
+                // Remove a extensão .html
+                let title = filename.replace('.html', '');
+                // Substitui hífens e underscores por espaços
+                title = title.replace(/[-_]/g, ' ');
+                // Capitaliza a primeira letra de cada palavra (opcional, mas melhora a leitura)
+                title = title.split(' ')
+                             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                             .join(' ');
+                return title;
+            }
+
+            async function fetchAndGenerateCards() {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error(`Erro na API do GitHub: ${response.status} ${response.statusText}`);
+                    }
+                    const files = await response.json();
+
+                    // Limpa a mensagem de "Carregando..."
+                    if (loadingMessage) {
+                         loadingMessage.remove();
+                    }
+
+                    // Filtra apenas arquivos .html
+                    const htmlFiles = files.filter(file => file.type === 'file' && file.name.endsWith('.html'));
+
+                    if (htmlFiles.length === 0) {
+                        container.innerHTML = '<p>Nenhum serviço (arquivo .html) encontrado na pasta `servicos`.</p>';
+                        return;
+                    }
+
+                    htmlFiles.forEach((file, index) => {
+                        const cardColumn = document.createElement('div');
+                        cardColumn.className = 'column is-4'; // Define a largura da coluna
+
+                        const cardLink = document.createElement('a');
+                        // Assume que a página principal está na raiz e a pasta servicos está nela
+                        cardLink.href = `${path}/${file.name}`;
+                        cardLink.className = 'card-link';
+
+                        const cardDiv = document.createElement('div');
+                        // Aplica uma classe de cor rotativa
+                        const currentClassColor = colorClasses[colorIndex % colorClasses.length];
+                        cardDiv.className = `card ${currentClassColor}`; // Adiciona a classe de cor
+                        colorIndex++; // Incrementa para a próxima cor
+
+                        const cardContent = document.createElement('div');
+                        cardContent.className = 'card-content';
+
+                        const titleP = document.createElement('p');
+                        titleP.className = 'title is-4'; // Tamanho do título ajustado
+                        titleP.textContent = formatTitle(file.name); // Gera o título a partir do nome do arquivo
+
+                        const subtitleP = document.createElement('p');
+                        subtitleP.className = 'subtitle is-6'; // Tamanho do subtítulo ajustado
+                        subtitleP.textContent = `Acessar ${formatTitle(file.name)}`; // Subtítulo genérico
+
+                        // Monta a estrutura
+                        cardContent.appendChild(titleP);
+                        cardContent.appendChild(subtitleP);
+                        cardDiv.appendChild(cardContent);
+                        cardLink.appendChild(cardDiv);
+                        cardColumn.appendChild(cardLink);
+                        container.appendChild(cardColumn);
+
+                        // Adiciona a classe 'visible' com um pequeno atraso para animação escalonada
+                         setTimeout(() => {
+                             cardDiv.classList.add("visible");
+                         }, index * 50); // Atraso aumenta para cada card
+                    });
+
+                } catch (error) {
+                    console.error('Falha ao buscar ou gerar cards:', error);
+                    if (loadingMessage) {
+                         loadingMessage.remove();
+                    }
+                    container.innerHTML = `<p class="has-text-danger">Erro ao carregar os serviços. Verifique o console para detalhes.</p><p class="is-size-7">${error.message}</p>`;
+                }
+            }
+
+            // Chama a função para buscar e gerar os cards
+            fetchAndGenerateCards();
+        });
+    </script>
+</body>
+</html>
