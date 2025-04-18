@@ -51,8 +51,14 @@
     
     <script>
         function voltar() {
-            window.location.href = "../index.html";
-        }
+                            const hostname = window.location.hostname;
+                            
+                            if (hostname.includes("onrender.com")) {
+                            window.location.href = "indexnewst.html";
+                            } else {
+                            window.location.href = "../index.html";
+                            }
+                        }
     </script>
 </body>
 </html>
