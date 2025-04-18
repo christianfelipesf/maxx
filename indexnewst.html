@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Serviços</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        .card-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-radius: 10px;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .card:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        .columns.is-centered {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container has-text-centered">
+            <h1 class="title">Plataforma Serviços</h1>
+            <div id="cards-container" class="columns is-centered is-multiline">
+                <p id="loading-message">Carregando serviços...</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Nova URL para buscar os arquivos diretamente no servidor
+            const apiUrl = '/servicos';
+            const container = document.getElementById('cards-container');
+            const loadingMessage = document.getElementById('loading-message');
+
+            function formatTitle(filename) {
+                let title = filename.replace('.html', '');
+                title = title.replace(/[-_]/g, ' ');
+                title = title.split(' ')
+                             .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1) : '')
+                             .join(' ');
+                return title;
+            }
+
+            async function fetchAndGenerateCards() {
+                let currentColorIndex = 0;
+
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error(`Erro ao buscar arquivos: ${response.status} ${response.statusText}`);
+                    }
+                    const files = await response.json();
+
+                    if (loadingMessage) { loadingMessage.remove(); }
+
+                    if (files.length === 0) {
+                        container.innerHTML = '<p>Nenhum serviço encontrado.</p>';
+                        return;
+                    }
+
+                    files.forEach((file, loopIndex) => {
+                        const cardColumn = document.createElement('div');
+                        cardColumn.className = 'column is-4';
+
+                        const cardLink = document.createElement('a');
+                        cardLink.href = `/servicos/${file}`;
+                        cardLink.className = 'card-link';
+
+                        const cardDiv = document.createElement('div');
+                        cardDiv.className = 'card';
+
+                        const cardContent = document.createElement('div');
+                        cardContent.className = 'card-content';
+
+                        const titleP = document.createElement('p');
+                        titleP.className = 'title is-4';
+                        titleP.textContent = formatTitle(file);
+
+                        const subtitleP = document.createElement('p');
+                        subtitleP.className = 'subtitle is-6';
+                        subtitleP.textContent = `Acessar ${formatTitle(file)}`;
+
+                        cardContent.appendChild(titleP);
+                        cardContent.appendChild(subtitleP);
+                        cardDiv.appendChild(cardContent);
+                        cardLink.appendChild(cardDiv);
+                        cardColumn.appendChild(cardLink);
+                        container.appendChild(cardColumn);
+
+                        setTimeout(() => {
+                            cardDiv.classList.add("visible");
+                        }, loopIndex * 50);
+                    });
+
+                } catch (error) {
+                    console.error('Falha ao buscar ou gerar cards:', error);
+                    if (loadingMessage) { loadingMessage.remove(); }
+                    container.innerHTML = `<div class="notification is-danger"><p>Erro: ${error.message}</p></div>`;
+                }
+            }
+
+            fetchAndGenerateCards();
+        });
+    </script>
+</body>
+</html>
