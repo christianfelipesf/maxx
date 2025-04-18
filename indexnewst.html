@@ -33,23 +33,48 @@
             transform: scale(1.08);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
         }
+    
+        /* Ajustes para Bulma columns/gap conflict */
         .columns.is-centered {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 20px; /* Mantém seu gap */
+            /* Zera as margens negativas do Bulma que conflitam com gap */
+            margin-left: 0 !important;
+            margin-right: 0 !important;
         }
+    
+        .columns.is-centered > .column {
+            /* Zera o padding padrão do Bulma nas colunas que conflitam com gap */
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+             /* O Bulma .column também tem padding-top/bottom por padrão, melhor zerar também para consistência se usar gap */
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        /* Fim ajustes para Bulma columns/gap conflict */
+    
+    
         /* Ajuste para o título e subtítulo dentro do card */
         .card-content .title,
         .card-content .subtitle {
              margin-bottom: 0.5rem !important; /* Reduzir margem entre título e subtítulo */
+             /* Adicionado para corrigir espaçamento entre letras */
+             letter-spacing: normal;
         }
          .card-content .title {
             margin-top: 0 !important;
-            word-break: break-word; /* Quebra palavras longas */
+             word-break: break-word; /* Quebra palavras longas */
+              /* Adicionado para corrigir espaçamento entre letras no título */
+             letter-spacing: normal;
          }
-
-
+         /* Adicionado para corrigir espaçamento entre letras no subtítulo explicitamente */
+         .card-content .subtitle {
+             letter-spacing: normal;
+         }
+    
+    
         @media screen and (max-width: 768px) {
             .columns {
                 flex-direction: column;
@@ -102,7 +127,7 @@
 
             // --- CONFIGURAÇÃO DO ENDPOINT LOCAL ---
             const servicesEndpoint = '/api/services'; // O endpoint no seu servidor Node.js
-            // servicesDirectory não é mais necessário para o link, pois os arquivos estarão na raiz
+            const servicesDirectory = 'servicos'; // O nome da subpasta onde os arquivos estão
             // --- FIM CONFIGURAÇÃO ---
 
             const container = document.getElementById('cards-container');
@@ -143,8 +168,8 @@
 
 
                     if (htmlFilenames.length === 0) {
-                        // Mensagem atualizada para refletir que está buscando na pasta raiz
-                        container.innerHTML = '<p>Nenhum serviço (arquivo .html) encontrado diretamente nesta pasta.</p>';
+                        // Mensagem atualizada para refletir que está buscando na pasta 'servicos'
+                        container.innerHTML = `<p>Nenhum serviço (arquivo .html) encontrado diretamente na pasta \`${servicesDirectory}\`.</p>`;
                         return;
                     }
 
@@ -154,8 +179,8 @@
                         cardColumn.className = 'column is-4';
 
                         const cardLink = document.createElement('a');
-                        // *** ALTERAÇÃO AQUI: O link aponta diretamente para o nome do arquivo ***
-                        cardLink.href = filename;
+                        // O link aponta para o arquivo dentro da pasta 'servicos'
+                        cardLink.href = `${servicesDirectory}/${filename}`;
                         cardLink.className = 'card-link';
 
                         const cardDiv = document.createElement('div');
@@ -211,3 +236,10 @@
                         </div>`;
                 }
             }
+
+            // Inicia o processo
+            fetchAndGenerateCards();
+        });
+    </script>
+</body>
+</html>

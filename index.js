@@ -5,47 +5,46 @@ const fs = require('fs').promises; // Usamos a versão de promises para assincro
 const app = express();
 const port = 3000;
 
-// Defina o diretório onde os arquivos estáticos estão localizados como a pasta atual
-// Isso torna todos os arquivos na raiz acessíveis diretamente via URL
+// Defina o diretório onde os arquivos estáticos estão localizados como a pasta ATUAL (__dirname)
+// Isso torna indexnewst.html (na raiz) acessível via /
+// E torna os arquivos em 'servicos/' acessíveis via /servicos/...
 app.use(express.static(__dirname));
 
-// Rota para a página inicial (opcional, mas mantém a URL limpa para a raiz)
-// O express.static já serviria indexnewst.html automaticamente se for o único index.*
+// Rota para a página inicial (opcional, garante que a raiz '/' sempre sirva indexnewst.html)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'indexnewst.html')); // Assume que indexnewst.html está na raiz
+    // Assume que indexnewst.html está na raiz
+    res.sendFile(path.join(__dirname, 'indexnewst.html'));
 });
 
-// Endpoint para listar os serviços (arquivos HTML na pasta raiz)
+// Endpoint para listar os serviços (arquivos HTML DENTRO da pasta 'servicos/')
 app.get('/api/services', async (req, res) => {
-    const rootPath = __dirname; // Caminho para a pasta raiz
-    // Lista de arquivos para EXCLUIR da lista de serviços
-    const excludedFiles = ['index.js', 'indexnewst.html', 'package.json', 'package-lock.json', 'node_modules']; // Adicione outros arquivos/pastas conforme necessário
+    // Caminho para a pasta 'servicos' que está diretamente na raiz do projeto
+    const servicesPath = path.join(__dirname, 'servicos');
 
     try {
-        // Lê o conteúdo do diretório raiz
-        const files = await fs.readdir(rootPath);
+        // Lê o conteúdo do diretório 'servicos'
+        const files = await fs.readdir(servicesPath);
 
-        // Filtra:
-        // 1. Apenas arquivos com extensão .html
-        // 2. Exclui arquivos listados em excludedFiles
-        // 3. Garante que seja um arquivo e não um diretório (fs.stat) - Mais robusto
-         const htmlFiles = [];
+        // Filtra apenas:
+        // 1. Aquilo que é um arquivo (não subpasta, etc.)
+        // 2. Aquilo que tem a extensão .html
+        const htmlFiles = [];
          for (const file of files) {
-             const filePath = path.join(rootPath, file);
+             const filePath = path.join(servicesPath, file);
              const stats = await fs.stat(filePath); // Obtém informações do arquivo/diretório
 
-             if (stats.isFile() && file.endsWith('.html') && !excludedFiles.includes(file)) {
+             if (stats.isFile() && file.endsWith('.html')) {
                  htmlFiles.push(file); // Adiciona apenas o nome do arquivo
              }
          }
-
 
         // Retorna a lista de nomes de arquivos HTML como JSON
         res.json(htmlFiles);
 
     } catch (error) {
-        console.error('Erro ao ler a pasta raiz para serviços:', error);
-        // Em caso de erro, retorna um erro 500
+        // Se a pasta 'servicos' não existir, ou houver outro erro de leitura
+        console.error('Erro ao ler a pasta de serviços:', error);
+        // Retorna um erro 500 (Internal Server Error)
         res.status(500).json({ message: 'Erro ao listar os serviços.', error: error.message });
     }
 });
