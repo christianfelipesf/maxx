@@ -6,10 +6,11 @@
     <title>Plataforma Serviços</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <style>
+        /* Estilos CSS */
         .card-link {
             display: block;
             text-decoration: none;
-            color: inherit;
+            color: inherit; /* Herda a cor do texto definida no estilo inline do card */
         }
         .card {
             transition: transform 0.3s, box-shadow 0.3s;
@@ -22,6 +23,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            padding: 1.5rem; /* Adicionado padding para o conteúdo não colar nas bordas */
         }
         .card.visible {
             opacity: 1;
@@ -37,6 +39,27 @@
             flex-wrap: wrap;
             gap: 20px;
         }
+        /* Ajuste para o título e subtítulo dentro do card */
+        .card-content .title,
+        .card-content .subtitle {
+             margin-bottom: 0.5rem !important; /* Reduzir margem entre título e subtítulo */
+        }
+         .card-content .title {
+            margin-top: 0 !important;
+             word-break: break-word; /* Quebra palavras longas */
+         }
+
+
+        @media screen and (max-width: 768px) {
+            .columns {
+                flex-direction: column;
+                align-items: center;
+            }
+            .column {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -51,11 +74,41 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Nova URL para buscar os arquivos diretamente no servidor
-            const apiUrl = '/servicos';
+
+            // --- DEFINIÇÃO DE CORES NO SCRIPT ---
+            const colorPairs = [
+                { bg: '#209cee', text: 'white' },  // Azul claro
+                { bg: '#ffdd57', text: 'black' },  // Amarelo
+                { bg: '#48c78e', text: 'white' },  // Verde menta
+                { bg: '#ff3860', text: 'white' },  // Vermelho rosado
+                { bg: '#7957d5', text: 'white' },  // Roxo vibrante
+                { bg: '#00d1b2', text: 'white' },  // Verde água
+                { bg: '#f14668', text: 'white' },  // Rosa escuro
+                { bg: '#3273dc', text: 'white' },  // Azul médio
+                { bg: '#23d160', text: 'white' },  // Verde neon
+                { bg: '#ff6b6b', text: 'white' },  // Coral
+                { bg: '#ff9f43', text: 'black' },  // Laranja claro
+                { bg: '#6c5ce7', text: 'white' },  // Roxo elétrico
+                { bg: '#00cec9', text: 'black' },  // Turquesa
+                { bg: '#e17055', text: 'white' },  // Laranja queimado
+                { bg: '#0984e3', text: 'white' },  // Azul vívido
+                { bg: '#fd79a8', text: 'white' },  // Rosa chiclete
+                { bg: '#ffeaa7', text: 'black' },  // Amarelo pálido
+                { bg: '#fab1a0', text: 'black' },  // Salmão
+                { bg: '#a29bfe', text: 'black' },  // Lilás claro
+                { bg: '#81ecec', text: 'black' },  // Ciano claro
+            ];
+            // --- FIM DEFINIÇÃO DE CORES ---
+
+            // --- CONFIGURAÇÃO DO ENDPOINT LOCAL ---
+            const servicesEndpoint = '/api/services'; // O endpoint no seu servidor Node.js
+            const servicesDirectory = 'servicos'; // O nome da pasta onde os arquivos estão dentro de 'public'
+            // --- FIM CONFIGURAÇÃO ---
+
             const container = document.getElementById('cards-container');
             const loadingMessage = document.getElementById('loading-message');
 
+            // Função de formatação de título (inalterada)
             function formatTitle(filename) {
                 let title = filename.replace('.html', '');
                 title = title.replace(/[-_]/g, ' ');
@@ -69,41 +122,69 @@
                 let currentColorIndex = 0;
 
                 try {
-                    const response = await fetch(apiUrl);
+                    // Chamando o endpoint local
+                    const response = await fetch(servicesEndpoint);
                     if (!response.ok) {
-                        throw new Error(`Erro ao buscar arquivos: ${response.status} ${response.statusText}`);
+                         let errorMsg = `Erro ao buscar serviços do servidor: ${response.status} ${response.statusText}`;
+                         try { const errorData = await response.json(); errorMsg += ` - ${errorData.message || JSON.stringify(errorData)}`; } catch (e) { /* Ignora */ }
+                         throw new Error(errorMsg);
                     }
-                    const files = await response.json();
+                    // A resposta é diretamente a lista de nomes de arquivos (strings)
+                    const htmlFilenames = await response.json();
+
+                    console.log("Nomes de arquivos HTML recebidos:", htmlFilenames); // DEBUG
 
                     if (loadingMessage) { loadingMessage.remove(); }
 
-                    if (files.length === 0) {
-                        container.innerHTML = '<p>Nenhum serviço encontrado.</p>';
+                    // Verifica se a resposta é um array (como esperado)
+                    if (!Array.isArray(htmlFilenames)) {
+                         throw new Error("Formato inesperado na resposta do servidor. Esperado um array.");
+                    }
+
+
+                    if (htmlFilenames.length === 0) {
+                        container.innerHTML = `<p>Nenhum serviço (arquivo .html) encontrado diretamente na pasta \`${servicesDirectory}\`.</p>`;
                         return;
                     }
 
-                    files.forEach((file, loopIndex) => {
+                    // Itera sobre os nomes dos arquivos HTML encontrados
+                    htmlFilenames.forEach((filename, loopIndex) => {
                         const cardColumn = document.createElement('div');
                         cardColumn.className = 'column is-4';
 
                         const cardLink = document.createElement('a');
-                        cardLink.href = `/servicos/${file}`;
+                        // O link aponta para o arquivo dentro da pasta 'servicos'
+                        cardLink.href = `${servicesDirectory}/${filename}`;
                         cardLink.className = 'card-link';
 
                         const cardDiv = document.createElement('div');
-                        cardDiv.className = 'card';
+                        cardDiv.className = 'card'; // Apenas a classe base
+
+                        // --- APLICAÇÃO SEQUENCIAL DAS CORES ---
+                        const selectedColor = colorPairs[currentColorIndex];
+                        cardDiv.style.backgroundColor = selectedColor.bg;
+                        cardDiv.style.color = selectedColor.text; // Cor do texto herdada
+                        currentColorIndex = (currentColorIndex + 1) % colorPairs.length;
+                        // --- FIM APLICAÇÃO SEQUENCIAL ---
 
                         const cardContent = document.createElement('div');
                         cardContent.className = 'card-content';
 
                         const titleP = document.createElement('p');
                         titleP.className = 'title is-4';
-                        titleP.textContent = formatTitle(file);
+                        // Passamos o nome do arquivo diretamente para formatTitle
+                        titleP.textContent = formatTitle(filename);
+                        titleP.style.color = selectedColor.text; // Aplica a cor do texto ao título
 
                         const subtitleP = document.createElement('p');
                         subtitleP.className = 'subtitle is-6';
-                        subtitleP.textContent = `Acessar ${formatTitle(file)}`;
+                        // Aplica a cor do texto com opacidade ao subtítulo
+                        subtitleP.style.color = `${selectedColor.text}b3`; // Adiciona alpha (~70% opacidade)
+                         // Passamos o nome do arquivo diretamente para formatTitle
+                        subtitleP.textContent = `Acessar ${formatTitle(filename)}`;
 
+
+                        // Monta a estrutura HTML do card
                         cardContent.appendChild(titleP);
                         cardContent.appendChild(subtitleP);
                         cardDiv.appendChild(cardContent);
@@ -111,18 +192,26 @@
                         cardColumn.appendChild(cardLink);
                         container.appendChild(cardColumn);
 
-                        setTimeout(() => {
-                            cardDiv.classList.add("visible");
-                        }, loopIndex * 50);
+                        // Aplica animação de entrada com atraso
+                         setTimeout(() => {
+                             cardDiv.classList.add("visible");
+                         }, loopIndex * 50); // Atraso baseado no índice do loop
                     });
 
                 } catch (error) {
                     console.error('Falha ao buscar ou gerar cards:', error);
                     if (loadingMessage) { loadingMessage.remove(); }
-                    container.innerHTML = `<div class="notification is-danger"><p>Erro: ${error.message}</p></div>`;
+                    // Exibe mensagem de erro na página
+                    container.innerHTML = `
+                        <div class="notification is-danger">
+                            <p><strong>Erro ao carregar os serviços.</strong></p>
+                            <p>Verifique o console (F12) para detalhes técnicos.</p>
+                            <p><small>Mensagem: ${error.message}</small></p>
+                        </div>`;
                 }
             }
 
+            // Inicia o processo
             fetchAndGenerateCards();
         });
     </script>
