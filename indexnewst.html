@@ -46,7 +46,7 @@
         }
          .card-content .title {
             margin-top: 0 !important;
-             word-break: break-word; /* Quebra palavras longas */
+            word-break: break-word; /* Quebra palavras longas */
          }
 
 
@@ -102,7 +102,7 @@
 
             // --- CONFIGURAÇÃO DO ENDPOINT LOCAL ---
             const servicesEndpoint = '/api/services'; // O endpoint no seu servidor Node.js
-            const servicesDirectory = 'servicos'; // O nome da pasta onde os arquivos estão dentro de 'public'
+            // servicesDirectory não é mais necessário para o link, pois os arquivos estarão na raiz
             // --- FIM CONFIGURAÇÃO ---
 
             const container = document.getElementById('cards-container');
@@ -143,7 +143,8 @@
 
 
                     if (htmlFilenames.length === 0) {
-                        container.innerHTML = `<p>Nenhum serviço (arquivo .html) encontrado diretamente na pasta \`${servicesDirectory}\`.</p>`;
+                        // Mensagem atualizada para refletir que está buscando na pasta raiz
+                        container.innerHTML = '<p>Nenhum serviço (arquivo .html) encontrado diretamente nesta pasta.</p>';
                         return;
                     }
 
@@ -153,8 +154,8 @@
                         cardColumn.className = 'column is-4';
 
                         const cardLink = document.createElement('a');
-                        // O link aponta para o arquivo dentro da pasta 'servicos'
-                        cardLink.href = `${servicesDirectory}/${filename}`;
+                        // *** ALTERAÇÃO AQUI: O link aponta diretamente para o nome do arquivo ***
+                        cardLink.href = filename;
                         cardLink.className = 'card-link';
 
                         const cardDiv = document.createElement('div');
@@ -210,10 +211,3 @@
                         </div>`;
                 }
             }
-
-            // Inicia o processo
-            fetchAndGenerateCards();
-        });
-    </script>
-</body>
-</html>
