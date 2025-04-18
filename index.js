@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname, 'public'))); // pasta "public"
 
 // Rota para a página inicial
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'indexnewst.html')); // Altere para o nome correto do seu arquivo
+    res.sendFile(path.join(__dirname, 'indexnewst.html')); // Altere para o nome correto do seu arquivo
 });
 
 // NOVA ROTA: Endpoint para listar os serviços (arquivos HTML)
