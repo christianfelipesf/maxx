@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: meu-site-node
+    name: plataforma
     env: node
     plan: free
     branch: main
