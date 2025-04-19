@@ -16,7 +16,10 @@
         padding: 1rem;
         margin-bottom: 1rem;
         transition: background-color 0.2s ease-in-out;
-      }
+      } /*
+      #products .product-item:hover {
+        background-color: #e0e0e0;
+      }-->*/
     </style>
   </head>
   <body class="p-4">
@@ -58,7 +61,7 @@
           </div>
           <div class="col-md-4">
             <label class="form-label">Dias Corridos</label>
-            <input class="form-control" name="F21" id="F21" placeholder="Dias Corridos" />
+            <input class="form-control" name="F21" placeholder="Dias Corridos" />
           </div>
           <div class="col-md-12">
             <label class="form-label">Motivo das Despesas</label>
@@ -84,59 +87,14 @@
         <hr class="my-4" />
 
         <button type="button" class="btn btn-primary" onclick="exportToExcel()">
+          <i class="bi bi-file-earmark-excel-fill me-2"></i>
           Baixar Planilha Preenchida
-        </button>
-        <button type="button" class="btn btn-danger ms-2" onclick="clearData()">
-          Limpar Dados
         </button>
       </form>
     </div>
 
     <script>
       let productCount = 0;
-
-      function saveToLocalStorage() {
-        const form = document.getElementById("expenseForm");
-        const formData = new FormData(form);
-        const dataObject = {};
-        for (const [key, value] of formData.entries()) {
-          dataObject[key] = value;
-        }
-        localStorage.setItem("formData", JSON.stringify(dataObject));
-        localStorage.setItem("productHTML", document.getElementById("products").innerHTML);
-      }
-
-      function loadFromLocalStorage() {
-        const savedData = localStorage.getItem("formData");
-        const productHTML = localStorage.getItem("productHTML");
-        if (savedData) {
-          const data = JSON.parse(savedData);
-          for (const [key, value] of Object.entries(data)) {
-            const input = document.querySelector(`[name="${key}"]`);
-            if (input) input.value = value;
-          }
-        }
-        if (productHTML) {
-          document.getElementById("products").innerHTML = productHTML;
-          setTimeout(() => {
-            document.querySelectorAll("[id^=product-]").forEach((el, index) => {
-              updateTotal(index);
-            });
-          }, 0);
-        }
-      }
-
-      function clearData() {
-        localStorage.removeItem("formData");
-        localStorage.removeItem("productHTML");
-        document.getElementById("expenseForm").reset();
-        document.getElementById("products").innerHTML = "";
-        const today = new Date().toISOString().split("T")[0];
-        document.getElementById("C21").value = document.getElementById("C21").value || today;
-        document.getElementById("D21").value = document.getElementById("D21").value || today;
-        updateDays();
-        addProduct();
-      }
 
       function addProduct() {
         const container = document.createElement("div");
@@ -161,9 +119,12 @@
               <input class="form-control bg-light" name="produto_total" type="text" placeholder="R$ 0,00" readonly>
             </div>
             <div class="col-md-2">
-              <button type="button" class="btn btn-danger w-100" onclick="removeProduct(${productCount})">Remover</button>
+              <button type="button" class="btn btn-danger w-100" onclick="removeProduct(${productCount})">
+                Remover
+              </button>
             </div>
-          </div>`;
+          </div>
+        `;
         document.getElementById("products").appendChild(container);
         productCount++;
         updateValorTotalProdutos();
@@ -173,18 +134,15 @@
         const element = document.getElementById(`product-${id}`);
         if (element) element.remove();
         updateValorTotalProdutos();
-        saveToLocalStorage();
       }
 
       function updateTotal(id) {
         const row = document.getElementById(`product-${id}`);
-        if (!row) return;
         const quantidade = parseFloat(row.querySelector("[name=produto_quantidade]").value) || 0;
         const valor = parseFloat(row.querySelector("[name=produto_valor]").value) || 0;
         const total = quantidade * valor;
         row.querySelector("[name=produto_total]").value = formatCurrency(total);
         updateValorTotalProdutos();
-        saveToLocalStorage();
       }
 
       function updateValorTotalProdutos() {
@@ -195,7 +153,6 @@
           totalGeral += raw || 0;
         });
         document.getElementById("D61").value = formatCurrency(totalGeral);
-        saveToLocalStorage();
       }
 
       function formatCurrency(value) {
@@ -210,23 +167,6 @@
         return parseFloat(value.replace(/\s|R\$|\./g, '').replace(',', '.')) || 0;
       }
 
-      function calculateDaysBetweenDates(startDate, endDate) {
-        const oneDay = 1000 * 60 * 60 * 24;
-        const diffInTime = new Date(endDate).getTime() - new Date(startDate).getTime();
-        return Math.round(diffInTime / oneDay);
-      }
-
-      document.getElementById("C21").addEventListener("input", () => updateDays());
-      document.getElementById("D21").addEventListener("input", () => updateDays());
-
-      function updateDays() {
-        const start = document.getElementById("C21").value;
-        const end = document.getElementById("D21").value;
-        if (start && end) {
-          const dias = calculateDaysBetweenDates(start, end) + 1;
-          document.getElementById("F21").value = dias;
-        }
-      }
       async function exportToExcel() {
         const form = document.getElementById("expenseForm");
         const data = {};
@@ -298,13 +238,12 @@
           alert("Erro ao exportar: " + error.message);
         }
       }
+
       window.addEventListener("DOMContentLoaded", () => {
-        loadFromLocalStorage();
         const today = new Date().toISOString().split("T")[0];
-        document.getElementById("C21").value = document.getElementById("C21").value || today;
-        document.getElementById("D21").value = document.getElementById("D21").value || today;
-        updateDays();
-        if (!document.querySelector("#products .product-item")) addProduct();
+        document.getElementById("C21").value = today;
+        document.getElementById("D21").value = today;
+        addProduct();
       });
     </script>
   </body>
