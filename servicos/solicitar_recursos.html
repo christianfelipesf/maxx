@@ -12,7 +12,7 @@
       <form id="expenseForm">
         <div class="row g-3">
           <div class="col-md-4">
-            <label class="form-label">Nome</label>
+            <label class="form-label">Nome Completo</label>
             <input class="form-control" name="C9" placeholder="Nome" />
           </div>
           <div class="col-md-4">
@@ -157,19 +157,27 @@
       data[input.name] = input.value;
     });
 
+    let pix = ""
+    if(data.C15){
+      pix = `PIX(${data.C15})`
+    }
     const mapped = {
       C9: data.C9,
       C13: data.C13,
       D15: data.D15,
       E15: data.E15,
       F15: data.F15,
-      C15: `PIX(${data.C15})`,
+      C15: pix, //PIX
       C21: data.C21,
       D21: data.D21,
       F21: data.F21,
       C23: data.C23,
       D61: parseCurrency(data.D61), // envia como número!
     };
+    console.log(data.C15)
+    if(data.C15){
+      data.C15 = `PIX(${data.C15})`
+    }
 
     mapped.NOME = mapped.C9;
     mapped.FONE = mapped.C13;
@@ -247,6 +255,7 @@
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("C21").value = today;
     document.getElementById("D21").value = today;
+    addProduct()
   });
 </script>
 
