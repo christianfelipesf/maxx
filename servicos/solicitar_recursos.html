@@ -1,10 +1,26 @@
 <!doctype html>
 <html lang="pt-br">
   <head>
+    <link rel="icon" type="image/x-icon" href="people.ico">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Formulário de Despesas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+      body {
+        background-color: #f8f9fa;
+      }
+      #products .product-item {
+        background-color: #f0f0f0;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: background-color 0.2s ease-in-out;
+      } /*
+      #products .product-item:hover {
+        background-color: #e0e0e0;
+      }-->*/
+    </style>
   </head>
   <body class="p-4">
     <div class="container">
@@ -71,194 +87,164 @@
         <hr class="my-4" />
 
         <button type="button" class="btn btn-primary" onclick="exportToExcel()">
+          <i class="bi bi-file-earmark-excel-fill me-2"></i>
           Baixar Planilha Preenchida
         </button>
-        
       </form>
     </div>
 
-    <!-- Mantenha o mesmo HTML acima, substitua apenas o script abaixo -->
-<script>
-  let productCount = 0;
+    <script>
+      let productCount = 0;
 
-  function addProduct() {
-    const container = document.createElement("div");
-    container.className = "row g-2 align-items-end mb-2";
-    container.id = `product-${productCount}`;
-    container.innerHTML = `
-      <div class="col-md-3">
-        <label class="form-label">Nome do Produto</label>
-        <input class="form-control" name="produto_nome" placeholder="Nome do Produto">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Quantidade</label>
-        <input class="form-control" name="produto_quantidade" type="number" placeholder="Quantidade" oninput="updateTotal(${productCount})">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Valor</label>
-        <input class="form-control" name="produto_valor" type="number" step="0.01" placeholder="Valor" oninput="updateTotal(${productCount})">
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">Valor Total</label>
-        <input class="form-control bg-light" name="produto_total" type="text" placeholder="R$ 0,00" readonly>
-      </div>
-      <div class="col-md-2">
-        <button type="button" class="btn btn-danger" onclick="removeProduct(${productCount})">Remover</button>
-      </div>
-    `;
-    document.getElementById("products").appendChild(container);
-    productCount++;
-    updateValorTotalProdutos();
-  }
+      function addProduct() {
+        const container = document.createElement("div");
+        container.className = "product-item";
+        container.id = `product-${productCount}`;
+        container.innerHTML = `
+          <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Nome do Produto</label>
+              <input class="form-control" name="produto_nome" placeholder="Nome do Produto">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Quantidade</label>
+              <input class="form-control" name="produto_quantidade" type="number" placeholder="Quantidade" oninput="updateTotal(${productCount})">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Valor</label>
+              <input class="form-control" name="produto_valor" type="number" step="0.01" placeholder="Valor" oninput="updateTotal(${productCount})">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Valor Total</label>
+              <input class="form-control bg-light" name="produto_total" type="text" placeholder="R$ 0,00" readonly>
+            </div>
+            <div class="col-md-2">
+              <button type="button" class="btn btn-danger w-100" onclick="removeProduct(${productCount})">
+                Remover
+              </button>
+            </div>
+          </div>
+        `;
+        document.getElementById("products").appendChild(container);
+        productCount++;
+        updateValorTotalProdutos();
+      }
 
-  function removeProduct(id) {
-    const element = document.getElementById(`product-${id}`);
-    if (element) element.remove();
-    updateValorTotalProdutos();
-  }
+      function removeProduct(id) {
+        const element = document.getElementById(`product-${id}`);
+        if (element) element.remove();
+        updateValorTotalProdutos();
+      }
 
-  function updateTotal(id) {
-    const row = document.getElementById(`product-${id}`);
-    const quantidade = parseFloat(row.querySelector("[name=produto_quantidade]").value) || 0;
-    const valor = parseFloat(row.querySelector("[name=produto_valor]").value) || 0;
-    const total = quantidade * valor;
-    row.querySelector("[name=produto_total]").value = formatCurrency(total);
-    updateValorTotalProdutos();
-  }
+      function updateTotal(id) {
+        const row = document.getElementById(`product-${id}`);
+        const quantidade = parseFloat(row.querySelector("[name=produto_quantidade]").value) || 0;
+        const valor = parseFloat(row.querySelector("[name=produto_valor]").value) || 0;
+        const total = quantidade * valor;
+        row.querySelector("[name=produto_total]").value = formatCurrency(total);
+        updateValorTotalProdutos();
+      }
 
-  function updateValorTotalProdutos() {
-    let totalGeral = 0;
-    const totals = document.querySelectorAll("[name=produto_total]");
-    totals.forEach((input) => {
-      const raw = parseCurrency(input.value);
-      totalGeral += raw || 0;
-    });
-    document.getElementById("D61").value = formatCurrency(totalGeral);
-  }
+      function updateValorTotalProdutos() {
+        let totalGeral = 0;
+        const totals = document.querySelectorAll("[name=produto_total]");
+        totals.forEach((input) => {
+          const raw = parseCurrency(input.value);
+          totalGeral += raw || 0;
+        });
+        document.getElementById("D61").value = formatCurrency(totalGeral);
+      }
 
-  function formatCurrency(value) {
-    return value.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    });
-  }
+      function formatCurrency(value) {
+        return value.toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        });
+      }
 
-  function parseCurrency(value) {
-    // Transforma "R$ 1.234,56" em 1234.56
-    if (!value) return 0;
-    return parseFloat(value.replace(/\s|R\$|\./g, '').replace(',', '.')) || 0;
-  }
+      function parseCurrency(value) {
+        if (!value) return 0;
+        return parseFloat(value.replace(/\s|R\$|\./g, '').replace(',', '.')) || 0;
+      }
 
-  async function exportToExcel() {
-    const form = document.getElementById("expenseForm");
-    const data = {};
-    const inputs = form.querySelectorAll("input[name]:not([name^=produto_])");
-    inputs.forEach((input) => {
-      data[input.name] = input.value;
-    });
+      async function exportToExcel() {
+        const form = document.getElementById("expenseForm");
+        const data = {};
+        const inputs = form.querySelectorAll("input[name]:not([name^=produto_])");
+        inputs.forEach((input) => {
+          data[input.name] = input.value;
+        });
 
-    let pix = ""
-    if(data.C15){
-      pix = `PIX(${data.C15})`
-    }
-    const mapped = {
-      C9: data.C9,
-      C13: data.C13,
-      D15: data.D15,
-      E15: data.E15,
-      F15: data.F15,
-      C15: pix, //PIX
-      C21: data.C21,
-      D21: data.D21,
-      F21: data.F21,
-      C23: data.C23,
-      D61: parseCurrency(data.D61), // envia como número!
-    };
-    console.log(data.C15)
-    if(data.C15){
-      data.C15 = `PIX(${data.C15})`
-    }
+        let pix = ""
+        if(data.C15){
+          pix = `PIX(${data.C15})`
+        }
+        const mapped = {
+          C9: data.C9,
+          C13: data.C13,
+          D15: data.D15,
+          E15: data.E15,
+          F15: data.F15,
+          C15: pix,
+          C21: data.C21,
+          D21: data.D21,
+          F21: data.F21,
+          C23: data.C23,
+          D61: parseCurrency(data.D61),
+        };
 
-    mapped.NOME = mapped.C9;
-    mapped.FONE = mapped.C13;
-    mapped.BANCO = mapped.D15;
-    mapped.AGENCIA = mapped.E15;
-    mapped.CONTA_CORRENTE = mapped.F15;
-    mapped.CODIGO_PIX = mapped.C15;
-    mapped.DATA_INICIAL = mapped.C21;
-    mapped.DATA_FINAL = mapped.D21;
-    mapped.DIAS_CORRIDOS = mapped.F21;
-    mapped.MOTIVO_DAS_DESPESAS = mapped.C23;
-    mapped.DATA = mapped.C21;
-    mapped.NOME_SOLICITANTE = mapped.C9;
-    mapped.VALOR_TOTAL = mapped.D61;
+        mapped.NOME = mapped.C9;
+        mapped.FONE = mapped.C13;
+        mapped.BANCO = mapped.D15;
+        mapped.AGENCIA = mapped.E15;
+        mapped.CONTA_CORRENTE = mapped.F15;
+        mapped.CODIGO_PIX = mapped.C15;
+        mapped.DATA_INICIAL = mapped.C21;
+        mapped.DATA_FINAL = mapped.D21;
+        mapped.DIAS_CORRIDOS = mapped.F21;
+        mapped.MOTIVO_DAS_DESPESAS = mapped.C23;
+        mapped.DATA = mapped.C21;
+        mapped.NOME_SOLICITANTE = mapped.C9;
+        mapped.VALOR_TOTAL = mapped.D61;
 
-    mapped.produtos = [];
-    const productRows = document.querySelectorAll("#products > div");
-    productRows.forEach((row) => {
-      mapped.produtos.push({
-        nome: row.querySelector("[name=produto_nome]").value,
-        quantidade: row.querySelector("[name=produto_quantidade]").value,
-        valor: row.querySelector("[name=produto_valor]").value,
-        total: parseCurrency(row.querySelector("[name=produto_total]").value),
+        mapped.produtos = [];
+        const productRows = document.querySelectorAll("#products > div");
+        productRows.forEach((row) => {
+          mapped.produtos.push({
+            nome: row.querySelector("[name=produto_nome]").value,
+            quantidade: row.querySelector("[name=produto_quantidade]").value,
+            valor: row.querySelector("[name=produto_valor]").value,
+            total: parseCurrency(row.querySelector("[name=produto_total]").value),
+          });
+        });
+
+        try {
+          const response = await fetch("https://maxx-isn6.onrender.com/gerar-planilha", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(mapped),
+          });
+
+          if (!response.ok) throw new Error("Erro ao gerar planilha");
+
+          const blob = await response.blob();
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "Formulario_Preenchido.xlsx";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (error) {
+          alert("Erro ao exportar: " + error.message);
+        }
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("C21").value = today;
+        document.getElementById("D21").value = today;
+        addProduct();
       });
-    });
-
-    try {
-      const response = await fetch("https://maxx-isn6.onrender.com/gerar-planilha", {
-      //const response = await fetch("http://localhost:3000/gerar-planilha", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(mapped),
-      });
-
-      if (!response.ok) throw new Error("Erro ao gerar planilha");
-
-      const blob = await response.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "Formulario_Preenchido.xlsx";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      alert("Erro ao exportar: " + error.message);
-    }
-  }
-  async function exportToPdfkit() { // New function for PDFKit
-    const dataToSend = collectFormData();
-
-    try {
-      const response = await fetch("http://localhost:3000/gerar-pdfkit", { // Call the new endpoint
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dataToSend),
-      });
-
-      if (!response.ok) throw new Error("Erro ao gerar PDF");
-
-      const blob = await response.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "Formulario_Preenchido.pdf"; // Set PDF filename
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      alert("Erro ao exportar para PDF: " + error.message);
-    }
-  }
-
-  function printForm() { // Function to trigger browser print
-    window.print();
-  }
-  window.addEventListener("DOMContentLoaded", () => {
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("C21").value = today;
-    document.getElementById("D21").value = today;
-    addProduct()
-  });
-</script>
-
+    </script>
   </body>
 </html>
