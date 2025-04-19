@@ -11,7 +11,9 @@ const port = 3000;
 // *** E configure qual arquivo usar como índice padrão para diretórios ***
 app.use(express.static(__dirname, { index: 'indexnewst.html' }));
 app.use(cors());
-
+app.use(cors({
+  origin: "https://maxx-isn6.onrender.com",
+}));
 // *** Remova a rota explícita para '/', pois express.static agora lida com isso ***
 // app.get('/', (req, res) => {
 //     res.sendFile(path.join(__dirname, 'indexnewst.html'));
