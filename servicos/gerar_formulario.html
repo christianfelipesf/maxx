@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formulário de Despesas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  </head>
+  <body class="p-4">
+    <div class="container">
+      <h2 class="mb-4">Formulário de Despesas</h2>
+      <form id="expenseForm">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Nome</label>
+            <input class="form-control" name="C9" placeholder="Nome" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Fone</label>
+            <input class="form-control" name="C13" type="tel" placeholder="(99) 99999-9999" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Banco</label>
+            <input class="form-control" name="D15" placeholder="Banco" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Agência</label>
+            <input class="form-control" name="E15" placeholder="Agência" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Conta Corrente</label>
+            <input class="form-control" name="F15" placeholder="Conta Corrente" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Código Pix</label>
+            <input class="form-control" name="C15" placeholder="Cole o código Pix aqui" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Data Inicial</label>
+            <input class="form-control" name="C21" id="C21" type="date" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Data Final</label>
+            <input class="form-control" name="D21" id="D21" type="date" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Dias Corridos</label>
+            <input class="form-control" name="F21" placeholder="Dias Corridos" />
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Motivo das Despesas</label>
+            <input class="form-control" name="C23" placeholder="Motivo das Despesas" />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <h5>Produtos</h5>
+        <div id="products"></div>
+        <button type="button" class="btn btn-secondary my-2" onclick="addProduct()">
+          Adicionar Produto
+        </button>
+
+        <div class="row mt-3">
+          <div class="col-md-4 ms-auto">
+            <label class="form-label fw-bold">Valor Total de Todos os Produtos</label>
+            <input class="form-control bg-light" id="D61" name="D61" readonly />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <button type="button" class="btn btn-primary" onclick="exportToExcel()">
+          Baixar Planilha Preenchida
+        </button>
+        
+      </form>
+    </div>
+
+    <!-- Mantenha o mesmo HTML acima, substitua apenas o script abaixo -->
+<script>
+  let productCount = 0;
+
+  function addProduct() {
+    const container = document.createElement("div");
+    container.className = "row g-2 align-items-end mb-2";
+    container.id = `product-${productCount}`;
+    container.innerHTML = `
+      <div class="col-md-3">
+        <label class="form-label">Nome do Produto</label>
+        <input class="form-control" name="produto_nome" placeholder="Nome do Produto">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Quantidade</label>
+        <input class="form-control" name="produto_quantidade" type="number" placeholder="Quantidade" oninput="updateTotal(${productCount})">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Valor</label>
+        <input class="form-control" name="produto_valor" type="number" step="0.01" placeholder="Valor" oninput="updateTotal(${productCount})">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Valor Total</label>
+        <input class="form-control bg-light" name="produto_total" type="text" placeholder="R$ 0,00" readonly>
+      </div>
+      <div class="col-md-2">
+        <button type="button" class="btn btn-danger" onclick="removeProduct(${productCount})">Remover</button>
+      </div>
+    `;
+    document.getElementById("products").appendChild(container);
+    productCount++;
+    updateValorTotalProdutos();
+  }
+
+  function removeProduct(id) {
+    const element = document.getElementById(`product-${id}`);
+    if (element) element.remove();
+    updateValorTotalProdutos();
+  }
+
+  function updateTotal(id) {
+    const row = document.getElementById(`product-${id}`);
+    const quantidade = parseFloat(row.querySelector("[name=produto_quantidade]").value) || 0;
+    const valor = parseFloat(row.querySelector("[name=produto_valor]").value) || 0;
+    const total = quantidade * valor;
+    row.querySelector("[name=produto_total]").value = formatCurrency(total);
+    updateValorTotalProdutos();
+  }
+
+  function updateValorTotalProdutos() {
+    let totalGeral = 0;
+    const totals = document.querySelectorAll("[name=produto_total]");
+    totals.forEach((input) => {
+      const raw = parseCurrency(input.value);
+      totalGeral += raw || 0;
+    });
+    document.getElementById("D61").value = formatCurrency(totalGeral);
+  }
+
+  function formatCurrency(value) {
+    return value.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  }
+
+  function parseCurrency(value) {
+    // Transforma "R$ 1.234,56" em 1234.56
+    if (!value) return 0;
+    return parseFloat(value.replace(/\s|R\$|\./g, '').replace(',', '.')) || 0;
+  }
+
+  async function exportToExcel() {
+    const form = document.getElementById("expenseForm");
+    const data = {};
+    const inputs = form.querySelectorAll("input[name]:not([name^=produto_])");
+    inputs.forEach((input) => {
+      data[input.name] = input.value;
+    });
+
+    const mapped = {
+      C9: data.C9,
+      C13: data.C13,
+      D15: data.D15,
+      E15: data.E15,
+      F15: data.F15,
+      C15: `PIX(${data.C15})`,
+      C21: data.C21,
+      D21: data.D21,
+      F21: data.F21,
+      C23: data.C23,
+      D61: parseCurrency(data.D61), // envia como número!
+    };
+
+    mapped.NOME = mapped.C9;
+    mapped.FONE = mapped.C13;
+    mapped.BANCO = mapped.D15;
+    mapped.AGENCIA = mapped.E15;
+    mapped.CONTA_CORRENTE = mapped.F15;
+    mapped.CODIGO_PIX = mapped.C15;
+    mapped.DATA_INICIAL = mapped.C21;
+    mapped.DATA_FINAL = mapped.D21;
+    mapped.DIAS_CORRIDOS = mapped.F21;
+    mapped.MOTIVO_DAS_DESPESAS = mapped.C23;
+    mapped.DATA = mapped.C21;
+    mapped.NOME_SOLICITANTE = mapped.C9;
+    mapped.VALOR_TOTAL = mapped.D61;
+
+    mapped.produtos = [];
+    const productRows = document.querySelectorAll("#products > div");
+    productRows.forEach((row) => {
+      mapped.produtos.push({
+        nome: row.querySelector("[name=produto_nome]").value,
+        quantidade: row.querySelector("[name=produto_quantidade]").value,
+        valor: row.querySelector("[name=produto_valor]").value,
+        total: parseCurrency(row.querySelector("[name=produto_total]").value),
+      });
+    });
+
+    try {
+      const response = await fetch("http://localhost:3000/gerar-planilha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(mapped),
+      });
+
+      if (!response.ok) throw new Error("Erro ao gerar planilha");
+
+      const blob = await response.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "Formulario_Preenchido.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      alert("Erro ao exportar: " + error.message);
+    }
+  }
+  async function exportToPdfkit() { // New function for PDFKit
+    const dataToSend = collectFormData();
+
+    try {
+      const response = await fetch("http://localhost:3000/gerar-pdfkit", { // Call the new endpoint
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dataToSend),
+      });
+
+      if (!response.ok) throw new Error("Erro ao gerar PDF");
+
+      const blob = await response.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "Formulario_Preenchido.pdf"; // Set PDF filename
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      alert("Erro ao exportar para PDF: " + error.message);
+    }
+  }
+
+  function printForm() { // Function to trigger browser print
+    window.print();
+  }
+  window.addEventListener("DOMContentLoaded", () => {
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("C21").value = today;
+    document.getElementById("D21").value = today;
+  });
+</script>
+
+  </body>
+</html>
