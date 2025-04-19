@@ -10,6 +10,7 @@ const port = 3000;
 // Defina o diretório onde os arquivos estáticos estão localizados como a pasta ATUAL (__dirname)
 // *** E configure qual arquivo usar como índice padrão para diretórios ***
 app.use(express.static(__dirname, { index: 'indexnewst.html' }));
+app.use(cors());
 
 // *** Remova a rota explícita para '/', pois express.static agora lida com isso ***
 // app.get('/', (req, res) => {
