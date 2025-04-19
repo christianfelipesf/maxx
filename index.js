@@ -11,9 +11,7 @@ const port = 3000;
 app.use(express.json());
 
 // Middleware CORS — permite requisições do domínio do frontend
-app.use(cors({
-  origin: "https://maxx-isn6.onrender.com", // ou "*" se quiser permitir tudo durante testes
-}));
+app.use(cors({ origin: "*" }));
 
 // Servir arquivos estáticos
 app.use(express.static(__dirname, { index: 'indexnewst.html' }));
