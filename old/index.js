@@ -42,18 +42,33 @@ app.get('/api/services', async (req, res) => {
 
 // Rota POST para gerar planilha
 app.post("/gerar-planilha", async (req, res) => {
+  const formulas = {
+    C9: "NOME",
+    C13: "FONE",
+    D15: "BANCO",
+    E15: "AGENCIA",
+    F15: "CONTA_CORRENTE",
+    C15: "CODIGO_PIX",
+    C21: "DATA_INICIAL",
+    D21: "DATA_FINAL",
+    F21: "DIAS_CORRIDOS",
+    C23: "MOTIVO_DAS_DESPESAS",
+    D61: "VALOR_TOTAL",
+    C70: "NOME_SOLICITANTE",
+    D70: "DATA",
+  };
+
   const dados = req.body;
   console.log (dados)
   try {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile("formulario_limpo.xlsx");
     const worksheet = workbook.worksheets[0];
-    for (let cell in dados) {
-      const valor = dados[cell];
-      // Só continua se o valor for string ou número
-      if (typeof valor === 'string' || typeof valor === 'number') {
-        //console.log(`Escrevendo em ${cell}: ${valor}`);
-        worksheet.getCell(cell).value = valor;
+
+    for (const cell in formulas) {
+      const campo = formulas[cell];
+      if (dados[campo]) {
+        worksheet.getCell(cell).value = dados[campo];
       }
     }
 
@@ -65,14 +80,11 @@ app.post("/gerar-planilha", async (req, res) => {
       row++;
     });
 
-    const filename = `adiantamento-${Date.now()}.xlsx`;
+    const filename = `despesas-${Date.now()}.xlsx`;
     const filepath = path.join(__dirname, filename);
     await workbook.xlsx.writeFile(filepath);
-    /*
+
     res.download(filepath, "Formulario_Preenchido.xlsx", () => {
-      fs.unlink(filepath); // Apaga o arquivo após download
-    });*/
-    res.download(filepath, filename, () => {
       fs.unlink(filepath); // Apaga o arquivo após download
     });
 

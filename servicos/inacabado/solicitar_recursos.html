@@ -240,20 +240,32 @@
           pix = `PIX(${data.C15})`
         }
         const mapped = {
-          C9: data.C9, // nome
-          C13: data.C13, //fone
-          D15: data.D15, //banco
-          E15: data.E15, //agencia
-          F15: data.F15, // CONTA_CORRENTE
-          C15: pix, // codigo pix
-          C21: data.C21, // DATA_INICIAL
-          D21: data.D21, // DATA_FINAL
-          F21: data.F21, // DIAS_CORRIDOS
-          C23: data.C23, // MOTIVO_DAS_DESPESAS:
-          D61: parseCurrency(data.D61), // VALOR_TOTAL
-          C70: data.C9,
-          D70: data.C21
+          C9: data.C9,
+          C13: data.C13,
+          D15: data.D15,
+          E15: data.E15,
+          F15: data.F15,
+          C15: pix,
+          C21: data.C21,
+          D21: data.D21,
+          F21: data.F21,
+          C23: data.C23,
+          D61: parseCurrency(data.D61),
         };
+
+        mapped.NOME = mapped.C9;
+        mapped.FONE = mapped.C13;
+        mapped.BANCO = mapped.D15;
+        mapped.AGENCIA = mapped.E15;
+        mapped.CONTA_CORRENTE = mapped.F15;
+        mapped.CODIGO_PIX = mapped.C15;
+        mapped.DATA_INICIAL = mapped.C21;
+        mapped.DATA_FINAL = mapped.D21;
+        mapped.DIAS_CORRIDOS = mapped.F21;
+        mapped.MOTIVO_DAS_DESPESAS = mapped.C23;
+        mapped.DATA = mapped.C21;
+        mapped.NOME_SOLICITANTE = mapped.C9;
+        mapped.VALOR_TOTAL = mapped.D61;
 
         mapped.produtos = [];
         const productRows = document.querySelectorAll("#products > div");
