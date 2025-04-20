@@ -41,7 +41,7 @@
         border-color: #28a745 !important;
         box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25) !important;
       }
-
+      
       /* Modal styles */
       .modal-overlay {
         position: fixed;
@@ -89,6 +89,8 @@
       #D61 {
           background-color: #e9ecef; /* Bootstrap's disabled/readonly color */
           opacity: 1; /* Ensure full opacity */
+          color: #ffffffee;
+          font-weight: bold;
       }
     </style>
   </head>
@@ -150,7 +152,7 @@
         <div class="row mt-3">
           <div class="col-md-4 ms-auto">
             <label class="form-label fw-bold">Valor Total de Todos os Produtos</label>
-            <input class="form-control bg-light" id="D61" name="D61" readonly required />
+            <input class="form-control bg-secondary" id="D61" name="D61" readonly required />
           </div>
         </div>
 
@@ -465,7 +467,7 @@
             clearInterval(countdownInterval);
             countdownElement.textContent = "Iniciando download...";
             startDownload(); // Start the download after countdown
-            // closeModal(); // Close modal after initiating download - removed to keep modal open briefly
+            closeModal(); // Close modal after initiating download - removed to keep modal open briefly
           }
         }, 1000);
       }
