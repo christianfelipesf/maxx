@@ -111,7 +111,7 @@
   </head>
   <body class="p-4">
     <div class="container">
-      <h2 class="mb-4">Formulário de Despesas</h2>
+      <h2 class="mb-4">Formulário de Prestações</h2>
       <form id="expenseForm">
         <div class="row g-3">
           <div class="col-md-4">
@@ -435,7 +435,6 @@
 
         // Update both total fields (D61 and D65)
         document.getElementById("D61").value = formatCurrency(totalGeral);
-        document.getElementById("D65").value = formatCurrency(totalGeral);
 
         // Recalculate the difference whenever the total product value changes
         calculateDifference();
