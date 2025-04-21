@@ -512,7 +512,7 @@
           });
 
           // Proceed with the actual download logic
-            exportToExcel(mapped);
+          exportToExcel(mapped, "formulario_limpo.xlsx");
       }
       const getFormattedDate = () => {
       const now = new Date();
@@ -530,7 +530,7 @@
       return `${yyyy}-${mesAbrev}-${dd}-${hh}-${min}-${ss}`;
     };
 
-      async function exportToExcel(dataToExport) {
+      async function exportToExcel(dataToExport, nomeArquivo) {
         try {
           const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
@@ -540,12 +540,18 @@
 
           console.log(url);
 
+          // Inclui o nome do arquivo no corpo da requisição
+          const requestBody = {
+            ...dataToExport,
+            nomeArquivo: nomeArquivo, // Envia o nome do arquivo
+          };
+
           const response = await fetch(url, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(dataToExport),
+            body: JSON.stringify(requestBody),
           });
 
           if (!response.ok) throw new Error("Erro ao gerar planilha");

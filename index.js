@@ -49,19 +49,29 @@ const generateFilename = () => {
 
 app.post("/gerar-planilha", async (req, res) => {
   const dados = req.body;
+  const nomeArquivo = dados.nomeArquivo; // Recebe o nome do arquivo do frontend
   console.log(dados);
 
   try {
+    if (!nomeArquivo) {
+      return res.status(400).json({ message: "O nome do arquivo não foi enviado." });
+    }
+
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile("formulario_limpo.xlsx");
+    await workbook.xlsx.readFile(nomeArquivo); // Usa o nome do arquivo enviado
     const worksheet = workbook.worksheets[0];
 
     for (let cell in dados) {
       const valor = dados[cell];
-      if (typeof valor === 'string' || typeof valor === 'number') {
-        worksheet.getCell(cell).value = valor;
+      console.log(`Transferindo Célula ${cell}`);
+      
+      // Verifica se a célula existe antes de atribuir o valor
+      if (cell.length == 3 && (typeof valor === 'string' || typeof valor === 'number')) {
+        const celula = worksheet.getCell(cell);
+        celula.value = valor;
       }
     }
+    
 
     let row = 27;
     dados.produtos.forEach((produto) => {
@@ -88,6 +98,7 @@ app.post("/gerar-planilha", async (req, res) => {
     res.status(500).json({ message: "Erro ao gerar a planilha.", error: error.message });
   }
 });
+
 
 
 // Inicia o servidor
