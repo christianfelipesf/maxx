@@ -86,11 +86,10 @@
       }
 
       /* Style for readonly total input */
-      #D61 {
-          background-color: #e9ecef; /* Bootstrap's disabled/readonly color */
-          opacity: 1; /* Ensure full opacity */
-          color: #ffffffee;
-          font-weight: bold;
+      
+      #D61 { 
+         background-color: #e9ecef;
+         opacity: 1;
       }
     </style>
   </head>
@@ -152,7 +151,7 @@
         <div class="row mt-3">
           <div class="col-md-4 ms-auto">
             <label class="form-label fw-bold">Valor Total de Todos os Produtos</label>
-            <input class="form-control bg-secondary" id="D61" name="D61" readonly required />
+            <input class="form-control  readonly-total rounded" id="D61" name="D61" readonly required />
           </div>
         </div>
 
