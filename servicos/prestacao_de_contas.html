@@ -687,7 +687,7 @@
 
 
           // Proceed with the actual download logic
-          exportToExcel(mapped, "prestacao_limpo.xlsx");
+          exportToExcel(mapped, "prestacao.xlsx");
       }
 
       async function exportToExcel(dataToExport, nomeArquivo) {
@@ -724,7 +724,7 @@
           // Cria o link para download
           const link = document.createElement("a");
           link.href = URL.createObjectURL(blob);
-          link.download = `Adiantamento${getFormattedDate()}.xlsx`;
+          link.download = `Prestacao${getFormattedDate()}.xlsx`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
