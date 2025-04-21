@@ -63,12 +63,13 @@ app.post("/gerar-planilha", async (req, res) => {
 
     for (let cell in dados) {
       const valor = dados[cell];
-      console.log(`Transferindo Célula ${cell}`);
+      
       
       // Verifica se a célula existe antes de atribuir o valor
-      if (cell.length == 3 && (typeof valor === 'string' || typeof valor === 'number')) {
+      if (cell.length <= 3 && (typeof valor === 'string' || typeof valor === 'number')) {
         const celula = worksheet.getCell(cell);
         celula.value = valor;
+        console.log(`Transferindo Célula ${cell} -> ${celula}`);
       }
     }
     

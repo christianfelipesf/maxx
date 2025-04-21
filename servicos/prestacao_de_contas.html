@@ -464,6 +464,7 @@
 
 
       function updateDays() {
+        console.log('dias atualizado')
         const start = document.getElementById("C21").value;
         const end = document.getElementById("D21").value;
         const daysInput = document.getElementById("F21");
@@ -685,7 +686,7 @@
 
 
           // Proceed with the actual download logic
-          exportToExcel(mapped, "prestacao.xlsx");
+          exportToExcel(mapped, "prestacao_limpo.xlsx");
       }
 
       async function exportToExcel(dataToExport, nomeArquivo) {
