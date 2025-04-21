@@ -104,8 +104,8 @@
             <input class="form-control" name="C9" placeholder="Nome" required />
           </div>
           <div class="col-md-4">
-            <label class="form-label">Fone</label>
-            <input class="form-control" name="C13" type="tel" placeholder="(99) 99999-9999" required />
+            <label class="form-label">Número de celular</label>
+            <input class="form-control" name="C13" type="tel" placeholder="(99) 9 9999 9999" required />
           </div>
           <div class="col-md-4">
             <label class="form-label">Banco</label>
@@ -472,7 +472,7 @@
         }, 1000);
       }
 
-      function startDownload() {
+      function startDownload(tipo) {
           const form = document.getElementById("expenseForm");
           const data = {};
           const inputs = form.querySelectorAll("input[name]:not([name^=produto_])");
@@ -514,7 +514,21 @@
           // Proceed with the actual download logic
             exportToExcel(mapped);
       }
+      const getFormattedDate = () => {
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
 
+      const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+      const yyyy = now.getFullYear();
+      const mesAbrev = meses[now.getMonth()];
+      const dd = pad(now.getDate());
+      const hh = pad(now.getHours());
+      const min = pad(now.getMinutes());
+      const ss = pad(now.getSeconds());
+
+      return `${yyyy}-${mesAbrev}-${dd}-${hh}-${min}-${ss}`;
+    };
 
       async function exportToExcel(dataToExport) {
         try {
@@ -523,7 +537,9 @@
           const url = isLocalhost
             ? "http://localhost:3000/gerar-planilha"
             : "https://maxx-isn6.onrender.com/gerar-planilha";
-          console.log(url)
+
+          console.log(url);
+
           const response = await fetch(url, {
             method: "POST",
             headers: {
@@ -532,21 +548,27 @@
             body: JSON.stringify(dataToExport),
           });
 
-
           if (!response.ok) throw new Error("Erro ao gerar planilha");
 
           const blob = await response.blob();
+
+          // Pega o nome do arquivo vindo do backend
+          const filename = response.headers.get("X-Filename") || "planilha.xlsx";
+
+          // Cria o link para download
           const link = document.createElement("a");
           link.href = URL.createObjectURL(blob);
-          link.download = "Formulario_Preenchido.xlsx";
+          link.download = `Adiantamento${getFormattedDate()}.xlsx`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-           showModal("Planilha gerada com sucesso!", "success", false); // Show success message after download
+          
+          showModal("Planilha gerada com sucesso!", "success", false);
         } catch (error) {
-           showModal("Erro ao exportar: " + error.message, "error", false); // Show error message if download fails
+          showModal("Erro ao exportar: " + error.message, "error", false);
         }
       }
+
 
       window.addEventListener("DOMContentLoaded", () => {
         loadFromLocalStorage();

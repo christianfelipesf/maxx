@@ -10,6 +10,9 @@ const port = 3000;
 // Middleware para aceitar JSON no corpo da requisição
 app.use(express.json());
 
+const crypto = require("crypto");
+
+
 // Middleware CORS — permite requisições do domínio do frontend
 app.use(cors({ origin: "*" }));
 
@@ -39,20 +42,23 @@ app.get('/api/services', async (req, res) => {
     res.status(500).json({ message: 'Erro ao listar os serviços.', error: error.message });
   }
 });
+// Gera um nome de arquivo com hash aleatório
+const generateFilename = () => {
+  return crypto.randomBytes(8).toString("hex") + ".xlsx";
+};
 
-// Rota POST para gerar planilha
 app.post("/gerar-planilha", async (req, res) => {
   const dados = req.body;
-  console.log (dados)
+  console.log(dados);
+
   try {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile("formulario_limpo.xlsx");
     const worksheet = workbook.worksheets[0];
+
     for (let cell in dados) {
       const valor = dados[cell];
-      // Só continua se o valor for string ou número
       if (typeof valor === 'string' || typeof valor === 'number') {
-        //console.log(`Escrevendo em ${cell}: ${valor}`);
         worksheet.getCell(cell).value = valor;
       }
     }
@@ -65,15 +71,16 @@ app.post("/gerar-planilha", async (req, res) => {
       row++;
     });
 
-    const filename = `adiantamento-${Date.now()}.xlsx`;
+    const filename = generateFilename();
+    res.setHeader("X-Filename", filename);
+
     const filepath = path.join(__dirname, filename);
     await workbook.xlsx.writeFile(filepath);
-    /*
-    res.download(filepath, "Formulario_Preenchido.xlsx", () => {
-      fs.unlink(filepath); // Apaga o arquivo após download
-    });*/
+
     res.download(filepath, filename, () => {
-      fs.unlink(filepath); // Apaga o arquivo após download
+      fs.unlink(filepath, (err) => {
+        if (err) console.error("Erro ao deletar o arquivo:", err);
+      });
     });
 
   } catch (error) {
@@ -81,6 +88,7 @@ app.post("/gerar-planilha", async (req, res) => {
     res.status(500).json({ message: "Erro ao gerar a planilha.", error: error.message });
   }
 });
+
 
 // Inicia o servidor
 app.listen(port, () => {
