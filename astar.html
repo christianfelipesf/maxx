@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Busca de Caminho</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none; /* Prevent pull-to-refresh */
+        }
+        .grid-container {
+            display: grid;
+            /* Grid dimensions set by JS using CSS variables */
+            grid-template-columns: repeat(var(--grid-cols, 15), 1fr);
+            grid-template-rows: repeat(var(--grid-rows, 15), 1fr);
+            gap: 1px;
+            touch-action: none; /* Prevent scrolling while drawing */
+            width: 90vw; /* Use viewport width */
+            max-width: 70vh; /* Limit max width based on viewport height for squareness */
+            height: 90vw; /* Use viewport width */
+            max-height: 70vh; /* Limit max height */
+            aspect-ratio: 1 / 1; /* Maintain square aspect ratio */
+            margin: auto; /* Center the grid */
+            overflow: auto; /* Allow scrolling if grid becomes too large for container */
+            border: 1px solid #94a3b8; /* slate-400 */
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .cell {
+            background-color: #e2e8f0; /* slate-200 */
+            border: 1px solid #cbd5e1; /* slate-300 */
+            aspect-ratio: 1 / 1; /* Ensure cells are square */
+            transition: background-color 0.1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem; /* Adjusted for potentially smaller cells */
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            min-width: 10px; /* Minimum cell width */
+            min-height: 10px; /* Minimum cell height */
+        }
+        .cell.start { background-color: #10b981; } /* emerald-500 */
+        .cell.end { background-color: #ef4444; } /* red-500 */
+        .cell.wall { background-color: #374151; } /* gray-700 */
+        /* Visualization colors */
+        .cell.open-astar { background-color: #60a5fa; } /* blue-400 */
+        .cell.closed-astar { background-color: #a78bfa; } /* violet-400 */
+        .cell.open-dijkstra { background-color: #fde047; } /* yellow-300 */
+        .cell.closed-dijkstra { background-color: #fb923c; } /* orange-400 */
+        .cell.open-bfs { background-color: #5eead4; } /* teal-300 */
+        .cell.closed-bfs { background-color: #93c5fd; } /* blue-300 */
+        .cell.path { background-color: #facc15; font-weight: bold; } /* yellow-400 */
+
+
+        .debug-info {
+            position: absolute;
+            top: 0px;
+            left: 1px;
+            font-size: clamp(0.4rem, 1.5vw, 0.6rem); /* Responsive font size */
+            line-height: 1;
+            color: #4b5563;
+            text-align: left;
+            pointer-events: none;
+            white-space: nowrap; /* Prevent wrapping */
+        }
+        .debug-info span { display: block; }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem; /* Reduced gap slightly */
+            margin-top: 1rem;
+            margin-bottom: 1rem; /* Added bottom margin */
+            padding: 0 0.5rem; /* Reduced padding */
+            width: 100%;
+            max-width: 1100px; /* Increased max width for controls */
+        }
+        .control-group {
+             background-color: white;
+             padding: 0.5rem 0.75rem;
+             border-radius: 0.375rem;
+             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+             display: flex;
+             align-items: center;
+             gap: 0.5rem;
+             flex-wrap: nowrap; /* Prevent wrapping within group */
+             overflow-x: auto; /* Allow horizontal scroll if needed */
+        }
+
+        .control-button {
+            padding: 0.5rem 1rem; /* Adjusted padding */
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
+            white-space: nowrap; /* Prevent button text wrapping */
+        }
+        .control-button.primary { background-color: #3b82f6; color: white; }
+        .control-button.primary:hover { background-color: #2563eb; }
+        .control-button.secondary { background-color: #6b7280; color: white; }
+        .control-button.secondary:hover { background-color: #4b5563; }
+        .control-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .radio-group label { margin-right: 0.5rem; cursor: pointer; vertical-align: middle; white-space: nowrap; }
+        .radio-group input[type="radio"] { vertical-align: middle; margin-right: 0.2rem; }
+        .input-group label { margin-right: 0.3rem; font-weight: 500; white-space: nowrap; }
+        .input-group input[type="number"], .input-group select {
+            padding: 0.3rem 0.5rem;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 0.25rem; /* rounded-sm */
+            text-align: center;
+            vertical-align: middle;
+        }
+         .input-group input[type="number"] { width: 4rem; }
+         .input-group select { width: auto; text-align: left; } /* Allow select to size naturally */
+         .input-group input[type="range"] { width: 6rem; vertical-align: middle; }
+         .input-group input[type="checkbox"] { vertical-align: middle; margin-right: 0.2rem; }
+
+
+        #message-box {
+            margin-top: 0.5rem; /* Reduced margin */
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+            width: 90%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #message-box.success { background-color: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+        #message-box.error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        #message-box.info { background-color: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
+    </style>
+</head>
+<body class="bg-slate-100 p-2 md:p-4 flex flex-col items-center min-h-screen">
+
+    <h1 class="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-slate-800 text-center">Visualizador de Algoritmos de Busca</h1>
+
+    <div class="controls">
+         <div class="control-group radio-group">
+             <span class="font-medium mr-1">Modo:</span>
+             <input type="radio" id="set-start" name="click-mode" value="start" checked>
+             <label for="set-start">Início</label>
+             <input type="radio" id="set-end" name="click-mode" value="end">
+             <label for="set-end">Fim</label>
+             <input type="radio" id="set-wall" name="click-mode" value="wall">
+             <label for="set-wall">Parede</label>
+              <input type="radio" id="set-erase" name="click-mode" value="erase">
+             <label for="set-erase">Apagar</label>
+         </div>
+         <div class="control-group input-group">
+             <label for="grid-size-input">Tamanho:</label>
+             <input type="number" id="grid-size-input" min="5" max="50" value="15">
+             <button id="update-grid-button" class="control-button secondary" style="padding: 0.3rem 0.6rem;">Atualizar</button>
+         </div>
+         <div class="control-group input-group">
+             <label for="algorithm-select">Algoritmo:</label>
+             <select id="algorithm-select">
+                 <option value="astar" selected>A* (A-Estrela)</option>
+                 <option value="dijkstra">Dijkstra</option>
+                 <option value="bfs">BFS (Busca em Largura)</option>
+             </select>
+         </div>
+         <div class="control-group">
+            <button id="start-button" class="control-button primary">Iniciar Busca</button>
+            <button id="reset-button" class="control-button secondary">Resetar</button>
+            <button id="clear-path-button" class="control-button secondary">Limpar Caminho</button>
+         </div>
+         <div class="control-group input-group">
+             <label for="speed-slider">Velocidade:</label>
+             <input type="range" id="speed-slider" min="10" max="500" value="50">
+         </div>
+         <div class="control-group input-group">
+             <input type="checkbox" id="show-debug">
+             <label for="show-debug">Mostrar Debug (A*/Dijkstra)</label>
+         </div>
+    </div>
+
+    <div id="message-box"></div>
+
+    <div id="grid" class="grid-container bg-white shadow-lg rounded-lg">
+        </div>
+
+    <script>
+        const gridElement = document.getElementById('grid');
+        const startButton = document.getElementById('start-button');
+        const resetButton = document.getElementById('reset-button');
+        const clearPathButton = document.getElementById('clear-path-button');
+        const messageBox = document.getElementById('message-box');
+        const speedSlider = document.getElementById('speed-slider');
+        const showDebugCheckbox = document.getElementById('show-debug');
+        const gridSizeInput = document.getElementById('grid-size-input');
+        const updateGridButton = document.getElementById('update-grid-button');
+        const algorithmSelect = document.getElementById('algorithm-select'); // Get algorithm selector
+
+        // --- Default grid dimensions ---
+        let GRID_COLS = 15;
+        let GRID_ROWS = 15;
+        const MIN_GRID_SIZE = 5;
+        const MAX_GRID_SIZE = 50;
+
+        let grid = [];
+        let startNode = null;
+        let endNode = null;
+        let isSearching = false;
+        let visualizationDelay = 50; // ms
+        let showDebugInfo = false;
+        let isMouseDown = false;
+        let currentAnimationFrameId = null; // Store animation frame ID
+
+        // --- Nó (Node) ---
+        class Node {
+             constructor(x, y, isWall = false) {
+                this.x = x; this.y = y; this.isWall = isWall;
+                this.g = Infinity; // Cost from start (used by A*, Dijkstra)
+                this.h = 0;      // Heuristic cost to end (used by A*)
+                this.f = Infinity; // Total cost g + h (used by A*)
+                this.visited = false; // Used by BFS
+                this.parent = null; // Used by all for path reconstruction
+                this.element = null; this.debugElement = null;
+            }
+            // Reset for new search
+            reset() {
+                this.g = Infinity; this.h = 0; this.f = Infinity;
+                this.visited = false; this.parent = null;
+            }
+            // Update visual appearance based on algorithm and state
+            updateVisual(className = '', removeClasses = []) {
+                if (!this.element) return;
+                 // Define base classes to always remove before adding new ones
+                const baseRemove = ['open-astar', 'closed-astar', 'open-dijkstra', 'closed-dijkstra', 'open-bfs', 'closed-bfs', 'path'];
+                this.element.classList.remove(...baseRemove, ...removeClasses);
+
+                if (className && !this.isWall && this !== startNode && this !== endNode) {
+                    this.element.classList.add(className);
+                }
+                this.updateDebugInfo();
+            }
+            // Update debug info (G, H, F) - primarily for A* and Dijkstra
+            updateDebugInfo() {
+                if (!this.debugElement) return;
+                const selectedAlgorithm = algorithmSelect.value;
+                // Show debug only if checked, not wall, and relevant algorithm
+                if (showDebugInfo && !this.isWall && (selectedAlgorithm === 'astar' || selectedAlgorithm === 'dijkstra')) {
+                     // For Dijkstra, H is effectively 0, F = G
+                    const gStr = this.g === Infinity ? '∞' : this.g.toFixed(0);
+                    const hStr = (selectedAlgorithm === 'astar' ? this.h.toFixed(0) : '0'); // Show H=0 for Dijkstra
+                    const fStr = this.f === Infinity ? '∞' : (selectedAlgorithm === 'astar' ? this.f.toFixed(0) : gStr); // F=G for Dijkstra
+
+                    this.debugElement.innerHTML = `<span>G:${gStr}</span><span>H:${hStr}</span><span>F:${fStr}</span>`;
+                    this.debugElement.style.display = 'block';
+                } else {
+                    this.debugElement.style.display = 'none';
+                }
+            }
+        }
+
+        // --- Funções Auxiliares ---
+        function manhattanDistance(nodeA, nodeB) {
+            if (!nodeA || !nodeB) return 0; // Safety check
+            return Math.abs(nodeA.x - nodeB.x) + Math.abs(nodeA.y - nodeB.y);
+        }
+
+        function getNeighbors(node) {
+            const neighbors = []; const { x, y } = node;
+            const directions = [ { dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 } ];
+            for (const dir of directions) {
+                const newX = x + dir.dx; const newY = y + dir.dy;
+                if (newX >= 0 && newX < GRID_COLS && newY >= 0 && newY < GRID_ROWS) {
+                    const neighborNode = grid[newY]?.[newX];
+                    if (neighborNode && !neighborNode.isWall) { neighbors.push(neighborNode); }
+                }
+            }
+            return neighbors;
+        }
+
+        // Reconstructs and draws the final path (works for all algorithms)
+        function reconstructPath(endNode, pathFound = true) {
+            if (!pathFound) {
+                 enableControls(); // Re-enable controls immediately if no path
+                 return;
+            }
+            let currentNode = endNode; const path = [];
+            while (currentNode !== null) { path.push(currentNode); currentNode = currentNode.parent; }
+            path.reverse();
+            let i = 0;
+            function drawStep() {
+                if (i < path.length) {
+                    const node = path[i];
+                    // Don't overwrite start/end node visuals
+                    if (node !== startNode && node !== endNode) {
+                        // Use a specific 'path' class, removing any open/closed classes
+                         const openClosedClasses = ['open-astar', 'closed-astar', 'open-dijkstra', 'closed-dijkstra', 'open-bfs', 'closed-bfs'];
+                         node.updateVisual('path', openClosedClasses);
+                    }
+                    i++;
+                    setTimeout(drawStep, Math.max(10, visualizationDelay / 3)); // Faster path drawing
+                } else {
+                    // Message includes path length
+                    showMessage(`Caminho encontrado com ${path.length - 1} passos!`, 'success');
+                    enableControls(); // Re-enable controls after path is drawn
+                }
+            }
+            // Start drawing only if a path exists (path length > 1 means start != end)
+            if (path.length > 0) {
+                 drawStep();
+            } else {
+                 // Handle case where start and end are the same node (path length 0 or 1)
+                  showMessage("Nó inicial é o mesmo que o nó final.", "info");
+                  enableControls();
+            }
+        }
+
+
+        function showMessage(text, type = 'info') {
+            messageBox.textContent = text; messageBox.className = '';
+            messageBox.classList.add(type); messageBox.style.display = 'block';
+        }
+        function hideMessage() { messageBox.style.display = 'none'; }
+
+        function disableControls(disableGridUpdate = true) {
+            isSearching = true;
+            startButton.disabled = true; resetButton.disabled = true; clearPathButton.disabled = true;
+            document.querySelectorAll('input[name="click-mode"]').forEach(radio => radio.disabled = true);
+            speedSlider.disabled = true; showDebugCheckbox.disabled = true;
+            algorithmSelect.disabled = true; // Disable algorithm select during search
+            if (disableGridUpdate) {
+                 gridSizeInput.disabled = true; updateGridButton.disabled = true;
+            }
+        }
+        function enableControls() {
+            isSearching = false;
+            startButton.disabled = false; resetButton.disabled = false; clearPathButton.disabled = false;
+            document.querySelectorAll('input[name="click-mode"]').forEach(radio => radio.disabled = false);
+            speedSlider.disabled = false; showDebugCheckbox.disabled = false;
+            gridSizeInput.disabled = false; updateGridButton.disabled = false;
+            algorithmSelect.disabled = false; // Enable algorithm select
+        }
+
+        // --- Main Search Function ---
+        function startSearch() {
+            if (isSearching) return;
+            if (!startNode || !endNode) {
+                showMessage("Defina os pontos de início e fim antes de começar.", "error"); return;
+            }
+
+            const selectedAlgorithm = algorithmSelect.value;
+            hideMessage();
+            disableControls();
+            clearVisualization(); // Clear previous visualization before starting
+
+            // Reset all nodes before search
+            for (let y = 0; y < GRID_ROWS; y++) {
+                for (let x = 0; x < GRID_COLS; x++) {
+                    grid[y]?.[x]?.reset();
+                }
+            }
+
+            // Cancel any previous animation frame
+            if (currentAnimationFrameId) { cancelAnimationFrame(currentAnimationFrameId); currentAnimationFrameId = null; }
+
+            // Call the selected algorithm function
+            switch (selectedAlgorithm) {
+                case 'astar':
+                    aStarSearchInternal();
+                    break;
+                case 'dijkstra':
+                    dijkstraSearchInternal();
+                    break;
+                case 'bfs':
+                    bfsSearchInternal();
+                    break;
+                default:
+                    console.error("Algoritmo desconhecido:", selectedAlgorithm);
+                    enableControls();
+            }
+        }
+
+
+        // --- A* Algorithm Implementation ---
+        function aStarSearchInternal() {
+            const openList = []; // Use array as priority queue (sort each time)
+            const closedList = new Set();
+            const openClass = 'open-astar';
+            const closedClass = 'closed-astar';
+
+            startNode.g = 0;
+            startNode.h = manhattanDistance(startNode, endNode);
+            startNode.f = startNode.g + startNode.h;
+            openList.push(startNode);
+            startNode.updateDebugInfo();
+
+            function searchStep() {
+                if (openList.length === 0) { showMessage("Caminho não encontrado (A*).", "error"); reconstructPath(null, false); return; }
+
+                openList.sort((a, b) => a.f - b.f); // Prioritize lowest F score
+                const currentNode = openList.shift();
+
+                if (currentNode === endNode) { reconstructPath(endNode); return; }
+
+                closedList.add(currentNode);
+                if (currentNode !== startNode) { currentNode.updateVisual(closedClass, [openClass]); } // Visualize closed node
+                currentNode.updateDebugInfo();
+
+
+                const neighbors = getNeighbors(currentNode);
+                for (const neighbor of neighbors) {
+                    if (closedList.has(neighbor)) { continue; }
+
+                    const costToMove = 1; // Assume uniform cost
+                    const tentativeG = currentNode.g + costToMove;
+
+                    let isNewPathBetter = false;
+                    if (!openList.includes(neighbor)) { // If neighbor not in open list
+                        neighbor.h = manhattanDistance(neighbor, endNode);
+                        isNewPathBetter = true;
+                        openList.push(neighbor);
+                         if (neighbor !== endNode) neighbor.updateVisual(openClass); // Visualize open node
+                    } else if (tentativeG < neighbor.g) { // If neighbor in open list but new path is better
+                        isNewPathBetter = true;
+                    }
+
+                    if (isNewPathBetter) {
+                        neighbor.parent = currentNode;
+                        neighbor.g = tentativeG;
+                        neighbor.f = neighbor.g + neighbor.h;
+                        neighbor.updateDebugInfo();
+                    }
+                }
+
+                // Schedule next step
+                currentAnimationFrameId = setTimeout(() => requestAnimationFrame(searchStep), visualizationDelay);
+            }
+            currentAnimationFrameId = requestAnimationFrame(searchStep); // Start the loop
+        }
+
+        // --- Dijkstra Algorithm Implementation ---
+        function dijkstraSearchInternal() {
+            const openList = []; // Use array as priority queue (sort by G cost)
+            const closedList = new Set();
+            const openClass = 'open-dijkstra';
+            const closedClass = 'closed-dijkstra';
+
+            startNode.g = 0;
+            startNode.f = 0; // For Dijkstra, f = g
+            openList.push(startNode);
+            startNode.updateDebugInfo();
+
+            function searchStep() {
+                if (openList.length === 0) { showMessage("Caminho não encontrado (Dijkstra).", "error"); reconstructPath(null, false); return; }
+
+                openList.sort((a, b) => a.g - b.g); // Prioritize lowest G score
+                const currentNode = openList.shift();
+
+                if (currentNode === endNode) { reconstructPath(endNode); return; }
+
+                // Optimization: If we pull a node with cost higher than already found end node, stop early (optional)
+                 // if (currentNode.g > endNode.g) { reconstructPath(endNode); return; }
+
+                closedList.add(currentNode);
+                 if (currentNode !== startNode) { currentNode.updateVisual(closedClass, [openClass]); }
+                 currentNode.updateDebugInfo();
+
+
+                const neighbors = getNeighbors(currentNode);
+                for (const neighbor of neighbors) {
+                    if (closedList.has(neighbor)) { continue; }
+
+                    const costToMove = 1; // Assume uniform cost
+                    const tentativeG = currentNode.g + costToMove;
+
+                    let isNewPathBetter = false;
+                    if (!openList.includes(neighbor)) {
+                        isNewPathBetter = true;
+                        openList.push(neighbor);
+                         if (neighbor !== endNode) neighbor.updateVisual(openClass);
+                    } else if (tentativeG < neighbor.g) {
+                        isNewPathBetter = true;
+                    }
+
+                    if (isNewPathBetter) {
+                        neighbor.parent = currentNode;
+                        neighbor.g = tentativeG;
+                        neighbor.f = tentativeG; // f = g for Dijkstra
+                        neighbor.updateDebugInfo();
+                    }
+                }
+                currentAnimationFrameId = setTimeout(() => requestAnimationFrame(searchStep), visualizationDelay);
+            }
+            currentAnimationFrameId = requestAnimationFrame(searchStep);
+        }
+
+        // --- Breadth-First Search (BFS) Implementation ---
+        function bfsSearchInternal() {
+            const queue = []; // Use array as a queue (FIFO)
+            const visited = new Set(); // Keep track of visited nodes
+            const openClass = 'open-bfs'; // Use distinct colors if desired
+            const closedClass = 'closed-bfs';
+
+            startNode.visited = true;
+            queue.push(startNode);
+            visited.add(startNode);
+             // No debug info update needed for BFS usually
+
+            function searchStep() {
+                if (queue.length === 0) { showMessage("Caminho não encontrado (BFS).", "error"); reconstructPath(null, false); return; }
+
+                const currentNode = queue.shift(); // Dequeue
+
+                if (currentNode === endNode) { reconstructPath(endNode); return; }
+
+                 // Visualize dequeued node as 'closed'
+                 if (currentNode !== startNode) { currentNode.updateVisual(closedClass, [openClass]); }
+
+                const neighbors = getNeighbors(currentNode);
+                for (const neighbor of neighbors) {
+                    // If neighbor hasn't been visited yet
+                    if (!visited.has(neighbor)) {
+                        neighbor.visited = true;
+                        neighbor.parent = currentNode; // Set parent for path reconstruction
+                        visited.add(neighbor);
+                        queue.push(neighbor); // Enqueue
+                         // Visualize newly enqueued node as 'open'
+                         if (neighbor !== endNode) neighbor.updateVisual(openClass);
+                    }
+                }
+                currentAnimationFrameId = setTimeout(() => requestAnimationFrame(searchStep), visualizationDelay);
+            }
+            currentAnimationFrameId = requestAnimationFrame(searchStep);
+        }
+
+
+        // --- Criação da Grade e Interação ---
+        function createGrid(cols, rows) {
+            if (currentAnimationFrameId) { cancelAnimationFrame(currentAnimationFrameId); currentAnimationFrameId = null; }
+            enableControls();
+
+            gridElement.innerHTML = ''; grid = [];
+            gridElement.style.setProperty('--grid-cols', cols); gridElement.style.setProperty('--grid-rows', rows);
+
+            const baseFontSize = 0.7; const scaleFactor = 15 / Math.max(cols, rows);
+            const newFontSize = Math.max(0.4, Math.min(1.0, baseFontSize * scaleFactor));
+            gridElement.style.fontSize = `${newFontSize}rem`;
+
+            for (let y = 0; y < rows; y++) {
+                const row = [];
+                for (let x = 0; x < cols; x++) {
+                    const cellElement = document.createElement('div'); cellElement.classList.add('cell');
+                    cellElement.dataset.x = x; cellElement.dataset.y = y;
+                    const debugElement = document.createElement('div'); debugElement.classList.add('debug-info');
+                    debugElement.style.display = 'none'; cellElement.appendChild(debugElement);
+                    const node = new Node(x, y); node.element = cellElement; node.debugElement = debugElement;
+                    row.push(node); gridElement.appendChild(cellElement);
+
+                    // Event Listeners
+                    const handleInteractionStart = (e) => {
+                        if (isSearching || (e.type === 'mousedown' && e.button !== 0)) return;
+                        e.preventDefault(); isMouseDown = true; handleCellInteraction(node);
+                    };
+                    const handleInteractionMove = (e) => {
+                        if (!isMouseDown || isSearching) return; e.preventDefault();
+                        let targetElement;
+                        if (e.type === 'touchmove') { const touch = e.touches[0]; targetElement = document.elementFromPoint(touch.clientX, touch.clientY); }
+                        else { targetElement = e.target; }
+                        if (targetElement && targetElement.classList.contains('cell')) {
+                            const targetX = parseInt(targetElement.dataset.x); const targetY = parseInt(targetElement.dataset.y);
+                            const targetNode = grid[targetY]?.[targetX];
+                            if (targetNode) { handleCellInteraction(targetNode); }
+                        }
+                    };
+                    cellElement.addEventListener('mousedown', handleInteractionStart);
+                    cellElement.addEventListener('touchstart', handleInteractionStart, { passive: false });
+                    cellElement.addEventListener('mouseover', handleInteractionMove);
+                    cellElement.addEventListener('touchmove', handleInteractionMove, { passive: false });
+                }
+                grid.push(row);
+            }
+            startNode = null; endNode = null; hideMessage();
+        }
+        window.addEventListener('mouseup', () => { if(isMouseDown) isMouseDown = false; });
+        window.addEventListener('touchend', () => { if(isMouseDown) isMouseDown = false; });
+        gridElement.addEventListener('mouseleave', () => { if(isMouseDown) isMouseDown = false; });
+
+        function handleCellInteraction(node) {
+            if (isSearching || !node) return;
+            const clickMode = document.querySelector('input[name="click-mode"]:checked').value;
+            // Clear visualization if changing grid structure
+            if (clickMode === 'wall' || clickMode === 'erase' || clickMode === 'start' || clickMode === 'end') {
+                clearVisualization();
+            }
+            if (clickMode === 'start') { setStartNode(node); }
+            else if (clickMode === 'end') { setEndNode(node); }
+            else if (clickMode === 'wall' && node !== startNode && node !== endNode) { toggleWall(node); }
+            else if (clickMode === 'erase') { eraseCell(node); }
+        }
+
+        function setStartNode(node) {
+            if (node.isWall || node === endNode || startNode === node) return;
+            if (startNode) { startNode.element.classList.remove('start'); startNode.reset(); startNode.updateDebugInfo(); } // Reset old start
+            startNode = node; startNode.element.classList.add('start'); hideMessage();
+            // Recalculate H for A* if end node exists
+            if (endNode && algorithmSelect.value === 'astar') {
+                for (let y = 0; y < GRID_ROWS; y++) { for (let x = 0; x < GRID_COLS; x++) {
+                    const n = grid[y]?.[x]; if (n && !n.isWall) { n.h = manhattanDistance(n, endNode); n.updateDebugInfo(); }
+                } }
+            }
+            startNode.updateDebugInfo(); // Update new start node's debug info
+        }
+
+        function setEndNode(node) {
+            if (node.isWall || node === startNode || endNode === node) return;
+            if (endNode) { endNode.element.classList.remove('end'); } // Remove class from old end
+            endNode = node; endNode.element.classList.add('end'); hideMessage();
+            // Recalculate H for all nodes for A* if start exists
+             if (startNode && algorithmSelect.value === 'astar') {
+                for (let y = 0; y < GRID_ROWS; y++) { for (let x = 0; x < GRID_COLS; x++) {
+                    const n = grid[y]?.[x];
+                    if (n && !n.isWall) { n.h = manhattanDistance(n, endNode); n.updateDebugInfo(); }
+                } }
+             } else if (startNode) { // Update start node's H if it exists (even for non-A*)
+                 startNode.h = manhattanDistance(startNode, endNode);
+                 startNode.updateDebugInfo();
+             }
+        }
+
+        function toggleWall(node) {
+            if (node === startNode || node === endNode) return;
+            node.isWall = !node.isWall; node.element.classList.toggle('wall', node.isWall);
+            node.reset(); // Reset costs if it becomes wall/not wall
+            node.updateDebugInfo();
+        }
+
+        function eraseCell(node) {
+             let needsHRecalc = false;
+            if (node === startNode) { startNode.element.classList.remove('start'); startNode = null; }
+            else if (node === endNode) {
+                endNode.element.classList.remove('end'); endNode = null;
+                needsHRecalc = true; // H needs reset/recalc for all nodes
+            } else if (node.isWall) {
+                node.isWall = false; node.element.classList.remove('wall');
+                 if(endNode) { node.h = manhattanDistance(node, endNode); } // Recalculate H for this node if end exists
+            }
+             // Clear any search visualization from the cell
+            const vizClasses = ['open-astar', 'closed-astar', 'open-dijkstra', 'closed-dijkstra', 'open-bfs', 'closed-bfs', 'path'];
+            node.updateVisual('', vizClasses);
+            node.reset();
+            node.updateDebugInfo();
+
+            // If end node was removed, reset H for all nodes
+             if (needsHRecalc) {
+                 for (let y = 0; y < GRID_ROWS; y++) { for (let x = 0; x < GRID_COLS; x++) {
+                     const n = grid[y]?.[x]; if(n) { n.h = 0; n.updateDebugInfo();}
+                 } }
+             }
+        }
+
+        function resetGrid() {
+            if (currentAnimationFrameId) { cancelAnimationFrame(currentAnimationFrameId); currentAnimationFrameId = null; }
+            startNode = null; endNode = null; isSearching = false;
+            hideMessage(); enableControls();
+            const newSize = parseInt(gridSizeInput.value);
+            if (!isNaN(newSize) && newSize >= MIN_GRID_SIZE && newSize <= MAX_GRID_SIZE) {
+                GRID_COLS = newSize; GRID_ROWS = newSize;
+                createGrid(GRID_COLS, GRID_ROWS);
+                // showMessage("Grelha resetada.", "info"); // Message shown by createGrid implicitly
+            } else {
+                showMessage(`Tamanho inválido. Use entre ${MIN_GRID_SIZE} e ${MAX_GRID_SIZE}.`, "error");
+                gridSizeInput.value = GRID_COLS;
+            }
+        }
+
+        // Clear visualization only (open/closed/path classes)
+        function clearVisualization() {
+            if (currentAnimationFrameId) { cancelAnimationFrame(currentAnimationFrameId); currentAnimationFrameId = null; }
+            hideMessage(); enableControls(); isSearching = false;
+            const vizClasses = ['open-astar', 'closed-astar', 'open-dijkstra', 'closed-dijkstra', 'open-bfs', 'closed-bfs', 'path'];
+            for (let y = 0; y < GRID_ROWS; y++) { for (let x = 0; x < GRID_COLS; x++) {
+                const node = grid[y]?.[x];
+                if (node) {
+                    if (!node.isWall && node !== startNode && node !== endNode) { node.updateVisual('', vizClasses); }
+                    node.reset(); // Reset costs and parent
+                    // Recalculate H cost if start/end defined and A* is selected (or potentially selected)
+                    if (startNode && endNode && !node.isWall) {
+                         node.h = manhattanDistance(node, endNode);
+                    } else { node.h = 0; }
+                    node.updateDebugInfo(); // Update debug display
+                }
+            } }
+            // Re-initialize start node costs
+            if (startNode) {
+                startNode.g = 0;
+                startNode.f = startNode.g + startNode.h; // F depends on H
+                startNode.updateDebugInfo();
+            }
+        }
+
+        // --- Event Listeners Setup ---
+        updateGridButton.addEventListener('click', () => {
+            const newSize = parseInt(gridSizeInput.value);
+            if (!isNaN(newSize) && newSize >= MIN_GRID_SIZE && newSize <= MAX_GRID_SIZE) {
+                if (newSize !== GRID_COLS) { resetGrid(); showMessage(`Tamanho da grelha atualizado para ${newSize}x${newSize}.`, "info"); }
+            } else {
+                showMessage(`Tamanho inválido. Insira um valor entre ${MIN_GRID_SIZE} e ${MAX_GRID_SIZE}.`, "error");
+                gridSizeInput.value = GRID_COLS;
+            }
+        });
+
+        // Listener for algorithm change to potentially update H costs if A* selected
+        algorithmSelect.addEventListener('change', () => {
+            clearVisualization(); // Clear previous path/viz when changing algorithm
+             // Recalculate H for all nodes only if A* is now selected and start/end exist
+             if (algorithmSelect.value === 'astar' && startNode && endNode) {
+                 for (let y = 0; y < GRID_ROWS; y++) { for (let x = 0; x < GRID_COLS; x++) {
+                     const n = grid[y]?.[x];
+                     if (n && !n.isWall) { n.h = manhattanDistance(n, endNode); n.updateDebugInfo(); }
+                 } }
+             } else { // For other algorithms or if start/end don't exist, ensure H is 0 or irrelevant visually
+                  for (let y = 0; y < GRID_ROWS; y++) { for (let x = 0; x < GRID_COLS; x++) {
+                     const n = grid[y]?.[x]; if (n) { n.updateDebugInfo(); } // Update visuals (removes H for non-A*)
+                 } }
+             }
+        });
+
+
+        startButton.addEventListener('click', startSearch); // Changed to call the main search dispatcher
+        resetButton.addEventListener('click', resetGrid);
+        clearPathButton.addEventListener('click', clearVisualization); // Changed to call the specific clear function
+        speedSlider.addEventListener('input', (e) => {
+            visualizationDelay = parseInt(e.target.max) + parseInt(e.target.min) - parseInt(e.target.value);
+        });
+        showDebugCheckbox.addEventListener('change', (e) => {
+            showDebugInfo = e.target.checked;
+            for (let y = 0; y < GRID_ROWS; y++) { for (let x = 0; x < GRID_COLS; x++) { grid[y]?.[x]?.updateDebugInfo(); } }
+        });
+
+        window.onload = () => {
+            const initialSize = parseInt(gridSizeInput.value);
+            if (!isNaN(initialSize) && initialSize >= MIN_GRID_SIZE && initialSize <= MAX_GRID_SIZE) {
+                GRID_COLS = initialSize; GRID_ROWS = initialSize;
+            } else { gridSizeInput.value = GRID_COLS; }
+            createGrid(GRID_COLS, GRID_ROWS);
+            showMessage("Escolha o algoritmo, defina Início/Fim/Paredes e clique em 'Iniciar Busca'.", "info");
+            visualizationDelay = parseInt(speedSlider.max) + parseInt(speedSlider.min) - parseInt(speedSlider.value);
+            showDebugInfo = showDebugCheckbox.checked;
+        }
+
+    </script>
+
+</body>
+</html>
