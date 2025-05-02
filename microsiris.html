@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsiris - Consulta, Wi-Fi, Desbloqueio e Histórico</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos personalizados */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 10px;
+            background-color: #f8f9fa;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding-bottom: 60px; /* Adiciona padding na parte inferior para o popup */
+        }
+        .container-fluid {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin: auto;
+            max-width: 1200px;
+        }
+
+        /* Estilo para as seções: Usa visibilidade e opacidade para transição suave */
+        .data-section, #unlock-section {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #dee2e6; /* Borda padrão */
+            border-radius: 8px;
+            background-color: #fdfdff;
+            display: flex; /* Mantém flex para layout */
+            flex-direction: column;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out, border-color 0.3s ease-in-out; /* Adiciona transição para cor da borda */
+            /* Remove opacidade/visibilidade inicial, JS vai gerenciar a classe 'visible' */
+            min-height: 100px; /* Reserva um espaço mínimo */
+            position: relative; /* Necessário para posicionamento absoluto de loaders/erros internos */
+        }
+         /* Estado inicial - pode ser escondido se necessário antes de qualquer conteúdo/loader */
+        .data-section:not(.visible), #unlock-section:not(.visible) {
+             opacity: 0;
+             visibility: hidden;
+             transform: translateY(10px);
+        }
+
+        .data-section.visible, #unlock-section.visible {
+            opacity: 1; /* Fade in */
+            transform: translateY(0); /* Move para a posição final */
+            visibility: visible; /* Torna visível */
+        }
+        /* Indicação de estado de erro - usa a cor de borda de perigo do Bootstrap */
+        .data-section.border-danger, #unlock-section.border-danger {
+             border-color: #dc3545 !important; /* Borda vermelha para erros */
+        }
+
+        /* Estados de carregamento/erro internos dentro das seções */
+        .section-status {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8); /* Overlay semi-transparente */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10; /* Acima do conteúdo */
+            border-radius: 8px; /* Corresponde ao border radius da seção */
+            padding: 20px;
+            text-align: center;
+        }
+        .section-status .loading-gif { /* Estilo para a imagem GIF */
+             width: 40px; /* Tamanho do GIF */
+             height: 40px;
+             margin-bottom: 10px;
+        }
+        .section-status p { margin: 0; font-size: 0.9rem; color: #6c757d; }
+        .section-status.error p { color: #dc3545; font-weight: bold; }
+
+
+        /* Spinner de carregamento principal - substituído por GIF */
+        #loading {
+            display: none; /* Controlado por JS */
+            text-align: center;
+            margin-top: 15px;
+            width: 100%;
+            padding: 10px 0; /* Adiciona algum padding */
+        }
+        #loading .loading-gif { /* Estilo para a imagem GIF principal */
+             width: 50px; /* Tamanho um pouco maior para o loader principal */
+             height: 50px;
+        }
+        #loading p {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+
+        .info-item {
+            margin-bottom: 6px;
+            display: inline-block;
+            width: calc(50% - 8px);
+            vertical-align: top;
+            padding-right: 8px;
+            box-sizing: border-box;
+            word-wrap: break-word;
+            font-size: 0.85rem;
+        }
+        .info-item strong, .current-wifi-info p strong, #unlock-result p strong {
+            display: inline-block;
+            width: 120px;
+            font-weight: 600;
+            color: #495057;
+        }
+        .current-wifi-info p, #unlock-result p {
+             margin-bottom: 0.4rem;
+             font-size: 0.85rem;
+             display: flex;
+             align-items: center;
+             gap: 5px;
+        }
+        .copy-btn {
+            cursor: pointer;
+            color: #007bff;
+            font-size: 0.8em;
+            padding: 2px 4px;
+            border: none;
+            background: none;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+        .copy-btn:hover { color: #0056b3; }
+
+        /* --- Estilos Remodelados para o Histórico Recente --- */
+        #history-section {
+            /* Adiciona padding e borda para parecer mais com uma seção */
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background-color: #fdfdff;
+            margin-top: 15px; /* Adiciona margem superior */
+            display: none; /* Mantido display none inicial, controlado por JS */
+            /* Adiciona sombra sutil */
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        #history-section h4 {
+            font-size: 1.1rem; /* Ajusta tamanho do título */
+            margin-bottom: 10px; /* Espaço abaixo do título */
+            color: #343a40;
+            font-weight: 600;
+        }
+
+        #history-list {
+            list-style: none;
+            padding: 0;
+            max-height: 120px; /* Altura máxima ajustada para ser mais "achatada" */
+            overflow-y: auto;
+            font-size: 0.85rem;
+            margin-bottom: 0; /* Remove margem inferior da lista */
+            /* Estilo para a scrollbar */
+            scrollbar-width: thin; /* Para Firefox */
+            scrollbar-color: #007bff #f1f1f1; /* Cor do "polegar" e da "pista" */
+        }
+
+        /* Estilo para a scrollbar no Webkit (Chrome, Safari) */
+        #history-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #history-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #history-list::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 4px;
+        }
+
+        #history-list::-webkit-scrollbar-thumb:hover {
+            background: #0056b3;
+        }
+
+
+        #history-list li {
+            padding: 8px 12px; /* Aumenta padding */
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s ease; /* Adiciona transição suave no hover */
+            border-radius: 4px; /* Adiciona borda arredondada nos itens */
+            margin-bottom: 4px; /* Adiciona espaço entre os itens */
+        }
+
+        #history-list li:last-child {
+             border-bottom: none;
+             margin-bottom: 0; /* Remove margem do último item */
+        }
+
+        #history-list li:hover {
+            background-color: #e9ecef; /* Cor de fundo no hover */
+        }
+
+        .history-timestamp {
+            font-size: 0.75em; /* Ajusta tamanho da fonte */
+            color: #6c757d;
+            flex-shrink: 0;
+            /* Adiciona um pouco de padding ou margin para melhor separação visual */
+            padding-left: 8px;
+        }
+
+        .history-contract-name {
+            flex-grow: 1;
+            word-break: break-word;
+            /* Garante que o texto não se sobreponha ao botão ou timestamp */
+            margin-right: 8px;
+        }
+
+        /* Estilo para o botão de busca rápida no histórico */
+        .history-search-btn {
+            order: -1;
+            background-color: #007bff;
+            color: white;
+            border: none; /* Remove borda */
+            border-radius: 4px; /* Adiciona borda arredondada */
+            padding: 6px; /* Aumenta padding */
+            width: 30px; /* Aumenta tamanho */
+            height: 30px; /* Aumenta tamanho */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-right: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease; /* Adiciona transição e efeito de clique */
+        }
+
+         .history-search-btn:hover {
+             background-color: #0056b3;
+         }
+         .history-search-btn:active {
+             transform: scale(0.95); /* Efeito de clique */
+         }
+
+         .history-search-btn i {
+             font-size: 0.9em; /* Ajusta tamanho do ícone */
+         }
+        /* --- Fim dos Estilos Remodelados --- */
+
+
+        /* Ajustes responsivos */
+        @media (max-width: 992px) {
+            .data-section, #unlock-section { margin-bottom: 15px; }
+        }
+        @media (max-width: 768px) {
+            .info-item { width: 100%; padding-right: 0; }
+            .button-group { flex-direction: column; gap: 5px; }
+            .button-group .btn { width: 100%; }
+            .current-wifi-info p strong, #unlock-result p strong { width: 100px; }
+            .container-fluid { padding: 15px; }
+             h1 { font-size: 1.8rem; }
+             /* Ajusta o histórico em telas menores */
+             #history-section {
+                 margin-top: 15px; /* Garante margem no topo em mobile */
+                 padding: 10px;
+             }
+             #history-section h4 {
+                 font-size: 1rem;
+             }
+             #history-list {
+                 max-height: 120px; /* Mantido o mesmo em telas menores */
+             }
+             #history-list li {
+                 padding: 6px 8px;
+                 gap: 5px;
+             }
+             .history-search-btn {
+                 width: 26px;
+                 height: 26px;
+                 padding: 5px;
+                 margin-right: 5px;
+             }
+             .history-timestamp {
+                 font-size: 0.7em;
+                 padding-left: 5px;
+             }
+        }
+
+        .button-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .btn { border-radius: 6px; font-weight: 500; transition: all 0.2s ease-in-out; }
+        .btn:disabled { opacity: 0.65; cursor: not-allowed; }
+        #copiar-btn { margin-top: 10px; margin-bottom: 5px; }
+        #set-wifi-btn, #unlock-btn { margin-top: 10px; }
+        /* Área de mensagem no topo (existente) */
+        #message-area { margin-top: 15px; padding: 10px; border-radius: 5px; display: none; font-size: 0.9rem; }
+        h1 { color: #343a40; text-align: center; font-weight: bold; font-size: 2rem; margin-bottom: 1rem; }
+        h3, h4 { color: #343a40; font-weight: 600; margin-bottom: 0.75rem; font-size: 1.1rem; }
+        h4.section-subtitle { font-size: 1rem; color: #6c757d; margin-bottom: 0.5rem; }
+
+        #current-wifi-info { border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 10px; }
+        /* Ajuste para remover a borda arredondada do input quando há um append */
+        #wifi-senha.form-control {
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
+        /* Garante que o primeiro botão no input-group-append tenha bordas arredondadas apenas na direita */
+        .input-group-append .btn:first-child {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            border-top-right-radius: .25rem !important;
+            border-bottom-right-radius: .25rem !important;
+        }
+
+
+        /* Flex grow para áreas de conteúdo dentro das seções */
+         #resultado-dados, #current-wifi-info-container, #wifi-form, #unlock-result-container {
+             flex-grow: 1;
+         }
+         #unlock-result { flex-grow: 1; } /* Garante que a área de resultado do desbloqueio cresça */
+
+         /* --- Estilos do Popup Inferior (Unificado) --- */
+        #bottom-popup {
+            position: fixed;
+            bottom: 20px; /* Distância da parte inferior */
+            left: 50%;
+            transform: translateX(-50%); /* Centraliza horizontalmente */
+            /* Cores padrão (azul claro) */
+            background-color: rgba(209, 236, 241, 0.95); /* info light */
+            color: #0c5460; /* info dark */
+            border: 1px solid rgba(190, 229, 235, 0.95); /* info border */
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1050; /* Acima de modais e outro conteúdo */
+            opacity: 0; /* Começa escondido */
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            white-space: nowrap; /* Evita quebra de linha */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            max-width: 90%; /* Limita a largura em telas menores */
+            text-align: center; /* Centraliza o texto */
+        }
+        #bottom-popup.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Cores baseadas nos tipos de alerta do Bootstrap para o popup inferior */
+        #bottom-popup.alert-primary { background-color: rgba(204, 229, 255, 0.95); color: #004085; border-color: rgba(184, 218, 255, 0.95); } /* Azul */
+        #bottom-popup.alert-success { background-color: rgba(212, 237, 218, 0.95); color: #155724; border-color: rgba(195, 230, 203, 0.95); } /* Verde */
+        #bottom-popup.alert-warning { background-color: rgba(255, 243, 205, 0.95); color: #856404; border-color: rgba(255, 238, 186, 0.95); } /* Amarelo/Laranja */
+        #bottom-popup.alert-danger { background-color: rgba(248, 215, 218, 0.95); color: #721c24; border-color: rgba(245, 198, 203, 0.95); } /* Vermelho */
+        #bottom-popup.alert-info { background-color: rgba(209, 236, 241, 0.95); color: #0c5460; border-color: rgba(190, 229, 235, 0.95); } /* Azul claro */
+
+        /* Ajuste responsivo para o popup inferior */
+        @media (max-width: 576px) {
+            #bottom-popup {
+                bottom: 10px; /* Menor distância da parte inferior em mobile */
+                padding: 8px 15px; /* Menor padding */
+                font-size: 0.85rem; /* Menor fonte */
+                white-space: normal; /* Permite quebra de linha em telas muito pequenas */
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <h1 class="my-3">Microsiris</h1>
+
+    <div id="message-area"></div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="form-group mb-2">
+                <label for="numero" class="font-weight-bold">Contrato:</label>
+                <input type="text" class="form-control form-control-sm" id="numero" value="" placeholder="Digite o contrato (6 dígitos)" maxlength="6" pattern="\d{6}">
+                </div>
+            <div class="button-group">
+                <button id="enviar" class="btn btn-primary btn-sm">Pesquisar Contrato</button>
+                <button id="colar-btn" class="btn btn-secondary btn-sm">Colar</button>
+            </div>
+        </div>
+        <div class="col-md-6">
+             <div id="history-section">
+                <h4 class="mb-1">Histórico Recente:</h4>
+                <ul id="history-list">
+                    </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="w-100">
+        <img src="https://i.imgur.com/gQD8KtQ.gif" alt="Carregando..." class="loading-gif">
+        <p>Aguarde, buscando dados do contrato...</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-3 mb-lg-0" id="resultado-container">
+            <div id="resultado" class="data-section">
+                <h3 class="mb-2">Dados do Contrato:</h3>
+                <div id="resultado-status" class="section-status" style="display: none;">
+                    </div>
+                <div id="resultado-dados" class="flex-grow-1">
+                    </div>
+                <button id="copiar-btn" class="btn btn-secondary btn-sm mt-auto" style="display: none;">Copiar Dados Formatados</button>
+            </div>
+        </div>
+
+        <div class="col-lg-6" id="wifi-settings-container">
+            <div id="wifi-settings" class="data-section">
+                <h3 class="mb-2">Configurações Wi-Fi</h3>
+                 <div id="wifi-status" class="section-status" style="display: none;">
+                      </div>
+                <div id="current-wifi-info-container" class="mb-2">
+                    <h4 class="section-subtitle">Informações Atuais:</h4>
+                     <div id="current-wifi-info" class="current-wifi-info" style="display: none;">
+                        </div>
+                </div>
+                <form id="wifi-form" class="mt-2 flex-grow-1" style="display: none;">
+                    <h4 class="section-subtitle">Atualizar Configurações:</h4>
+                    <input type="hidden" id="wifi-olt"><input type="hidden" id="wifi-slot"><input type="hidden" id="wifi-pon"><input type="hidden" id="wifi-mac"><input type="hidden" id="wifi-id"><input type="hidden" id="wifi-isnokia">
+                    <div class="form-group mb-2">
+                        <label for="wifi-ssid" class="font-weight-bold small mb-1">Novo SSID 2.4GHz:</label>
+                        <input type="text" class="form-control form-control-sm" id="wifi-ssid" placeholder="Ex: MinhaRede">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="wifi-senha" class="font-weight-bold small mb-1">Nova Senha:</label>
+                        <div class="input-group input-group-sm">
+                             <input type="text" class="form-control form-control-sm" id="wifi-senha" placeholder="Mínimo 8 caracteres">
+                             <div class="input-group-append">
+                                 <button type="button" id="generate-password-btn" class="btn btn-info btn-sm" title="Gerar Senha Aleatória"><i class="fas fa-random"></i></button>
+                             </div>
+                        </div>
+                         </div>
+                     <p class="text-muted small mb-2">5GHz: "<span id="ssid-5g-preview" class="font-weight-bold"></span>" (mesma senha)</p>
+                </form>
+                 <button type="button" id="set-wifi-btn" class="btn btn-success btn-sm mt-auto" style="display: none;">Atualizar Wi-Fi</button>
+                 </div>
+        </div>
+    </div>
+
+    <div class="row mt-3" id="unlock-section-container">
+         <div class="col-12">
+             <div id="unlock-section">
+                 <h4 class="mb-2">Desbloqueio</h4>
+                 <div id="unlock-status" class="section-status" style="display: none;">
+                      </div>
+                 <div id="unlock-result" class="text-sm mb-2 flex-grow-1">
+                     </div>
+                 <button id="unlock-btn" class="btn btn-warning btn-sm mt-auto" style="display: none;">Desbloquear Contrato</button>
+             </div>
+         </div>
+     </div>
+
+</div>
+
+<div id="bottom-popup"></div>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    // Variáveis globais
+    let dadosFormatados = '';
+    let contractData = {};
+    const MAX_HISTORY_ITEMS = 5;
+    // URL do GIF de carregamento - Substitua por sua URL
+    const LOADING_GIF_URL = 'https://cdnl.iconscout.com/lottie/premium/thumb/loader-5478808-4574104.gif'; // Exemplo de GIF de carregamento
+
+    // --- Elementos do DOM ---
+    const numeroInput = document.getElementById('numero');
+    const enviarBtn = document.getElementById('enviar');
+    const colarBtn = document.getElementById('colar-btn');
+    const loadingDiv = document.getElementById('loading'); // Loader principal (inicial)
+    const messageArea = document.getElementById('message-area'); // Área de mensagem no topo
+    const historySection = document.getElementById('history-section');
+    const historyList = document.getElementById('history-list');
+    // Renomeado historyPopup para bottomPopup para refletir o uso unificado
+    const bottomPopup = document.getElementById('bottom-popup');
+
+
+    // Elementos das Seções
+    const resultadoDiv = document.getElementById('resultado');
+    const resultadoDadosDiv = document.getElementById('resultado-dados');
+    const resultadoStatusDiv = document.getElementById('resultado-status'); // Status interno
+    const copiarBtn = document.getElementById('copiar-btn');
+
+    const wifiSettingsDiv = document.getElementById('wifi-settings');
+    const wifiStatusDiv = document.getElementById('wifi-status'); // Status interno
+    const wifiForm = document.getElementById('wifi-form');
+    const setWifiBtn = document.getElementById('set-wifi-btn');
+    const wifiSsidInput = document.getElementById('wifi-ssid');
+    const wifiSenhaInput = document.getElementById('wifi-senha');
+    const generatePasswordBtn = document.getElementById('generate-password-btn');
+    const ssid5gPreview = document.getElementById('ssid-5g-preview');
+    const currentWifiInfoDiv = document.getElementById('current-wifi-info');
+    const currentWifiInfoContainer = document.getElementById('current-wifi-info-container');
+
+    const unlockSectionDiv = document.getElementById('unlock-section');
+    const unlockStatusDiv = document.getElementById('unlock-status'); // Status interno
+    const unlockBtn = document.getElementById('unlock-btn');
+    const unlockResultDiv = document.getElementById('unlock-result');
+
+
+    // --- Funções Auxiliares ---
+    // Exibe uma mensagem na área superior (mantida para mensagens gerais do sistema)
+    function showMessage(message, type = 'danger', duration = 5000) {
+        const alertClass = `alert-${type}`;
+        messageArea.textContent = message;
+        messageArea.className = `alert ${alertClass} alert-dismissible fade show`;
+        messageArea.style.display = 'block';
+        // Rola para a área de mensagem para garantir que seja visível
+        messageArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (duration > 0) {
+            // Usa o método de fechar do alert do Bootstrap, se disponível, caso contrário, apenas esconde
+            if (typeof $ !== 'undefined' && $.fn.alert) {
+                setTimeout(() => { $(messageArea).alert('close'); }, duration);
+            } else {
+                setTimeout(() => { messageArea.style.display = 'none'; }, duration);
+            }
+        }
+    }
+
+    // Função unificada para exibir popups temporários na parte inferior
+    function showBottomPopup(message, type = 'info', duration = 3000) {
+        // Mapeia tipos de alerta para classes Bootstrap
+        const alertClass = `alert-${type}`; // Use primary, success, warning, danger, info
+
+        bottomPopup.textContent = message;
+        // Limpa classes de cor anteriores e adiciona a nova
+        bottomPopup.className = `alert ${alertClass}`; // Usa classes alert-* para cores
+        bottomPopup.classList.add('show'); // Adiciona a classe 'show' para exibir com transição
+
+        if (duration > 0) {
+            setTimeout(() => {
+                bottomPopup.classList.remove('show');
+                // Espera a transição terminar antes de limpar o conteúdo (opcional, mas limpa)
+                bottomPopup.addEventListener('transitionend', function handler() {
+                    if (!bottomPopup.classList.contains('show')) {
+                         bottomPopup.textContent = ''; // Limpa o texto
+                         bottomPopup.className = ''; // Remove todas as classes de cor
+                         bottomPopup.removeEventListener('transitionend', handler);
+                    }
+                });
+            }, duration);
+        }
+    }
+
+
+    // Gera uma senha aleatória simples
+    function generateRandomPassword(length = 8) {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let password = '';
+        for (let i = 0; i < length; i++) { password += chars.charAt(Math.floor(Math.random() * chars.length)); }
+        return password;
+    }
+
+    // Copia texto para a área de transferência
+    async function copyToClipboard(text, successMessage = 'Copiado!') {
+        if (!text || text === 'N/A') { showBottomPopup('Nenhum texto para copiar.', 'warning', 2000); return; } // Usa popup inferior
+        try {
+            await navigator.clipboard.writeText(text);
+            showBottomPopup(successMessage, 'success', 2000); // Usa popup inferior
+        } catch (err) {
+            console.error('Falha ao copiar: ', err); showBottomPopup('Erro ao copiar para a área de transferência.', 'danger'); // Usa popup inferior
+        }
+    }
+
+    // --- Funções de Histórico ---
+    // Obtém o histórico do Local Storage
+    function getHistory() {
+        const history = localStorage.getItem('microsirisHistory');
+        return history ? JSON.parse(history) : [];
+    }
+
+    // Adiciona um item ao histórico e salva no Local Storage
+    function addToHistory(contractNumber, subscriberName) {
+        if (!contractNumber || !/^\d{6}$/.test(contractNumber)) return;
+        let history = getHistory();
+        const timestamp = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        // Remove o item existente se o contrato já estiver no histórico
+        history = history.filter(item => item.contract !== contractNumber);
+        // Adiciona o novo item no início
+        history.unshift({ contract: contractNumber, name: subscriberName || 'N/A', time: timestamp });
+        // Limita o tamanho do histórico
+        if (history.length > MAX_HISTORY_ITEMS) { history.pop(); }
+        localStorage.setItem('microsirisHistory', JSON.stringify(history));
+        displayHistory(); // Atualiza a exibição
+    }
+
+    // Exibe o histórico na lista
+    function displayHistory() {
+        const history = getHistory();
+        historyList.innerHTML = ''; // Limpa a lista atual
+        if (history.length > 0) {
+            historySection.style.display = 'block'; // Mostra a seção de histórico
+            history.forEach(item => {
+                const li = document.createElement('li');
+                // Removido 'list-group-item-action' para evitar hover no botão
+                li.className = 'list-group-item d-flex justify-content-between align-items-center py-1 px-2';
+
+                // Adiciona o novo botão de busca rápida primeiro
+                const searchButton = document.createElement('button');
+                searchButton.className = 'btn btn-outline-secondary btn-sm history-search-btn';
+                searchButton.innerHTML = '<i class="fas fa-search"></i>'; // Ícone de lupa
+                searchButton.title = `Pesquisar Contrato ${item.contract}`; // Tooltip
+
+                // Adiciona listener para o botão de busca rápida
+                searchButton.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Impede que o clique no botão propague para o LI
+                    numeroInput.value = item.contract; // Preenche o input
+                    showBottomPopup(`Pesquisando contrato ${item.contract} (${item.name})...`, 'info'); // Usa popup inferior com cor info
+                    enviarBtn.click(); // Simula o clique no botão de pesquisa principal
+                });
+                li.appendChild(searchButton); // Adiciona o botão ao item da lista PRIMEIRO
+
+                const contractInfoSpan = document.createElement('span');
+                contractInfoSpan.className = 'history-contract-name';
+                contractInfoSpan.textContent = `${item.contract} - ${item.name}`;
+                li.appendChild(contractInfoSpan); // Adiciona a informação do contrato
+
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'history-timestamp badge badge-light badge-pill';
+                timeSpan.textContent = item.time;
+                li.appendChild(timeSpan); // Adiciona o timestamp
+
+                historyList.appendChild(li);
+            });
+        } else {
+            historySection.style.display = 'none'; // Esconde a seção se não houver histórico
+        }
+    }
+
+    // --- Gerenciar Status das Seções (Carregando/Erro) ---
+    // Controla a exibição dos overlays de status dentro das seções
+    function setSectionStatus(sectionDiv, statusDiv, isLoading = false, errorMessage = null) {
+        // Esconde conteúdo e botões (exceto botões de copiar E o botão de gerar senha)
+        // Adicionado a exclusão do botão generate-password-btn para que ele não seja ocultado
+        sectionDiv.querySelectorAll('.flex-grow-1, button:not(.copy-btn):not(#generate-password-btn)').forEach(el => el.style.display = 'none');
+        // Mostra/Esconde o overlay de status interno
+        if (isLoading || errorMessage) {
+            statusDiv.style.display = 'flex'; // Mostra o overlay
+            statusDiv.classList.remove('error'); // Remove estado de erro anterior
+            statusDiv.innerHTML = ''; // Limpa o conteúdo anterior (spinner ou erro)
+
+            if (isLoading) {
+                // Adiciona a imagem GIF e a mensagem de carregamento
+                const loadingGif = document.createElement('img');
+                loadingGif.src = LOADING_GIF_URL;
+                loadingGif.alt = 'Carregando...';
+                loadingGif.className = 'loading-gif'; // Aplica a classe CSS para tamanho
+                statusDiv.appendChild(loadingGif);
+
+                const loadingMessage = document.createElement('p');
+                loadingMessage.textContent = sectionDiv === resultadoDiv ? 'Buscando dados...' : sectionDiv === wifiSettingsDiv ? 'Buscando configurações Wi-Fi...' : 'Buscando status de desbloqueio...';
+                statusDiv.appendChild(loadingMessage);
+
+                sectionDiv.classList.remove('border-danger'); // Remove borda de erro quando está carregando
+            } else if (errorMessage) {
+                // Adiciona a mensagem de erro
+                statusDiv.classList.add('error'); // Adiciona classe de erro
+                const errorMessageElement = document.createElement('p');
+                errorMessageElement.textContent = errorMessage;
+                statusDiv.appendChild(errorMessageElement);
+                sectionDiv.classList.add('border-danger'); // Adiciona borda de erro
+            }
+            sectionDiv.classList.add('visible'); // Garante que a seção esteja visível para mostrar o status
+        } else {
+            statusDiv.style.display = 'none'; // Esconde o overlay
+            statusDiv.classList.remove('error'); // Remove classe de erro
+            sectionDiv.classList.remove('border-danger'); // Remove borda de erro em caso de sucesso
+            // Conteúdo e botões serão mostrados pelas respectivas funções de exibição de dados
+        }
+    }
+
+
+    // --- Listeners de Eventos ---
+    // Listener para o botão Gerar Senha
+    generatePasswordBtn.addEventListener('click', (event) => { // Adicionado 'event' aqui
+        event.preventDefault(); // Impede o comportamento padrão do botão (submissão do formulário)
+        const newPassword = generateRandomPassword(8);
+        wifiSenhaInput.value = newPassword;
+        wifiSenhaInput.type = 'text'; // Mostra a senha gerada
+        showBottomPopup('Senha aleatória gerada!', 'info', 3000); // Usa popup inferior com cor info
+    });
+
+    // Listener para o botão Pesquisar Contrato
+    enviarBtn.addEventListener('click', async () => {
+        const numero = numeroInput.value.trim();
+        // Usa a função unificada para exibir a mensagem de validação do contrato
+        if (!/^\d{6}$/.test(numero)) {
+            showBottomPopup('Por favor, insira um número de contrato válido (6 dígitos).', 'danger'); // Popup inferior vermelho
+            return;
+        } else {
+             // Limpa a mensagem de validação se o formato estiver correto
+             // Não precisa limpar explicitamente o popup, ele some sozinho
+        }
+
+
+        // Resetar UI e definir seções para estado de carregamento
+        enviarBtn.disabled = true; colarBtn.disabled = true;
+        messageArea.style.display = 'none'; // Esconde mensagem do topo
+        contractData = {}; dadosFormatados = ''; // Limpa dados anteriores
+
+        // Define todas as seções relevantes para o estado de carregamento
+        setSectionStatus(resultadoDiv, resultadoStatusDiv, true);
+        setSectionStatus(wifiSettingsDiv, wifiStatusDiv, true);
+        setSectionStatus(unlockSectionDiv, unlockStatusDiv, true);
+
+        // Esconde o botão de copiar inicialmente
+        copiarBtn.style.display = 'none';
+
+
+        try {
+            // Buscar Dados do Contrato
+            const formData = new FormData(); formData.append('info', numero);
+            console.log("Fetching contract data for:", numero);
+            // TODO: Substitua pelo seu endpoint de API real
+            const response = await fetch('http://192.168.0.3/Osiris/process/main.php', { method: 'POST', body: formData });
+            if (!response.ok) { const errorText = await response.text(); console.error('Main API Server response:', errorText); throw new Error(`Erro no servidor: ${response.status} ${response.statusText}`); }
+            const data = await response.json(); console.log("Contract data received:", data);
+
+            // Verificar se os dados estão vazios ou indicam um erro do backend
+             if (!data || Object.keys(data).length === 0 || data.error) {
+                 const errorMsg = data?.error || 'Nenhum dado retornado ou formato inválido.';
+                 console.error("Error or empty data received:", errorMsg);
+                 // Define a seção principal para o estado de erro
+                 setSectionStatus(resultadoDiv, resultadoStatusDiv, false, `Erro ao buscar dados: ${errorMsg}`);
+                 // Esconde outras seções ou mostra erros específicos se aplicável
+                 setSectionStatus(wifiSettingsDiv, wifiStatusDiv, false, 'Dados do contrato ausentes.');
+                 setSectionStatus(unlockSectionDiv, unlockStatusDiv, false, 'Dados do contrato ausentes.');
+                 showMessage(`Erro ao buscar dados: ${errorMsg}`, 'warning'); // Mensagem geral no topo
+                 return; // Interrompe o processamento
+             }
+
+            contractData = data; // Armazena os dados do contrato globalmente
+
+            // Exibir Dados do Contrato
+            resultadoDadosDiv.innerHTML = ''; // Garante que esteja limpo
+            const agora = new Date(); const dataAtual = agora.toLocaleDateString('pt-BR'); const horaAtual = agora.toLocaleTimeString('pt-BR');
+            let hasData = false;
+            // Define a ordem das chaves a serem exibidas
+            const displayOrder = [
+                'assinante', 'mac_onu', 'nomeolt', 'slot', 'pon', 'id', 'adminstate', 'operstate',
+                'down', 'up', 'rxpower', 'txpower', 'oltrx', 'gateway', 'dns1', 'dns2',
+                'hardver', 'softver', 'uptime', 'distancia', 'current', 'temp', 'voltage', 'modelo', 'isnokia' // Adicione outras chaves relevantes
+            ];
+
+             displayOrder.forEach(key => {
+                 if (data.hasOwnProperty(key) && data[key] !== null && data[key] !== "null" && data[key] !== "") {
+                     hasData = true;
+                     const item = document.createElement('div');
+                     item.className = 'info-item';
+                     // Sanitiza o valor antes de inserir no HTML
+                     const safeValue = String(data[key]).replace(/</g, "&lt;").replace(/</g, "&gt;");
+                     // Formata a chave para exibição (ex: 'mac_onu' -> 'MAC ONU')
+                     const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                     item.innerHTML = `<strong>${formattedKey}:</strong> ${safeValue}`;
+                     resultadoDadosDiv.appendChild(item);
+                 }
+             });
+
+            if (!hasData) {
+                 setSectionStatus(resultadoDiv, resultadoStatusDiv, false, 'Nenhum dado detalhado encontrado.');
+                 setSectionStatus(wifiSettingsDiv, wifiStatusDiv, false, 'Dados do contrato ausentes.');
+                 setSectionStatus(unlockSectionDiv, unlockStatusDiv, false, 'Dados do contrato ausentes.');
+                 showMessage('Nenhum dado detalhado encontrado para este contrato.', 'warning'); // Mensagem geral no topo
+                 return; // Interrompe o processamento posterior se não houver dados relevantes
+            }
+
+            // Esconde o loader interno e mostra conteúdo/botão para a seção principal
+            setSectionStatus(resultadoDiv, resultadoStatusDiv, false);
+            resultadoDadosDiv.style.display = 'block'; // Mostra conteúdo
+            copiarBtn.style.display = 'block'; // Mostra botão de copiar
+
+            addToHistory(numero, data.assinante); // Adiciona ao histórico
+
+            // Preparar Dados Formatados para Copiar
+            let campos = displayOrder
+                .filter(key => data.hasOwnProperty(key) && data[key] !== null && data[key] !== "null" && data[key] !== "" && data[key] !== "N/A")
+                .map(key => {
+                    const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    return `${formattedKey}: ${data[key]}`;
+                });
+            dadosFormatados = `Osiris: ${campos.join(', ')} (${dataAtual}, ${horaAtual})`;
+
+
+            // Configurar Seções de Wi-Fi e Desbloqueio se os dados necessários estiverem disponíveis
+            const requiredKeys = ['olt', 'slot', 'pon', 'mac_onu', 'id']; // Chaves necessárias para ações de Wi-Fi/Desbloqueio
+            const hasRequiredData = requiredKeys.every(key => data[key] !== null && data[key] !== undefined && data[key] !== "null" && data[key] !== "");
+
+            if (hasRequiredData) {
+                // Preenche campos ocultos para ações de Wi-Fi
+                document.getElementById('wifi-olt').value = data.olt;
+                document.getElementById('wifi-slot').value = data.slot;
+                document.getElementById('wifi-pon').value = data.pon;
+                document.getElementById('wifi-mac').value = data.mac_onu;
+                document.getElementById('wifi-id').value = data.id;
+                document.getElementById('wifi-isnokia').value = data.isnokia || 'false'; // Lida com isnokia potencialmente ausente
+
+                 // Busca informações atuais do Wi-Fi (esta função atualizará o status de wifiSettingsDiv)
+                fetchCurrentWifiInfo(data);
+
+                 // O status da seção de desbloqueio será atualizado por fetchCurrentWifiInfo ou permanecerá carregando se a busca de Wi-Fi falhar
+                 // A área de resultado e o botão de desbloqueio são mostrados pelo handler de clique do unlockBtn
+                 setSectionStatus(unlockSectionDiv, unlockStatusDiv, false); // Limpa o carregamento inicial, pronto para o clique do botão
+                 unlockResultDiv.style.display = 'block'; // Mostra área de resultado
+                 unlockBtn.style.display = 'block'; // Mostra botão de desbloqueio
+
+
+            } else {
+                // Define as seções de Wi-Fi e Desbloqueio para o estado de erro se os dados necessários estiverem faltando
+                setSectionStatus(wifiSettingsDiv, wifiStatusDiv, false, 'Dados essenciais ausentes para Wi-Fi.');
+                setSectionStatus(unlockSectionDiv, unlockStatusDiv, false, 'Dados essenciais ausentes para Desbloqueio.');
+                console.warn("Dados essenciais (OLT, Slot, PON, MAC, ID) ausentes para habilitar Wi-Fi/Desbloqueio.");
+            }
+        } catch (error) {
+            console.error('Erro no processo de busca:', error);
+            // Define todas as seções para o estado de erro em caso de falha na busca principal
+            setSectionStatus(resultadoDiv, resultadoStatusDiv, false, `Erro ao buscar dados: ${error.message}`);
+            setSectionStatus(wifiSettingsDiv, wifiStatusDiv, false, 'Erro ao buscar dados do contrato.');
+            setSectionStatus(unlockSectionDiv, unlockStatusDiv, false, 'Erro ao buscar dados do contrato.');
+            showMessage(`Ocorreu um erro ao buscar os dados: ${error.message}`); // Mensagem geral no topo
+        } finally {
+            enviarBtn.disabled = false; colarBtn.disabled = false;
+            loadingDiv.style.display = 'none'; // Esconde loader principal
+        }
+    });
+
+    // Busca as informações atuais do Wi-Fi
+    async function fetchCurrentWifiInfo(cData) {
+        // Usa o gerenciador de status da seção
+        setSectionStatus(wifiSettingsDiv, wifiStatusDiv, true, 'Buscando informações Wi-Fi atuais...');
+        currentWifiInfoDiv.innerHTML = ''; // Limpa resultados anteriores
+        currentWifiInfoDiv.style.display = 'none'; // Esconde área de resultado
+        wifiForm.style.display = 'none'; // Esconde formulário
+        setWifiBtn.style.display = 'none'; // Esconde botão
+        // Não precisa limpar o popup inferior aqui, ele some sozinho
+
+
+        try {
+            const wifiFormData = new FormData();
+            wifiFormData.append('olt', cData.olt);
+            wifiFormData.append('slot', cData.slot);
+            wifiFormData.append('pon', cData.pon);
+            wifiFormData.append('mac', cData.mac_onu);
+            wifiFormData.append('modelo', cData.modelo || ''); // Inclui modelo se disponível
+            wifiFormData.append('id', cData.id);
+            wifiFormData.append('isnokia', cData.isnokia || 'false');
+            console.log("Fetching current Wi-Fi data with:", Object.fromEntries(wifiFormData));
+
+            // TODO: Substitua pelo seu endpoint de API real
+            const wifiResponse = await fetch('http://192.168.0.3/Osiris/process/wifi.php', { method: 'POST', body: wifiFormData });
+            if (!wifiResponse.ok) { const errorText = await wifiResponse.text(); console.error('wifi.php response error:', errorText); throw new Error(`Erro no servidor Wi-Fi: ${wifiResponse.status}`); }
+            const wifiData = await wifiResponse.json(); console.log("Current Wi-Fi data received:", wifiData);
+
+             // Verifica erros ou dados vazios de wifi.php
+             if (!wifiData || wifiData.error) {
+                 const errorMsg = wifiData?.error || 'Nenhuma informação Wi-Fi retornada.';
+                 throw new Error(errorMsg);
+             }
+
+            displayCurrentWifiInfo(wifiData); // Exibe os dados
+
+             // Esconde o loader interno e mostra conteúdo/formulário/botão para a seção de Wi-Fi
+            setSectionStatus(wifiSettingsDiv, wifiStatusDiv, false);
+            currentWifiInfoDiv.style.display = 'block'; // Mostra área de resultado
+            wifiForm.style.display = 'block'; // Mostra formulário
+            setWifiBtn.style.display = 'block'; // Mostra botão
+
+
+        } catch (error) {
+            console.error('Erro ao buscar informações atuais do Wi-Fi:', error);
+             // Define a seção de Wi-Fi para o estado de erro
+            setSectionStatus(wifiSettingsDiv, wifiStatusDiv, false, `Não foi possível carregar as informações atuais do Wi-Fi. (${error.message})`);
+            // Opcionalmente, exibe um erro mínimo na área de informação também
+            currentWifiInfoDiv.innerHTML = `<p class="text-danger small">Erro ao carregar.</p>`;
+            currentWifiInfoDiv.style.display = 'block';
+        }
+    }
+
+    // Exibe as informações atuais do Wi-Fi
+    function displayCurrentWifiInfo(wifiData) {
+        // Fornece valores padrão para campos potencialmente ausentes
+        const ssid24 = wifiData.ssid || 'N/A';
+        const pass24 = wifiData.passwifi || 'N/A';
+        const canal24 = wifiData["canal-wifi"] || 'N/A';
+        const ssid5 = wifiData.ssid5g || 'N/A';
+        const pass5 = wifiData.passwifi5g || 'N/A';
+        const canal5 = wifiData["canal-wifi5g"] || 'N/A';
+
+        currentWifiInfoDiv.innerHTML = `
+            <p><strong>SSID 2.4G:</strong> <span id="current-ssid-24">${ssid24}</span> ${ssid24 !== 'N/A' ? '<button class="copy-btn" data-target="current-ssid-24" title="Copiar SSID 2.4G"><i class="far fa-copy"></i></button>' : ''}</p>
+            <p><strong>Senha 2.4G:</strong> <span id="current-pass-24">${pass24}</span> ${pass24 !== 'N/A' ? '<button class="copy-btn" data-target="current-pass-24" title="Copiar Senha 2.4G"><i class="far fa-copy"></i></button>' : ''}</p>
+            <p><strong>Canal 2.4G:</strong> ${canal24}</p>
+            <hr style="border-top: 1px dashed #ccc; margin: 5px 0;">
+            <p><strong>SSID 5G:</strong> <span id="current-ssid-5">${ssid5}</span> ${ssid5 !== 'N/A' ? '<button class="copy-btn" data-target="current-ssid-5" title="Copiar SSID 5G"><i class="far fa-copy"></i></button>' : ''}</p>
+            <p><strong>Senha 5G:</strong> <span id="current-pass-5">${pass5}</span> ${pass5 !== 'N/A' ? '<button class="copy-btn" data-target="current-pass-5" title="Copiar Senha 5G"><i class="far fa-copy"></i></button>' : ''}</p>
+            <p><strong>Canal 5G:</strong> ${canal5}</p>
+        `;
+        // Adiciona listeners de evento aos novos botões de copiar
+        currentWifiInfoDiv.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const targetId = event.currentTarget.getAttribute('data-target');
+                const textToCopy = document.getElementById(targetId)?.textContent;
+                const successMsg = targetId.includes('ssid') ? `SSID "${textToCopy}" copiado!` : `Senha copiada!`;
+                copyToClipboard(textToCopy, successMsg);
+            });
+        });
+    }
+
+    // Listener para o botão Desbloquear Contrato
+    unlockBtn.addEventListener('click', async () => {
+        // Verifica se os dados essenciais estão disponíveis
+        if (!contractData || !contractData.olt || !contractData.mac_onu || !contractData.slot || !contractData.pon || !contractData.id) { showMessage('Dados necessários para o desbloqueio não estão disponíveis.', 'warning'); return; } // Mantém mensagem no topo para erros de dados essenciais
+
+        unlockBtn.disabled = true; // Desabilita o botão durante o processo
+        // Usa o gerenciador de status da seção para o processo de desbloqueio
+        setSectionStatus(unlockSectionDiv, unlockStatusDiv, true, 'Processando desbloqueio...');
+        unlockResultDiv.innerHTML = ''; // Limpa resultado anterior
+        unlockResultDiv.style.display = 'none'; // Esconde área de resultado
+
+
+        try {
+            const unlockFormData = new FormData();
+            unlockFormData.append('ipolt', contractData.olt);
+            unlockFormData.append('mac', contractData.mac_onu);
+            unlockFormData.append('slot', contractData.slot);
+            unlockFormData.append('pon', contractData.pon);
+            unlockFormData.append('id', contractData.id);
+            unlockFormData.append('isnokia', contractData.isnokia || 'false');
+            unlockFormData.append('nivel', '3'); // Assumindo que nível 3 é desbloqueio padrão
+            console.log("Sending data to desbloquear.php:", Object.fromEntries(unlockFormData));
+
+            // TODO: Substitua pelo seu endpoint de API real
+            const unlockResponse = await fetch('http://192.168.0.3/Osiris/process/desbloquear.php', { method: 'POST', body: unlockFormData });
+            if (!unlockResponse.ok) { const errorText = await unlockResponse.text(); console.error('Unlock API Server response:', errorText); throw new Error(`Erro no servidor de desbloqueio: ${unlockResponse.status}`); }
+            const unlockResult = await unlockResponse.json(); console.log("Unlock response received:", unlockResult);
+
+             // Verifica erros do backend
+             if (unlockResult.error) {
+                 throw new Error(unlockResult.error);
+             }
+
+            // Exibe resultados - ajuste com base na estrutura real da resposta
+            unlockResultDiv.innerHTML = `
+                <p><strong>Status:</strong> ${unlockResult.st || 'N/A'}</p>
+                <p><strong>Contrato:</strong> ${unlockResult.ctt || 'N/A'}</p>
+                <p><strong>Data Expiração:</strong> ${unlockResult.data || 'N/A'}</p>
+                <p><strong>Situação:</strong> ${unlockResult.situacao || 'N/A'}</p>
+                <p><strong>Desbloqueio Realizado:</strong> ${unlockResult.desbloqueio ? 'Sim' : 'Não'}</p>
+                ${unlockResult.message ? `<p><strong>Mensagem:</strong> ${unlockResult.message}</p>` : ''}
+            `;
+            unlockResultDiv.style.display = 'block'; // Mostra área de resultado
+
+            // Esconde o loader interno após o processo
+            setSectionStatus(unlockSectionDiv, unlockStatusDiv, false);
+
+
+            if (unlockResult.desbloqueio) {
+                showMessage('Contrato desbloqueado com sucesso!', 'success'); // Mensagem geral no topo
+            } else {
+                const failureReason = unlockResult.message || '(Resposta não indicou sucesso)';
+                showMessage(`Falha ao desbloquear. ${failureReason}`, 'warning'); // Mensagem geral no topo
+                 // Opcionalmente, adiciona borda de erro se a ação de desbloqueio falhou, mas não lançou um erro
+                 // unlockSectionDiv.classList.add('border-danger');
+            }
+        } catch (error) {
+            console.error('Erro ao desbloquear:', error);
+            showMessage(`Erro durante o desbloqueio: ${error.message}`, 'danger'); // Mensagem geral no topo
+            // Define a seção de desbloqueio para o estado de erro
+            setSectionStatus(unlockSectionDiv, unlockStatusDiv, false, `Falha ao processar desbloqueio. (${error.message})`);
+            // Opcionalmente, exibe um erro mínimo na área de resultado também
+            unlockResultDiv.innerHTML = `<p class="text-danger small">Erro.</p>`;
+            unlockResultDiv.style.display = 'block';
+        } finally {
+            unlockBtn.disabled = false; // Reabilita o botão
+        }
+    });
+
+    // Listener para o botão Copiar Dados Formatados
+    copiarBtn.addEventListener('click', () => { copyToClipboard(dadosFormatados, 'Dados formatados copiados!'); });
+
+    // Listener para o botão Colar
+    colarBtn.addEventListener('click', () => {
+        navigator.clipboard.readText()
+            .then(text => {
+                // Extrai os primeiros 6 dígitos, se possível
+                const digits = text.trim().match(/\d/g)?.join('') || '';
+                numeroInput.value = digits.substring(0, 6);
+                if (numeroInput.value) {
+                    showBottomPopup('Número colado. Verifique e clique em Pesquisar.', 'info', 3000); // Popup inferior azul claro
+                } else {
+                    showBottomPopup('Nenhum número encontrado na área de transferência.', 'warning', 3000); // Popup inferior amarelo
+                }
+            })
+            .catch(err => {
+                console.error('Erro ao colar:', err);
+                // Para erros de permissão, ainda pode ser melhor usar a mensagem superior ou um modal
+                showMessage('Erro ao colar da área de transferência.', 'danger'); // Mantém mensagem no topo para erros de permissão
+            });
+    });
+
+    // Listener para atualizar a pré-visualização do SSID 5G
+    wifiSsidInput.addEventListener('input', updateSsid5gPreview);
+    function updateSsid5gPreview() {
+        const ssidBase = wifiSsidInput.value.trim();
+        ssid5gPreview.textContent = ssidBase ? `${ssidBase}.5G` : '(Nome da Rede 5G)';
+    }
+    updateSsid5gPreview(); // Chamada inicial
+
+    // Listener para o botão Atualizar Wi-Fi
+    setWifiBtn.addEventListener('click', async () => {
+        const ssid = wifiSsidInput.value.trim();
+        const senha = wifiSenhaInput.value;
+
+        // Validação da senha Wi-Fi usando o popup inferior
+        if (!ssid) {
+            showBottomPopup('Por favor, insira o nome da rede Wi-Fi (SSID).', 'danger'); // Popup inferior vermelho
+            return;
+        }
+        if (!senha || senha.length < 8) {
+            showBottomPopup('A senha do Wi-Fi deve ter pelo menos 8 caracteres.', 'danger'); // Popup inferior vermelho
+            return;
+        } else {
+            // Não precisa limpar o popup explicitamente, ele some sozinho
+        }
+
+
+        setWifiBtn.disabled = true; // Desabilita o botão durante o processo
+        // Usa o gerenciador de status da seção para o processo de atualização do Wi-Fi
+        setSectionStatus(wifiSettingsDiv, wifiStatusDiv, true, 'Atualizando Wi-Fi...');
+        currentWifiInfoDiv.style.display = 'none'; // Esconde informações enquanto atualiza
+        wifiForm.style.display = 'none'; // Esconde formulário enquanto atualiza
+
+
+        try {
+            const wifiFormData = new FormData();
+            wifiFormData.append('olt', document.getElementById('wifi-olt').value);
+            wifiFormData.append('slot', document.getElementById('wifi-slot').value);
+            wifiFormData.append('pon', document.getElementById('wifi-pon').value);
+            wifiFormData.append('mac', document.getElementById('wifi-mac').value);
+            wifiFormData.append('id', document.getElementById('wifi-id').value);
+            wifiFormData.append('isnokia', document.getElementById('wifi-isnokia').value);
+            // Envia SSIDs e senhas separadas conforme a expectativa do seu backend
+            wifiFormData.append('ssid', ssid); // Nome base para 2.4G
+            wifiFormData.append('senha', senha);
+            wifiFormData.append('ssid5g', `${ssid}.5G`); // Adiciona .5G para 5G
+            wifiFormData.append('senha5g', senha); // Mesma senha para 5G
+            // Inclui outros parâmetros se necessário por setWifi.php
+            wifiFormData.append('canalwf', '0'); wifiFormData.append('visivelwf', '0'); wifiFormData.append('statuswf', 'enable');
+            wifiFormData.append('visivelwf5g', '0'); wifiFormData.append('statuswf5g', 'enable'); wifiFormData.append('canalwf5g', '0');
+
+            console.log("Sending data to setWifi.php:", Object.fromEntries(wifiFormData));
+
+            // TODO: Substitua pelo seu endpoint de API real
+            const wifiResponse = await fetch('http://192.168.0.3/Osiris/process/setWifi.php', { method: 'POST', body: wifiFormData });
+            if (!wifiResponse.ok) { const errorText = await wifiResponse.text(); console.error('setWifi.php response error:', errorText); throw new Error(`Erro no servidor ao atualizar Wi-Fi: ${wifiResponse.status}`); }
+            const wifiResult = await wifiResponse.json(); console.log('Wi-Fi Update Response (JSON):', wifiResult);
+
+             // Verifica erros do backend
+             if (wifiResult.error) {
+                 throw new Error(wifiResult.error);
+             }
+
+            // Verifica sucesso com base na estrutura da resposta do seu backend (ex: result ou result2)
+            if (wifiResult.result === true || wifiResult.result2 === true) {
+                 showBottomPopup('Configurações de Wi-Fi atualizadas com sucesso! Aguarde a atualização das informações atuais.', 'success'); // Popup inferior verde
+                 // Busca as informações atuais novamente após um pequeno atraso para permitir que as mudanças se apliquem
+                 if (contractData) {
+                     setTimeout(() => fetchCurrentWifiInfo(contractData), 3000); // Atraso antes de buscar novamente
+                 }
+                 // Esconde o loader interno e mostra conteúdo/formulário/botão após atualização bem-sucedida
+                 setSectionStatus(wifiSettingsDiv, wifiStatusDiv, false);
+                 // fetchCurrentWifiInfo tornará conteúdo/formulário/botão visíveis novamente
+            } else {
+                 const failureReason = wifiResult.message || JSON.stringify(wifiResult); // Fornece mais detalhes, se disponíveis
+                 showBottomPopup(`Falha ao atualizar Wi-Fi. ${failureReason}`, 'warning'); // Popup inferior amarelo
+                 // Define a seção de Wi-Fi para o estado de erro
+                 setSectionStatus(wifiSettingsDiv, wifiStatusDiv, false, `Falha ao atualizar Wi-Fi. ${failureReason}`);
+                 // Busca novamente mesmo em caso de falha para mostrar o estado atual
+                 if (contractData) { fetchCurrentWifiInfo(contractData); }
+            }
+
+        } catch (error) {
+            console.error('Erro ao atualizar Wi-Fi:', error);
+            showBottomPopup(`Erro ao atualizar Wi-Fi: ${error.message}`, 'danger'); // Popup inferior vermelho
+            // Define a seção de Wi-Fi para o estado de erro em caso de catch
+            setSectionStatus(wifiSettingsDiv, wifiStatusDiv, false, `Erro ao atualizar Wi-Fi: ${error.message}`);
+            // Busca novamente em caso de erro para mostrar o estado potencialmente inalterado
+            if (contractData) { fetchCurrentWifiInfo(contractData); }
+        } finally {
+            setWifiBtn.disabled = false; // Reabilita o botão
+        }
+    });
+
+
+    // --- Configuração Inicial ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Garante que loaders e overlays de status estejam inicialmente escondidos
+        loadingDiv.style.display = 'none';
+        resultadoStatusDiv.style.display = 'none';
+        wifiStatusDiv.style.display = 'none';
+        unlockStatusDiv.style.display = 'none';
+        messageArea.style.display = 'none';
+        // Garante que o popup inferior esteja inicialmente escondido
+        bottomPopup.classList.remove('show');
+
+
+        // Esconde conteúdo e botões das seções inicialmente
+        resultadoDadosDiv.style.display = 'none';
+        copiarBtn.style.display = 'none';
+        currentWifiInfoDiv.style.display = 'none';
+        wifiForm.style.display = 'none';
+        setWifiBtn.style.display = 'none';
+        unlockResultDiv.style.display = 'none';
+        unlockBtn.style.display = 'none';
+
+        // Esconde as próprias seções inicialmente usando a classe 'visible'
+        resultadoDiv.classList.remove('visible');
+        wifiSettingsDiv.classList.remove('visible');
+        unlockSectionDiv.classList.remove('visible');
+
+        displayHistory(); // Carrega e exibe o histórico
+    });
+
+</script>
+
+</body>
+</html>
