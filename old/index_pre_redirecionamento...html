@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <link rel="icon" type="image/x-icon" href="ico.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Serviços</title>
+    <meta name="title" content="Plataforma Serviços" />
+    <meta name="description" content="Serviços para usuário contact center." />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://metatags.io/" />
+    <meta property="og:title" content="Plataforma Serviços" />
+    <meta property="og:description" content="Serviços para usuário contact center." />
+    <meta property="og:image" content="https://christianfelipesf.github.io/maxx/simples.jpg" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        /* Estilos CSS (sem as classes .card-color-X) */
+        .card-link {
+            display: block;
+            text-decoration: none;
+            color: inherit; /* Herda a cor do texto definida no estilo inline do card */
+        }
+        .card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-radius: 10px;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .card:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        .columns.is-centered {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        @media screen and (max-width: 768px) {
+            .columns {
+                flex-direction: column;
+                align-items: center;
+            }
+            .column {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container has-text-centered">
+            <h1 class="title">Plataforma Serviços STATIC 2</h1>
+            <div id="cards-container" class="columns is-centered is-multiline">
+                <p id="loading-message">Carregando serviços...</p>
+            </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="container has-text-centered">
+            <!--
+            <a href="https://maxx-isn6.onrender.com/" class="button is-warning is-light is-large" target="_blank">
+                Ir para o Novo Website
+            </a>-->
+            <a href="https://maxx-isn6.onrender.com/" class="button is-warning is-light is-large">
+                Ir para o Novo Website
+            </a>
+        </div>
+    </section>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // ****** CONFIGURE AQUI ******
+            // Substitua pelos seus dados corretos do GitHub
+            const owner = 'christianfelipesf'; // Exemplo: 'SEU_USUARIO_GITHUB'
+            const repo = 'maxx';            // Exemplo: 'NOME_DO_SEU_REPOSITORIO'
+            // ***************************
+
+            // --- DEFINIÇÃO DE CORES NO SCRIPT ---
+            // Cores aplicadas sequencialmente e repetidas.
+            // Adicione ou remova objetos para mudar as cores disponíveis.
+            const colorPairs = [
+                { bg: '#209cee', text: 'white' },  // Azul claro
+                { bg: '#ffdd57', text: 'black' },  // Amarelo
+                { bg: '#48c78e', text: 'white' },  // Verde menta
+                { bg: '#ff3860', text: 'white' },  // Vermelho rosado
+                { bg: '#7957d5', text: 'white' },  // Roxo vibrante
+                { bg: '#00d1b2', text: 'white' },  // Verde água
+                { bg: '#f14668', text: 'white' },  // Rosa escuro
+                { bg: '#3273dc', text: 'white' },  // Azul médio
+                { bg: '#23d160', text: 'white' },  // Verde neon
+                { bg: '#ff6b6b', text: 'white' },  // Coral
+                { bg: '#ff9f43', text: 'black' },  // Laranja claro
+                { bg: '#6c5ce7', text: 'white' },  // Roxo elétrico
+                { bg: '#00cec9', text: 'black' },  // Turquesa
+                { bg: '#e17055', text: 'white' },  // Laranja queimado
+                { bg: '#0984e3', text: 'white' },  // Azul vívido
+                { bg: '#fd79a8', text: 'white' },  // Rosa chiclete
+                { bg: '#ffeaa7', text: 'black' },  // Amarelo pálido
+                { bg: '#fab1a0', text: 'black' },  // Salmão
+                { bg: '#a29bfe', text: 'black' },  // Lilás claro
+                { bg: '#81ecec', text: 'black' },  // Ciano claro
+            ];
+            /*
+            const colorPairs = [
+                { bg: '#209cee', text: '#ffffff' }, // Bulma Primary (Info)
+                { bg: '#48c78e', text: '#ffffff' }, // Bulma Success
+                { bg: '#ffdd57', text: '#363636' }, // Bulma Warning (dark text)
+                { bg: '#ff3860', text: '#ffffff' }, // Bulma Danger
+                { bg: '#7957d5', text: '#ffffff' }, // Vibrant Purple
+                { bg: '#3273dc', text: '#ffffff' }, // Bulma Link
+                { bg: '#00d1b2', text: '#ffffff' }, // Bulma Turquoise
+                { bg: '#f14668', text: '#ffffff' }, // Bulma Pinkish Red
+                { bg: '#23d160', text: '#ffffff' }, // Bulma Neon Green
+                { bg: '#ff9f43', text: '#363636' }, // Light Orange (dark text)
+                { bg: '#0984e3', text: '#ffffff' }, // Vivid Blue
+                { bg: '#fd79a8', text: '#ffffff' }, // Bubblegum Pink
+            ];
+            */
+            // --- FIM DEFINIÇÃO DE CORES ---
+
+            const path = 'servicos';
+            const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+            const container = document.getElementById('cards-container');
+            const loadingMessage = document.getElementById('loading-message');
+
+            // Função de formatação de título (inalterada)
+            function formatTitle(filename) {
+                let title = filename.replace('.html', '');
+                title = title.replace(/[-_]/g, ' ');
+                title = title.split(' ')
+                             .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1) : '')
+                             .join(' ');
+                return title;
+            }
+
+            async function fetchAndGenerateCards() {
+                // Contador para aplicar cores sequencialmente
+                let currentColorIndex = 0;
+
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        let errorMsg = `Erro na API do GitHub: ${response.status} ${response.statusText}`;
+                        try { const errorData = await response.json(); errorMsg += ` - ${errorData.message || JSON.stringify(errorData)}`; } catch (e) { /* Ignora */ }
+                        throw new Error(errorMsg);
+                    }
+                    const files = await response.json();
+
+                    console.log("Dados recebidos da API:", files); // DEBUG
+
+                    if (loadingMessage) { loadingMessage.remove(); }
+                    if (!Array.isArray(files)) { throw new Error("Formato inesperado na resposta da API."); }
+
+                    const htmlFiles = files.filter(file => file.type === 'file' && file.name.endsWith('.html'));
+
+                    console.log("Arquivos HTML filtrados:", htmlFiles); // DEBUG
+
+                    if (htmlFiles.length === 0) {
+                        container.innerHTML = '<p>Nenhum serviço (arquivo .html) encontrado diretamente na pasta `servicos`.</p>';
+                        return;
+                    }
+
+                    // Itera sobre os arquivos HTML encontrados
+                    htmlFiles.forEach((file, loopIndex) => { // loopIndex usado para animação
+                        const cardColumn = document.createElement('div');
+                        cardColumn.className = 'column is-4';
+
+                        const cardLink = document.createElement('a');
+                        cardLink.href = `${path}/${file.name}`;
+                        cardLink.className = 'card-link';
+
+                        const cardDiv = document.createElement('div');
+                        cardDiv.className = 'card'; // Apenas a classe base
+
+                        // --- APLICAÇÃO SEQUENCIAL DAS CORES ---
+                        // Seleciona o par de cores usando o contador atual
+                        const selectedColor = colorPairs[currentColorIndex];
+
+                        // Aplica as cores diretamente ao estilo do elemento card
+                        cardDiv.style.backgroundColor = selectedColor.bg;
+                        cardDiv.style.color = selectedColor.text; // Cor do texto herdada
+
+                        // ---- DEBUG ----
+                        console.log(`File: ${file.name}, SequentialIndex: ${currentColorIndex}, Applied BG: ${selectedColor.bg}, Applied Text: ${selectedColor.text}`);
+                        // ---- FIM DEBUG ----
+
+                        // Incrementa o contador e garante que ele volte a 0 (repita) usando o módulo (%)
+                        // Isso garante que o próximo card use a próxima cor na sequência, repetindo do início se necessário
+                        currentColorIndex = (currentColorIndex + 1) % colorPairs.length;
+                        // --- FIM APLICAÇÃO SEQUENCIAL ---
+
+                        const cardContent = document.createElement('div');
+                        cardContent.className = 'card-content';
+
+                        const titleP = document.createElement('p');
+                        titleP.className = 'title is-4';
+                        titleP.textContent = formatTitle(file.name);
+
+                        const subtitleP = document.createElement('p');
+                        subtitleP.className = 'subtitle is-6';
+                        subtitleP.style.color = `${selectedColor.text}b3`; // Add alpha (e.g., b3 for ~70% opacity)
+                        console.log(selectedColor.text)
+                        subtitleP.textContent = `Acessar ${formatTitle(file.name)}`;
+
+                        // Monta a estrutura HTML do card
+                        cardContent.appendChild(titleP);
+                        cardContent.appendChild(subtitleP);
+                        cardDiv.appendChild(cardContent);
+                        cardLink.appendChild(cardDiv);
+                        cardColumn.appendChild(cardLink);
+                        container.appendChild(cardColumn);
+
+                        // Aplica animação de entrada com atraso
+                         setTimeout(() => {
+                             cardDiv.classList.add("visible");
+                         }, loopIndex * 50); // Atraso baseado no índice do loop
+                    });
+
+                } catch (error) {
+                    console.error('Falha ao buscar ou gerar cards:', error);
+                    if (loadingMessage) { loadingMessage.remove(); }
+                    // Exibe mensagem de erro na página
+                    container.innerHTML = `
+                        <div class="notification is-danger">
+                            <p><strong>Erro ao carregar os serviços.</strong></p>
+                            <p>Verifique o console (F12) para detalhes técnicos.</p>
+                            <p><small>Mensagem: ${error.message}</small></p>
+                        </div>`;
+                }
+            }
+
+            // Inicia o processo
+            fetchAndGenerateCards();
+        });
+    </script>
+</body>
+</html>

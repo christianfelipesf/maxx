@@ -180,7 +180,13 @@
             atualizarTexto()
         };
         function voltar() {
+            const hostname = window.location.hostname;
+            
+            if (hostname.includes("onrender.com")) {
+                window.location.href = "../indexnewst.html";
+            } else {
             window.location.href = "../index.html";
+            }
         }
         function animarTextarea() {
             const resultado = document.getElementById("resultado");

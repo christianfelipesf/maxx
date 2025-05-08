@@ -1,0 +1,88 @@
+<!-- Código HTML minimizado e limpo, mantendo funcionalidades essenciais -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Microsiris</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-3">
+    <h1 class="h4 text-center">Microsiris</h1>
+    <div class="form-group">
+      <input type="text" id="numero" class="form-control form-control-sm" placeholder="Contrato (6 dígitos)" maxlength="6">
+    </div>
+    <div class="mb-3">
+      <button id="enviar" class="btn btn-primary btn-sm">Pesquisar</button>
+      <button id="colar-btn" class="btn btn-secondary btn-sm">Colar</button>
+    </div>
+    <div id="resultado" class="mb-3" style="display:none">
+      <h5>Dados do Contrato</h5>
+      <div id="resultado-dados" class="small"></div>
+      <button id="copiar-btn" class="btn btn-outline-secondary btn-sm mt-2">Copiar</button>
+    </div>
+    <div id="wifi" style="display:none">
+      <h5>Configurar Wi-Fi</h5>
+      <input id="wifi-ssid" class="form-control form-control-sm mb-1" placeholder="SSID">
+      <input id="wifi-senha" class="form-control form-control-sm mb-1" placeholder="Senha (mín. 8)">
+      <button id="set-wifi-btn" class="btn btn-success btn-sm">Atualizar</button>
+    </div>
+    <div id="desbloqueio" class="mt-3" style="display:none">
+      <h5>Desbloqueio</h5>
+      <div id="unlock-result" class="small"></div>
+      <button id="unlock-btn" class="btn btn-warning btn-sm">Desbloquear</button>
+    </div>
+  </div>
+
+  <script>
+    const input = id => document.getElementById(id);
+    const show = id => input(id).style.display = 'block';
+    const hide = id => input(id).style.display = 'none';
+
+    input('colar-btn').onclick = async () => {
+      const text = await navigator.clipboard.readText();
+      input('numero').value = text.match(/\d{6}/)?.[0] || '';
+    };
+
+    input('enviar').onclick = async () => {
+      const numero = input('numero').value.trim();
+      if (!/^\d{6}$/.test(numero)) return alert('Contrato inválido');
+
+      hide('resultado'); hide('wifi'); hide('desbloqueio');
+      const form = new FormData(); form.append('info', numero);
+      const r = await fetch('http://192.168.0.3/Osiris/process/main.php', { method: 'POST', body: form });
+      const data = await r.json();
+
+      if (!data || data.error) return alert(data?.error || 'Erro');
+      input('resultado-dados').innerHTML = Object.entries(data).map(([k,v]) => `<div><strong>${k}:</strong> ${v}</div>`).join('');
+      show('resultado'); show('wifi'); show('desbloqueio');
+
+      input('copiar-btn').onclick = () => navigator.clipboard.writeText(JSON.stringify(data));
+      input('set-wifi-btn').onclick = async () => {
+        const ssid = input('wifi-ssid').value;
+        const senha = input('wifi-senha').value;
+        if (!ssid || senha.length < 8) return alert('SSID e senha obrigatórios');
+        const f = new FormData();
+        ['olt','slot','pon','mac_onu','id','isnokia'].forEach(k => f.append(k, data[k] || ''));
+        f.append('ssid', ssid);
+        f.append('senha', senha);
+        f.append('ssid5g', ssid+'.5G');
+        f.append('senha5g', senha);
+        ['canalwf','visivelwf','statuswf','canalwf5g','visivelwf5g','statuswf5g'].forEach(k => f.append(k, '0'));
+        await fetch('http://192.168.0.3/Osiris/process/setWifi.php', { method: 'POST', body: f });
+        alert('Wi-Fi atualizado');
+      };
+
+      input('unlock-btn').onclick = async () => {
+        const f = new FormData();
+        ['ipolt','mac','slot','pon','id','isnokia'].forEach(k => f.append(k === 'ipolt' ? 'ipolt' : k, data[k === 'ipolt' ? 'olt' : k] || ''));
+        f.append('nivel', '3');
+        const r = await fetch('http://192.168.0.3/Osiris/process/desbloquear.php', { method: 'POST', body: f });
+        const res = await r.json();
+        input('unlock-result').innerHTML = Object.entries(res).map(([k,v]) => `<div><strong>${k}:</strong> ${v}</div>`).join('');
+      };
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <link rel="icon" type="image/x-icon" href="people.ico">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formulário de Despesas</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: 'Inter', sans-serif; /* Added Inter font */
+      }
+      #products .product-item {
+        background-color: #f0f0f0;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: background-color 0.2s ease-in-out;
+      }
+
+      /* CSS for flashing red effect */
+      .flash-red {
+        animation: flashRed 1s linear infinite alternate;
+      }
+
+      @keyframes flashRed {
+        0% {
+          border-color: #dc3545;
+          box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+          background-color: #f8d7da; /* Light red background */
+        }
+        100% {
+          border-color: #f8d7da;
+          box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0);
+          background-color: #fff; /* White background */
+        }
+      }
+
+      /* CSS for green effect */
+      .highlight-green {
+        border-color: #28a745 !important;
+        box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25) !important;
+      }
+
+      /* Modal styles */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1050;
+      }
+
+      .modal-content {
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        position: relative;
+        max-width: 400px; /* Make modal smaller */
+        width: 90%; /* Responsive width */
+        color: white; /* White text for modal content */
+      }
+
+      .modal-content.error {
+        background-color: #dc3545; /* Red background for error */
+        border: 2px solid #dc3545;
+      }
+
+      .modal-content.success {
+        background-color: #28a745; /* Green background for success */
+        border: 2px solid #28a745;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: white; /* White close button */
+      }
+
+      /* Style for readonly total inputs */
+      .readonly-total {
+          background-color: #e9ecef; /* Bootstrap's disabled/readonly color */
+          opacity: 1; /* Ensure full opacity */
+          color: #495057; /* Standard text color for readonly */
+          font-weight: bold;
+          text-align: right; /* Align currency to the right */
+      }
+      /*#D61 { Specific ID style kept for potential backward compatibility 
+         background-color: #e9ecef;
+         opacity: 1;
+         color: #495057;
+         font-weight: bold;
+         text-align: right;
+      }*/
+      #D61 {
+          background-color: #e9ecef; /* Bootstrap's disabled/readonly color */
+          opacity: 1; /* Ensure full opacity */
+          color: #ffffffee;
+          font-weight: bold;
+      }
+    </style>
+  </head>
+  <body class="p-4">
+    <div class="container">
+      <h2 class="mb-4">Formulário de Prestações</h2>
+      <form id="expenseForm">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Nome Completo</label>
+            <input class="form-control rounded" name="C9" placeholder="Nome" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Número de celular</label>
+            <input class="form-control rounded" name="C13" type="tel" placeholder="(99) 9 9999 9999" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Banco</label>
+            <input class="form-control rounded" name="D15" placeholder="Banco" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Agência</label>
+            <input class="form-control rounded" name="E15" placeholder="Agência" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Conta Corrente</label>
+            <input class="form-control rounded" name="F15" placeholder="Conta Corrente" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Código Pix</label>
+            <input class="form-control rounded" name="C15" placeholder="Cole o código Pix aqui" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Data Inicial</label>
+            <input class="form-control rounded" name="C21" id="C21" type="date" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Data Final</label>
+            <input class="form-control rounded" name="D21" id="D21" type="date" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Dias Corridos</label>
+            <input class="form-control rounded readonly-total" name="F21" id="F21" placeholder="Dias Corridos" readonly required />
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Motivo das Despesas</label>
+            <input class="form-control rounded" name="C23" placeholder="Motivo das Despesas" required />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <h5>Produtos</h5>
+        <div id="products"></div>
+        <button type="button" class="btn btn-secondary my-2 rounded" onclick="addProduct()">
+          Adicionar Produto
+        </button>
+
+        <hr class="my-4" />
+
+        <div class="row g-3 justify-content-end align-items-end">
+          <div class="col-md-3">
+              <label class="form-label fw-bold">Valor Total de Todos os Produtos</label>
+              <input class="form-control bg-secondary" id="D61" name="D61" readonly required />
+          </div>
+          <div class="col-md-3">
+              <label class="form-label fw-bold">Valor do Adiantamento</label>
+              <input class="form-control rounded" id="valorAdiantamento" name="valorAdiantamento" type="number" step="0.01" placeholder="R$ 0,00" required oninput="calculateDifference()" />
+          </div>
+          <div class="col-md-3">
+              <label class="form-label fw-bold">Valor a Receber</label>
+              <input class="form-control readonly-total rounded" id="D67" name="D67" readonly />
+          </div>
+          <div class="col-md-3">
+              <label class="form-label fw-bold">Valor a ser Devolvido</label>
+              <input class="form-control readonly-total rounded" id="D68" name="D68" readonly />
+          </div>
+      </div>
+      
+
+
+        <hr class="my-4" />
+
+        <div class="d-flex justify-content-start">
+            <button type="button" class="btn btn-primary rounded" onclick="validateAndExport()">
+              Baixar Planilha Preenchida
+            </button>
+            <button type="button" class="btn btn-danger ms-2 rounded" onclick="clearData()">
+              Limpar Dados
+            </button>
+        </div>
+      </form>
+    </div>
+
+    <div id="validationModal" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <p id="modalMessage"></p>
+        <p id="countdown"></p>
+        <button id="confirmDownload" class="btn btn-light mt-3 rounded" style="display: none;" onclick="startDownload()">Confirmar Download</button>
+      </div>
+    </div>
+
+    <script>
+      let productCount = 0;
+      let countdownInterval = null;
+
+      // --- Utility Functions ---
+      function formatCurrency(value) {
+        // Check if value is a valid number before formatting
+        if (isNaN(value) || value === null) {
+             return 'R$ 0,00'; // Return default currency format for invalid numbers
+        }
+        return value.toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        });
+      }
+
+      function parseCurrency(value) {
+        if (typeof value !== 'string') return 0; // Ensure input is a string
+        // Remove currency symbol, thousands separators (.), and replace comma decimal separator with dot
+        const cleanedValue = value.replace(/\s|R\$|\./g, '').replace(',', '.');
+        const number = parseFloat(cleanedValue);
+        return isNaN(number) ? 0 : number; // Return 0 if parsing fails
+      }
+
+       function parseInputNumber(value) {
+            if (typeof value !== 'string' || value.trim() === '') return 0;
+            const number = parseFloat(value);
+            return isNaN(number) ? 0 : number;
+        }
+
+      function calculateDaysBetweenDates(startDate, endDate) {
+        const oneDay = 1000 * 60 * 60 * 24;
+        // Ensure dates are valid before calculating
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return 0; // Return 0 if dates are invalid
+        }
+        const diffInTime = end.getTime() - start.getTime();
+        // Return 0 if end date is before start date
+        if (diffInTime < 0) return 0;
+        return Math.round(diffInTime / oneDay) + 1; // Add 1 to include both start and end days
+      }
+
+      const getFormattedDate = () => {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        const yyyy = now.getFullYear();
+        const mesAbrev = meses[now.getMonth()];
+        const dd = pad(now.getDate());
+        const hh = pad(now.getHours());
+        const min = pad(now.getMinutes());
+        const ss = pad(now.getSeconds());
+        return `${yyyy}-${mesAbrev}-${dd}-${hh}-${min}-${ss}`;
+      };
+
+
+      // --- Local Storage Functions ---
+      function saveToLocalStorage() {
+        const form = document.getElementById("expenseForm");
+        const formData = new FormData(form);
+        const dataObject = {};
+        for (const [key, value] of formData.entries()) {
+          // Don't save calculated fields derived from others (like D65, D67, D68, F21, produto_total)
+          if (!['D65', 'D67', 'D68', 'F21', 'produto_total'].includes(key)) {
+             dataObject[key] = value;
+          }
+        }
+        localStorage.setItem("formData", JSON.stringify(dataObject));
+        localStorage.setItem("productHTML", document.getElementById("products").innerHTML);
+        // Save product count separately to ensure correct IDs on reload
+        localStorage.setItem("productCount", productCount.toString());
+      }
+
+      function loadFromLocalStorage() {
+        const savedData = localStorage.getItem("formData");
+        const productHTML = localStorage.getItem("productHTML");
+        const savedProductCount = localStorage.getItem("productCount");
+
+        if (savedData) {
+          const data = JSON.parse(savedData);
+          for (const [key, value] of Object.entries(data)) {
+            const input = document.querySelector(`[name="${key}"]`);
+            if (input) {
+                // Handle date inputs specifically if needed
+                if (input.type === 'date' && value) {
+                    input.value = value; // Assumes date is stored in YYYY-MM-DD format
+                } else {
+                    input.value = value;
+                }
+            }
+          }
+        }
+
+        if (productHTML) {
+          document.getElementById("products").innerHTML = productHTML;
+          productCount = savedProductCount ? parseInt(savedProductCount, 10) : 0; // Restore product count
+
+          // Re-attach event listeners for dynamically loaded product inputs
+          document.querySelectorAll("#products .product-item").forEach((el) => {
+              const currentId = parseInt(el.id.split('-')[1], 10);
+              const quantityInput = el.querySelector("[name=produto_quantidade]");
+              const valueInput = el.querySelector("[name=produto_valor]");
+              const removeButton = el.querySelector("button");
+
+              if(quantityInput) quantityInput.oninput = () => updateTotal(currentId);
+              if(valueInput) valueInput.oninput = () => updateTotal(currentId);
+              if(removeButton) removeButton.onclick = () => removeProduct(currentId);
+
+              // Recalculate individual product total on load
+              updateTotal(currentId);
+          });
+        } else {
+             // If no products loaded, ensure productCount is 0
+             productCount = 0;
+        }
+
+         // Set default dates if not loaded
+        const today = new Date().toISOString().split("T")[0];
+        const startDateInput = document.getElementById("C21");
+        const endDateInput = document.getElementById("D21");
+        if (!startDateInput.value) startDateInput.value = today;
+        if (!endDateInput.value) endDateInput.value = today;
+
+
+        // Recalculate derived fields after loading
+        updateDays(); // Recalculate days
+        updateValorTotalProdutos(); // Recalculate totals and difference
+      }
+
+      // --- Form Interaction Functions ---
+      function clearData() {
+        localStorage.removeItem("formData");
+        localStorage.removeItem("productHTML");
+        localStorage.removeItem("productCount");
+        document.getElementById("expenseForm").reset();
+        document.getElementById("products").innerHTML = "";
+        productCount = 0; // Reset product count
+
+        // Reset dates to today
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("C21").value = today;
+        document.getElementById("D21").value = today;
+
+        // Reset calculated fields
+        document.getElementById("F21").value = "1"; // Default to 1 day if start/end are same
+        document.getElementById("D61").value = formatCurrency(0);
+        document.getElementById("D65").value = formatCurrency(0);
+        document.getElementById("D67").value = formatCurrency(0);
+        document.getElementById("D68").value = formatCurrency(0);
+        document.getElementById("valorAdiantamento").value = ''; // Clear advance amount
+
+        // Add one product row by default after clearing
+        addProduct();
+
+        // Ensure totals are updated after adding the default product row
+        updateValorTotalProdutos();
+      }
+
+      function addProduct() {
+        const currentId = productCount; // Use current count as ID before incrementing
+        const container = document.createElement("div");
+        container.className = "product-item";
+        container.id = `product-${currentId}`;
+        container.innerHTML = `
+          <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Nome do Produto</label>
+              <input class="form-control rounded" name="produto_nome" placeholder="Nome do Produto" oninput="saveToLocalStorage()">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Quantidade</label>
+              <input class="form-control rounded" name="produto_quantidade" type="number" placeholder="Qtde" oninput="updateTotal(${currentId})">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Valor Unitário</label>
+              <input class="form-control rounded" name="produto_valor" type="number" step="0.01" placeholder="Valor Unit." oninput="updateTotal(${currentId})">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Valor Total</label>
+              <input class="form-control readonly-total rounded" name="produto_total" type="text" placeholder="R$ 0,00" readonly>
+            </div>
+            <div class="col-md-2">
+              <button type="button" class="btn btn-danger w-100 rounded" onclick="removeProduct(${currentId})">Remover</button>
+            </div>
+          </div>
+        `;
+        document.getElementById("products").appendChild(container);
+        productCount++; // Increment count AFTER using it for the ID
+        updateValorTotalProdutos(); // Update overall total
+        saveToLocalStorage(); // Save after adding product
+      }
+
+      function removeProduct(id) {
+        const element = document.getElementById(`product-${id}`);
+        if (element) element.remove();
+        updateValorTotalProdutos(); // Recalculate total after removal
+        saveToLocalStorage(); // Save after removing product
+      }
+
+      function updateTotal(id) {
+        const row = document.getElementById(`product-${id}`);
+        if (!row) return;
+        const quantidadeInput = row.querySelector("[name=produto_quantidade]");
+        const valorInput = row.querySelector("[name=produto_valor]");
+        const totalInput = row.querySelector("[name=produto_total]");
+
+        const quantidade = parseInputNumber(quantidadeInput.value);
+        const valor = parseInputNumber(valorInput.value);
+        const total = quantidade * valor;
+
+        totalInput.value = formatCurrency(total);
+        updateValorTotalProdutos(); // Update the grand total whenever an item total changes
+        saveToLocalStorage(); // Save after updating product total
+      }
+
+      function updateValorTotalProdutos() {
+        let totalGeral = 0;
+        const totals = document.querySelectorAll("[name=produto_total]");
+        totals.forEach((input) => {
+          totalGeral += parseCurrency(input.value);
+        });
+
+        // Update both total fields (D61 and D65)
+        document.getElementById("D61").value = formatCurrency(totalGeral);
+
+        // Recalculate the difference whenever the total product value changes
+        calculateDifference();
+        // Note: saveToLocalStorage() is called within calculateDifference()
+      }
+
+       function calculateDifference() {
+            const totalProdutosValue = parseCurrency(document.getElementById('D61').value);
+            const adiantamentoValue = parseInputNumber(document.getElementById('valorAdiantamento').value);
+
+            const difference = adiantamentoValue - totalProdutosValue;
+
+            const d67Input = document.getElementById('D67'); // Valor a Pagar/Devolver
+            const d68Input = document.getElementById('D68'); // Valor a Receber
+
+            if (difference < 0) {
+                // Negative difference: Amount to Pay/Return (show as positive)
+                d67Input.value = formatCurrency(Math.abs(difference));
+                d68Input.value = formatCurrency(0); // Clear the other field
+            } else {
+                // Positive or zero difference: Amount to Receive
+                d68Input.value = formatCurrency(difference);
+                d67Input.value = formatCurrency(0); // Clear the other field
+            }
+            saveToLocalStorage(); // Save state after calculation
+        }
+
+
+      function updateDays() {
+        console.log('dias atualizado')
+        const start = document.getElementById("C21").value;
+        const end = document.getElementById("D21").value;
+        const daysInput = document.getElementById("F21");
+
+        if (start && end) {
+          const dias = calculateDaysBetweenDates(start, end);
+          daysInput.value = dias > 0 ? dias : 1; // Ensure at least 1 day if dates are same or invalid range
+        } else {
+          daysInput.value = ""; // Clear days if dates are not set
+        }
+        saveToLocalStorage(); // Save after updating days
+      }
+
+      // --- Validation and Export ---
+      function validateAndExport() {
+        const form = document.getElementById("expenseForm");
+        // Include the new 'valorAdiantamento' field in required checks
+        const requiredInputs = form.querySelectorAll("input[required]:not([readonly]), input[name='valorAdiantamento']");
+        let allFilled = true;
+        const emptyInputs = [];
+
+        // Remove previous validation styling
+        document.querySelectorAll('.flash-red, .highlight-green').forEach(input => {
+            input.classList.remove('flash-red', 'highlight-green');
+            input.removeEventListener('input', removeFlashRed); // Clean up listeners
+        });
+
+        // --- Check General Required Fields ---
+        requiredInputs.forEach(input => {
+            const value = input.value.trim();
+             // Check if empty OR if it's the advance amount and it's not a valid number >= 0
+            if (value === '' || (input.id === 'valorAdiantamento' && (isNaN(parseFloat(value)) || parseFloat(value) < 0)) ) {
+                allFilled = false;
+                emptyInputs.push(input);
+            }
+        });
+
+        // --- Check Product Specific Inputs ---
+        const productItems = document.querySelectorAll("#products .product-item");
+        if (productItems.length > 0) {
+            productItems.forEach(item => {
+                // Check product name, quantity, and value (exclude total)
+                const productRequiredInputs = item.querySelectorAll("input[name='produto_nome'], input[name='produto_quantidade'], input[name='produto_valor']");
+                productRequiredInputs.forEach(input => {
+                     const value = input.value.trim();
+                     // Check if empty OR if number input is not a valid number >= 0
+                    if (value === '' || (input.type === 'number' && (isNaN(parseFloat(value)) || parseFloat(value) < 0)) ) {
+                        // Only mark as not filled if it wasn't already caught by the main required check (unlikely but safe)
+                        if (!emptyInputs.includes(input)) {
+                             allFilled = false;
+                             emptyInputs.push(input);
+                        }
+                    }
+                });
+            });
+        } else {
+             // If there are no product rows, the form might still be considered valid depending on requirements
+             // For now, assume at least one product might be expected, but don't force validation failure here.
+             // The D61/D65 check below handles the case where products are expected but missing/zero.
+        }
+
+         // --- Check if Total Product Value is Zero when products exist ---
+         const totalProdutosInput = document.getElementById('D61');
+         if (productItems.length > 0 && parseCurrency(totalProdutosInput.value) === 0) {
+             // If there are product rows but the total is zero, flag relevant product inputs
+             productItems.forEach(item => {
+                 const qtyInput = item.querySelector("input[name='produto_quantidade']");
+                 const valInput = item.querySelector("input[name='produto_valor']");
+                 if (parseInputNumber(qtyInput.value) <= 0 && !emptyInputs.includes(qtyInput)) emptyInputs.push(qtyInput);
+                 if (parseInputNumber(valInput.value) <= 0 && !emptyInputs.includes(valInput)) emptyInputs.push(valInput);
+             });
+             allFilled = false; // Mark as not filled if products exist but total is zero
+         }
+
+
+        // --- Handle Validation Results ---
+        if (!allFilled) {
+          // Flash red empty/invalid inputs indefinitely until filled/corrected
+          emptyInputs.forEach(input => {
+              input.classList.add('flash-red');
+              // Add event listener to remove flash-red when input is valid
+              input.addEventListener('input', removeFlashRed);
+          });
+          // Show error modal asking if user wants to proceed
+          showModal("Alguns campos obrigatórios não foram preenchidos ou são inválidos. Deseja continuar com o download mesmo assim?", "error", true); // Show confirm button
+        } else {
+          // Highlight all filled inputs green temporarily
+           const allFormInputs = form.querySelectorAll("input:not([readonly]):not([type='button']):not([type='submit'])");
+           allFormInputs.forEach(input => {
+               input.classList.add('highlight-green');
+               setTimeout(() => {
+                   input.classList.remove('highlight-green');
+               }, 3000); // Highlight for 3 seconds
+           });
+
+          // Show success modal and start countdown
+          showModal("Todos os campos preenchidos corretamente. O download começará em alguns segundos.", "success", false); // No confirm button needed
+          startCountdown(3); // Start 3-second countdown
+        }
+      }
+
+      // Function to remove flash-red class when input is valid
+      function removeFlashRed(event) {
+         const input = event.target;
+         const value = input.value.trim();
+         let isValid = value !== ''; // Basic check for non-empty
+
+         // Specific check for number inputs (including advance amount)
+         if (input.type === 'number' || input.id === 'valorAdiantamento') {
+             const numValue = parseFloat(value);
+             isValid = !isNaN(numValue) && numValue >= 0;
+         }
+
+         if (isValid) {
+             input.classList.remove('flash-red');
+             input.removeEventListener('input', removeFlashRed); // Remove listener after correction
+         }
+      }
+
+
+      // --- Modal Functions ---
+      function showModal(message, type, showConfirmButton) {
+        const modal = document.getElementById("validationModal");
+        const modalContent = modal.querySelector(".modal-content");
+        const modalMessage = document.getElementById("modalMessage");
+        const confirmButton = document.getElementById("confirmDownload");
+        const countdownElement = document.getElementById("countdown");
+
+        modalMessage.textContent = message;
+        modalContent.className = "modal-content " + type; // Set class for styling
+        confirmButton.style.display = showConfirmButton ? "inline-block" : "none"; // Use inline-block
+        countdownElement.textContent = ""; // Clear previous countdown
+        clearInterval(countdownInterval); // Clear any existing interval
+        modal.style.display = "flex"; // Show modal
+      }
+
+      function closeModal() {
+        document.getElementById("validationModal").style.display = "none";
+        clearInterval(countdownInterval); // Stop countdown if modal is closed manually
+      }
+
+      function startCountdown(seconds) {
+        let count = seconds;
+        const countdownElement = document.getElementById("countdown");
+        countdownElement.textContent = `Download em ${count} segundos...`;
+
+        // Clear any previous interval before starting a new one
+        clearInterval(countdownInterval);
+
+        countdownInterval = setInterval(() => {
+          count--;
+          if (count > 0) {
+            countdownElement.textContent = `Download em ${count} segundos...`;
+          } else {
+            clearInterval(countdownInterval);
+            countdownElement.textContent = "Iniciando download...";
+            startDownload(); // Start the download after countdown
+            // Keep modal open briefly to show "Iniciando download..."
+            setTimeout(closeModal, 1500); // Close modal after 1.5 seconds
+          }
+        }, 1000);
+      }
+
+      // --- Data Preparation and Export ---
+      function startDownload() {
+          closeModal(); // Close any open modal immediately when download starts
+
+          const form = document.getElementById("expenseForm");
+          const data = {};
+          // Select all inputs and textareas with a name attribute, excluding product details for now
+          const inputs = form.querySelectorAll("input[name]:not([name^=produto_]), textarea[name]:not([name^=produto_])");
+          inputs.forEach((input) => {
+            data[input.name] = input.value;
+          });
+
+          // Format PIX code if present
+          let pix = data.C15 ? `PIX(${data.C15})` : "";
+
+          // Prepare data mapping for the backend, parsing numbers where needed
+          const mapped = {
+            C9: data.C9, // nome
+            C13: data.C13, // fone
+            D15: data.D15, // banco
+            E15: data.E15, // agencia
+            F15: data.F15, // CONTA_CORRENTE
+            C15: pix, // codigo pix formatted
+            C21: data.C21, // DATA_INICIAL
+            D21: data.D21, // DATA_FINAL
+            F21: data.F21, // DIAS_CORRIDOS (already calculated)
+            C23: data.C23, // MOTIVO_DAS_DESPESAS
+            D61: parseCurrency(data.D61), // VALOR_TOTAL Produtos (parsed number)
+            D65: parseCurrency(data.D61), // Total Geral - Same as D61, parsed
+            D66: parseInputNumber(data.valorAdiantamento), // Advance Amount (parsed number) - Send if needed by backend
+            D67: parseCurrency(data.D67), // Valor a Pagar/Devolver (parsed number)
+            D68: parseCurrency(data.D68), // Valor a Receber (parsed number)
+            // Signature fields
+            C75: data.C9, // Repeat Name for signature area
+            D75: data.C21 // Repeat Start Date for signature area (or use current date if preferred)
+          };
+          // Add product details
+          mapped.produtos = [];
+          const productRows = document.querySelectorAll("#products .product-item");
+          productRows.forEach((row) => {
+             const nomeInput = row.querySelector("[name=produto_nome]");
+             const quantidadeInput = row.querySelector("[name=produto_quantidade]");
+             const valorInput = row.querySelector("[name=produto_valor]");
+             const totalInput = row.querySelector("[name=produto_total]");
+
+             mapped.produtos.push({
+               // Use empty string as fallback if inputs are somehow missing
+               nome: nomeInput ? nomeInput.value : '',
+               quantidade: quantidadeInput ? parseInputNumber(quantidadeInput.value) : 0,
+               valor: valorInput ? parseInputNumber(valorInput.value) : 0,
+               total: totalInput ? parseCurrency(totalInput.value) : 0,
+             });
+          });
+
+          
+
+
+          // Proceed with the actual download logic
+          exportToExcel(mapped, "prestacao_limpo.xlsx");
+      }
+
+      async function exportToExcel(dataToExport, nomeArquivo) {
+        try {
+          const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+          const url = isLocalhost
+            ? "http://localhost:3000/gerar-planilha"
+            : "https://maxx-isn6.onrender.com/gerar-planilha";
+
+          console.log(url);
+
+          // Inclui o nome do arquivo no corpo da requisição
+          const requestBody = {
+            ...dataToExport,
+            nomeArquivo: nomeArquivo, // Envia o nome do arquivo
+          };
+
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          if (!response.ok) throw new Error("Erro ao gerar planilha");
+
+          const blob = await response.blob();
+
+          // Pega o nome do arquivo vindo do backend
+          const filename = response.headers.get("X-Filename") || "planilha.xlsx";
+
+          // Cria o link para download
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = `Prestacao${getFormattedDate()}.xlsx`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          showModal("Planilha gerada com sucesso!", "success", false);
+        } catch (error) {
+          showModal("Erro ao exportar: " + error.message, "error", false);
+        }
+      }
+
+
+
+      // --- Initialization ---
+      window.addEventListener("DOMContentLoaded", () => {
+        loadFromLocalStorage(); // Load saved data first
+
+        // Add a product row only if there are none loaded
+        if (document.querySelectorAll("#products .product-item").length === 0) {
+             addProduct();
+        }
+
+        // Add event listeners for date changes
+        document.getElementById("C21").addEventListener("input", updateDays);
+        document.getElementById("D21").addEventListener("input", updateDays);
+
+        // Add event listener for advance amount changes
+        document.getElementById("valorAdiantamento").addEventListener("input", calculateDifference);
+
+        // Add event listeners for general form inputs to save changes
+        document.querySelectorAll("#expenseForm input:not([name^=produto_]):not([readonly]), #expenseForm textarea:not([name^=produto_])").forEach(input => {
+             input.addEventListener('input', saveToLocalStorage);
+             input.addEventListener('change', saveToLocalStorage); // Also save on change (e.g., for date picker)
+        });
+
+        // Initial calculation after everything is loaded and set up
+        updateValorTotalProdutos(); // This will also call calculateDifference
+      });
+
+    </script>
+  </body>
+</html>
