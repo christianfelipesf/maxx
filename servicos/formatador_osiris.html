@@ -78,27 +78,17 @@
       <div class="control">
         <textarea id="inputData" class="textarea" placeholder="Cole os dados aqui..."></textarea>
       </div>
-    </div> <!---
-    <div class="field">
-      <label class="label">Estilo de Animação</label>
-      <div class="select" aria-disabled="true">
-        <select id="animationStyle">
-          <option value="none">Sem efeitos</option>
-          <option value="typewriter">Digitando</option>
-          <option value="fade">Desaparecer e aparecer</option>
-        </select>
-      </div>
-    </div> -->
-    <div class="control mt-2">
-      <button class="button is-info" onclick="copyOutput(); saveOutputToHistory();">
-        <i class="fas fa-copy" style="color: blue;"></i> Copiar
-      </button>
     </div>
     <div class="field mt-4">
       <label class="label">Resultado</label>
       <div class="control">
         <input type="text" id="outputData" class="input" readonly>
       </div>
+    </div>
+    <div class="control mt-2">
+      <button id="copyButton" class="button is-info" onclick="copyOutput(); saveOutputToHistory();" disabled>
+        <i class="fas fa-copy" style="color: blue;"></i> Copiar
+      </button>
     </div>
     <div id="popup" class="popup">Copiado para a área de transferência!</div>
     <div id="history" class="box">
@@ -162,10 +152,13 @@
   function animateOutput(text, duration = 3000, style = 'typewriter') {
     const inputField = document.getElementById('inputData');
     const outputField = document.getElementById('outputData');
+    const copyButton = document.getElementById('copyButton');
+    copyButton.disabled = true; // desativa antes de começar
     const originalInput = inputField.value;
 
     if (style === 'none') {
       outputField.value = text;
+      copyButton.disabled = false;
       return;
     }
 
@@ -179,6 +172,7 @@
         i++;
       } else {
         clearInterval(interval);
+        copyButton.disabled = false; // habilita após animação
       }
     }, delay);
   }
@@ -190,7 +184,7 @@
       const timestamp = new Date().toLocaleString();
       const formattedText = `Osiris: ${formatInline(parsedData)} (${timestamp})`;
       const style = document.getElementById('animationStyle')?.value ?? 'typewriter';
-      animateOutput(formattedText, 100, style);
+      animateOutput(formattedText, 50, style);
     }
   }
 
