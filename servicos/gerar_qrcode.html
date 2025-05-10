@@ -38,25 +38,49 @@
     }
 
     .pdf-container {
+      overflow: auto;
+      width: 100%;
       text-align: center;
       margin-top: 20px;
     }
 
     canvas {
-      width: 100%;
+      width: auto;
+      max-width: 100%;
       height: auto;
+      aspect-ratio: 2 / 3; /* Mantém a proporção do PDF 400x600 */
       border: 1px solid #ccc;
       border-radius: 6px;
+      display: block;
+      margin: 0 auto;
     }
 
     .buttons-container {
       display: flex;
       justify-content: space-between;
       margin-top: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     #qrBorderRadius {
       display: none; /* Oculta o campo do raio da borda */
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .pdf-container, .pdf-container * {
+        visibility: visible;
+      }
+      .pdf-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: auto;
+      }
     }
   </style>
 </head>
@@ -70,12 +94,12 @@
     <label for="password" class="label">Senha</label>
     <input type="text" id="password" class="input" placeholder="minhasenha123">
 
-    <!-- O campo do raio da borda do QR Code é oculto e editado apenas por script -->
-    <input type="number" id="qrBorderRadius" class="input" placeholder="20" value="20" style="display: none;">
+    <input type="number" id="qrBorderRadius" class="input" value="20" style="display: none;">
 
     <div class="buttons-container">
       <button class="button is-primary" onclick="baixarPdf()">Baixar PDF</button>
       <button class="button is-link" onclick="inverterEstilo()">Inverter Estilo</button>
+      <button class="button is-info" onclick="abrirCanvasEmNovaGuia()">Abrir Imagem</button>
     </div>
 
     <div class="pdf-container">
@@ -83,35 +107,29 @@
     </div>
   </div>
 
-  <!-- QRCode lib -->
+  <!-- Bibliotecas -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <!-- PDF-lib -->
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
-  <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
 
   <script>
-    let isInverted = false; // Controla o estilo invertido
-
-    // Parâmetros configurados via script
+    let isInverted = false;
     const defaultFontSize = 13;
     const defaultQrSize = 214;
     const defaultQrY = 228;
     let fontSize = defaultFontSize;
     let qrSize = defaultQrSize;
     let qrY = defaultQrY;
-    let qrBorderRadius = 30;  // Raio da borda do QR Code
+    let qrBorderRadius = 30;
     let ssid = "MinhaRede";
     let password = "minhasenha123";
 
-    // Função para atualizar os parâmetros ao alterar os inputs
     function atualizarParametros() {
       ssid = document.getElementById('ssid').value || "MinhaRede";
       password = document.getElementById('password').value || "minhasenha123";
-      renderizarPdf(); // Atualiza o canvas com os novos parâmetros
+      renderizarPdf();
     }
 
-    // Função para renderizar PDF de forma eficiente e sem piscamento
     async function renderizarPdf() {
       const blob = await gerarPdfBlob();
       const url = URL.createObjectURL(blob);
@@ -119,16 +137,11 @@
       const context = canvas.getContext('2d');
       const pdfDoc = await pdfjsLib.getDocument(url).promise;
       const page = await pdfDoc.getPage(1);
-      const viewport = page.getViewport({ scale: 2 }); // Aumento da escala para maior nitidez
+      const viewport = page.getViewport({ scale: 2 });
 
-      // Limpa o canvas para evitar "piscamento"
-      context.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Evita o piscamento ao renderizar
       canvas.width = viewport.width;
       canvas.height = viewport.height;
-
-      // Renderiza a página do PDF no canvas
+      context.clearRect(0, 0, canvas.width, canvas.height);
       await page.render({
         canvasContext: context,
         viewport
@@ -138,7 +151,7 @@
     async function gerarPdfBlob() {
       const wifiString = `WIFI:T:WPA;S:${ssid};P:${password};;`;
       const qrDataUrl = await QRCode.toDataURL(wifiString, {
-        color: { dark: '#000000', light: '#00000000' }, // Garante fundo transparente
+        color: { dark: '#000000', light: '#00000000' },
         scale: 10
       });
 
@@ -151,82 +164,77 @@
       const backgroundColor = isInverted ? rgb(0, 0, 0) : rgb(1, 1, 1);
       const textColor = isInverted ? rgb(1, 1, 1) : rgb(0, 0, 0);
 
-      page.drawRectangle({
-        x: 0, y: 0,
-        width: 400, height: 600,
-        color: backgroundColor
-      });
+      page.drawRectangle({ x: 0, y: 0, width: 400, height: 600, color: backgroundColor });
 
       page.drawText('Informações da Rede Wi-Fi', {
-        x: 50, y: 560,
-        size: fontSize + 4,
-        font,
-        color: textColor
+        x: 50, y: 560, size: fontSize + 4, font, color: textColor
       });
-
       page.drawText(`SSID: ${ssid}`, {
-        x: 50, y: 530,
-        size: fontSize,
-        font,
-        color: textColor
+        x: 50, y: 530, size: fontSize, font, color: textColor
       });
-
       page.drawText(`Senha: ${password}`, {
-        x: 50, y: 510,
-        size: fontSize,
-        font,
-        color: textColor
+        x: 50, y: 510, size: fontSize, font, color: textColor
       });
 
-      // Ajuste de posição para garantir que o QR Code não ultrapasse os limites
-      const qrYAdjusted = Math.max(100, Math.min(qrY, 500 - qrSize)); // Ajusta a posição vertical para não ultrapassar os limites
+      const qrYAdjusted = Math.max(100, Math.min(qrY, 500 - qrSize));
 
-      // Desenha uma borda branca ao redor do QR Code
-      const borderPadding = -10; // Tamanho da borda
       page.drawRectangle({
-        x: (400 - qrSize) / 2 - borderPadding,
-        y: qrYAdjusted - borderPadding,
-        width: qrSize + borderPadding * 2,
-        height: qrSize + borderPadding * 2,
-        color: rgb(1, 1, 1) // Borda branca
+        x: (400 - qrSize) / 2 - 10,
+        y: qrYAdjusted - 10,
+        width: qrSize + 20,
+        height: qrSize + 20,
+        color: rgb(1, 1, 1)
       });
 
-      // Desenhando o QR Code com fundo transparente
       page.drawImage(qrImage, {
         x: (400 - qrSize) / 2,
         y: qrYAdjusted,
         width: qrSize,
-        height: qrSize,
-        borderRadius: qrBorderRadius // Usando o parâmetro de borda
+        height: qrSize
       });
 
       const pdfBytes = await pdfDoc.save();
       return new Blob([pdfBytes], { type: 'application/pdf' });
     }
 
-    // Função para baixar o PDF
+    function gerarTimestamp() {
+      const agora = new Date();
+      const ano = agora.getFullYear();
+      const mes = String(agora.getMonth() + 1).padStart(2, '0');
+      const dia = String(agora.getDate()).padStart(2, '0');
+      const hora = String(agora.getHours()).padStart(2, '0');
+      const minuto = String(agora.getMinutes()).padStart(2, '0');
+      const segundo = String(agora.getSeconds()).padStart(2, '0');
+      return `${ano}-${mes}-${dia}_${hora}-${minuto}-${segundo}`;
+    }
+    
     async function baixarPdf() {
       const blob = await gerarPdfBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
+      const timestamp = gerarTimestamp();
       a.href = url;
-      a.download = `wifi-${ssid}.pdf`;
+      a.download = `wifi-${ssid}_${timestamp}.pdf`;
       a.click();
     }
 
-    // Função para inverter o estilo do PDF
     function inverterEstilo() {
-      isInverted = !isInverted; // Alterna o estilo invertido
-      renderizarPdf(); // Atualiza o PDF com o novo estilo
+      isInverted = !isInverted;
+      renderizarPdf();
     }
 
-    // Adiciona os eventos de input para atualizar os parâmetros
+    function abrirCanvasEmNovaGuia() {
+      const canvas = document.getElementById('pdfCanvas');
+      const imgData = canvas.toDataURL();
+      const newTab = window.open();
+      newTab.document.write(`<img src="${imgData}" style="max-width:100%">`);
+      newTab.document.title = "Visualização do QR Code";
+    }
+
     document.getElementById('ssid').addEventListener('input', atualizarParametros);
     document.getElementById('password').addEventListener('input', atualizarParametros);
 
-    // Inicializa o canvas com os valores padrões
     window.addEventListener('load', renderizarPdf);
-
   </script>
 </body>
 </html>
