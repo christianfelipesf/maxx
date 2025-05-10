@@ -1,44 +1,51 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Gerar PDF Wi-Fi com QR Code</title>
+  <meta charset="UTF-8">
+  <title>Wi-Fi QR PDF Visual</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f2f5;
-      padding: 40px;
+      background: #f2f2f2;
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      padding: 40px;
     }
 
     .container {
       background: white;
-      padding: 30px;
+      padding: 25px;
       border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
       width: 100%;
-      max-width: 400px;
+      max-width: 480px;
     }
 
-    h1 {
+    h2 {
       text-align: center;
       margin-bottom: 20px;
     }
 
     label {
       display: block;
-      margin-top: 15px;
+      margin-top: 12px;
+      font-weight: bold;
     }
 
-    input {
+    input[type="text"] {
       width: 100%;
-      padding: 10px;
-      margin-top: 5px;
+      padding: 8px;
       border-radius: 5px;
       border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    small {
+      color: #555;
     }
 
     button {
@@ -47,9 +54,9 @@
       background: #007bff;
       color: white;
       border: none;
-      margin-top: 20px;
       border-radius: 5px;
-      font-size: 16px;
+      margin-top: 20px;
+      font-weight: bold;
       cursor: pointer;
     }
 
@@ -57,60 +64,134 @@
       background: #0056b3;
     }
 
-    .success {
-      margin-top: 15px;
-      color: green;
-      text-align: center;
+    iframe {
+      width: 100%;
+      height: 500px;
+      margin-top: 25px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Gerar PDF de Wi-Fi</h1>
-    <form id="wifiForm">
-      <label for="ssid">Nome da Rede (SSID):</label>
-      <input type="text" id="ssid" name="ssid" required>
+    <h2>Wi-Fi PDF com QR Code</h2>
 
-      <label for="password">Senha:</label>
-      <input type="text" id="password" name="password" required>
+    <label>SSID:</label>
+    <input type="text" id="ssid" placeholder="Nome da rede" value="MinhaRede">
 
-      <button type="submit">Gerar PDF</button>
-    </form>
-    <div class="success" id="successMsg"></div>
+    <label>Senha:</label>
+    <input type="text" id="password" placeholder="Senha da rede" value="minhasenha123">
+
+    <label>Tamanho do QR Code: <span id="qrSizeLabel">200</span>px</label>
+    <input type="range" id="qrSize" min="100" max="400" value="200" oninput="atualizarPdf()">
+
+    <label>Posição Vertical do QR Code: <span id="qrYLabel">300</span>px</label>
+    <input type="range" id="qrY" min="100" max="500" value="300" oninput="atualizarPdf()">
+
+    <label>Tamanho da Fonte: <span id="fontSizeLabel">14</span>px</label>
+    <input type="range" id="fontSize" min="8" max="30" value="14" oninput="atualizarPdf()">
+
+    <button onclick="baixarPdf()">Baixar PDF</button>
+
+    <iframe id="pdfPreview"></iframe>
   </div>
 
-  <script>
-    document.getElementById('wifiForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
+  <!-- QRCode lib -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <!-- PDF-lib -->
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
 
+  <script>
+    async function gerarPdfBlob() {
       const ssid = document.getElementById('ssid').value;
       const password = document.getElementById('password').value;
+      const fontSize = parseInt(document.getElementById('fontSize').value);
+      const qrSize = parseInt(document.getElementById('qrSize').value);
+      const qrY = parseInt(document.getElementById('qrY').value);
 
-      try {
-        const response = await fetch('/gerar-pdf-wifi', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ssid, password })
-        });
+      // Atualiza rótulos
+      document.getElementById('qrSizeLabel').textContent = qrSize;
+      document.getElementById('qrYLabel').textContent = qrY;
+      document.getElementById('fontSizeLabel').textContent = fontSize;
 
-        if (!response.ok) throw new Error('Erro ao gerar PDF');
+      const wifiString = `WIFI:T:WPA;S:${ssid};P:${password};;`;
 
-        const blob = await response.blob();
-        const filename = response.headers.get('Content-Disposition')?.split('filename=')[1] || 'wifi.pdf';
+      // Gera QR Code com fundo transparente e escala maior
+      const qrDataUrl = await QRCode.toDataURL(wifiString, {
+        color: {
+          dark: '#000000',
+          light: '#0000' // Transparente
+        },
+        scale: 10 // Mais detalhes
+      });
 
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = filename.replaceAll('"', '');
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+      const { PDFDocument, rgb, StandardFonts } = PDFLib;
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([400, 600]);
 
-        document.getElementById('successMsg').textContent = 'PDF gerado com sucesso!';
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const qrImage = await pdfDoc.embedPng(qrDataUrl);
 
-      } catch (err) {
-        alert('Erro ao gerar PDF: ' + err.message);
-      }
-    });
+      page.drawText('Informações da Rede Wi-Fi', {
+        x: 50,
+        y: 560,
+        size: fontSize + 4,
+        font,
+        color: rgb(0, 0.2, 0.6)
+      });
+
+      page.drawText(`SSID: ${ssid}`, {
+        x: 50,
+        y: 530,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 0)
+      });
+
+      page.drawText(`Senha: ${password}`, {
+        x: 50,
+        y: 510,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 0)
+      });
+
+      page.drawImage(qrImage, {
+        x: (400 - qrSize) / 2,
+        y: qrY,
+        width: qrSize,
+        height: qrSize
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      return new Blob([pdfBytes], { type: 'application/pdf' });
+    }
+
+    async function atualizarPdf() {
+      const blob = await gerarPdfBlob();
+      const url = URL.createObjectURL(blob);
+      const iframe = document.getElementById('pdfPreview');
+      iframe.src = url;
+    }
+
+    async function baixarPdf() {
+      const ssid = document.getElementById('ssid').value;
+      const blob = await gerarPdfBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `wifi-${ssid}.pdf`;
+      a.click();
+    }
+
+    // Atualiza o PDF na inicialização
+    window.addEventListener('load', atualizarPdf);
+
+    // Atualiza em tempo real
+    ['ssid', 'password', 'fontSize', 'qrSize', 'qrY'].forEach(id =>
+      document.getElementById(id).addEventListener('input', atualizarPdf)
+    );
   </script>
 </body>
 </html>

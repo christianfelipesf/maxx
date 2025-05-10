@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerar PDF QR Wi-Fi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 450px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      margin-top: 15px;
+      display: block;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      margin-top: 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .row input {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>PDF de Wi-Fi com QR</h2>
+
+    <label>SSID:</label>
+    <input type="text" id="ssid" placeholder="Nome da rede">
+
+    <label>Senha:</label>
+    <input type="text" id="password" placeholder="Senha da rede">
+
+    <label>Tamanho da fonte:</label>
+    <input type="number" id="fontSize" value="14" min="8" max="30">
+
+    <label>Tamanho do QR Code (px):</label>
+    <input type="number" id="qrSize" value="200" min="100" max="400">
+
+    <label>Posição vertical do QR Code (y):</label>
+    <input type="number" id="qrY" value="300" min="0" max="600">
+
+    <button onclick="gerarPdf()">Gerar e Imprimir PDF</button>
+  </div>
+
+  <!-- QRCode lib -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <!-- PDF-lib -->
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
+
+  <script>
+    async function gerarPdf() {
+      const ssid = document.getElementById('ssid').value;
+      const password = document.getElementById('password').value;
+      const fontSize = parseInt(document.getElementById('fontSize').value) || 14;
+      const qrSize = parseInt(document.getElementById('qrSize').value) || 200;
+      const qrY = parseInt(document.getElementById('qrY').value) || 300;
+
+      if (!ssid || !password) {
+        alert("Preencha o SSID e a Senha!");
+        return;
+      }
+
+      const wifiString = `WIFI:T:WPA;S:${ssid};P:${password};;`;
+      const qrDataUrl = await QRCode.toDataURL(wifiString);
+
+      const { PDFDocument, rgb, StandardFonts } = PDFLib;
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([400, 600]);
+
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const qrImage = await pdfDoc.embedPng(qrDataUrl);
+
+      page.drawText('Informações da Rede Wi-Fi', {
+        x: 50,
+        y: 560,
+        size: fontSize + 4,
+        font,
+        color: rgb(0, 0.2, 0.6),
+      });
+
+      page.drawText(`SSID: ${ssid}`, {
+        x: 50,
+        y: 530,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 0)
+      });
+
+      page.drawText(`Senha: ${password}`, {
+        x: 50,
+        y: 510,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 0)
+      });
+
+      page.drawImage(qrImage, {
+        x: (400 - qrSize) / 2,
+        y: qrY,
+        width: qrSize,
+        height: qrSize
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `wifi-${ssid}.pdf`;
+      link.click();
+    }
+  </script>
+</body>
+</html>
