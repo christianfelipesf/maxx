@@ -4,6 +4,9 @@ const path = require("path");
 const cors = require("cors");
 const fs = require('fs').promises;
 
+const QRCode = require("qrcode");
+const PDFDocument = require("pdfkit");
+
 const app = express();
 const port = 3000;
 
@@ -100,7 +103,50 @@ app.post("/gerar-planilha", async (req, res) => {
   }
 });
 
+// Rota para gerar o PDF com QR Code de Wi-Fi
+app.post('/gerar-pdf-wifi', async (req, res) => {
+  const { ssid, password } = req.body;
 
+  if (!ssid || !password) {
+    return res.status(400).json({ message: 'SSID e senha são obrigatórios.' });
+  }
+
+  const wifiString = `WIFI:T:WPA;S:${ssid};P:${password};;`;
+
+  try {
+    const qrDataUrl = await QRCode.toDataURL(wifiString);
+    const doc = new PDFDocument();
+    const filename = `wifi_${Date.now()}.pdf`;
+    const filepath = path.join(__dirname, filename);
+    const stream = doc.pipe(require('fs').createWriteStream(filepath));
+
+    doc.fontSize(20).text('Informações de Wi-Fi', { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(14).text(`SSID: ${ssid}`);
+    doc.text(`Senha: ${password}`);
+    doc.moveDown();
+
+    const base64Data = qrDataUrl.replace(/^data:image\/png;base64,/, "");
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    doc.image(buffer, {
+      fit: [200, 200],
+      align: 'center'
+    });
+
+    doc.end();
+
+    stream.on('finish', () => {
+      res.download(filepath, filename, () => {
+        fs.unlink(filepath).catch(err => console.error("Erro ao remover arquivo:", err));
+      });
+    });
+
+  } catch (err) {
+    console.error("Erro ao gerar PDF de Wi-Fi:", err);
+    res.status(500).json({ message: 'Erro ao gerar o PDF.' });
+  }
+});
 
 // Inicia o servidor
 app.listen(port, () => {
