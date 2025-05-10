@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsiris - Consulta, Wi-Fi, Desbloqueio e Histórico</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: auto;
+        }
+        #resultado, #wifi-settings, #unlock-section, #history-section {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        #loading, #wifi-loading, #unlock-loading, #current-wifi-loading {
+            display: none;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .info-item {
+            margin-bottom: 8px;
+            display: inline-block;
+            width: calc(50% - 10px);
+            vertical-align: top;
+            padding-right: 10px;
+            box-sizing: border-box;
+            word-wrap: break-word;
+        }
+        .info-item strong, .current-wifi-info p strong, #unlock-result p strong {
+            display: inline-block;
+            width: 140px;
+            font-weight: 600;
+            color: #495057;
+        }
+        .current-wifi-info p, #unlock-result p {
+             margin-bottom: 0.5rem;
+             font-size: 0.9rem;
+             display: flex;
+             align-items: center;
+             gap: 5px;
+        }
+        .copy-btn {
+            cursor: pointer;
+            color: #007bff;
+            font-size: 0.8em;
+            padding: 2px 4px;
+            border: none;
+            background: none;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+        .copy-btn:hover {
+            color: #0056b3;
+        }
+        #history-list {
+            list-style: none;
+            padding: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+        }
+        #history-list li {
+            padding: 5px 8px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #history-list li:last-child { border-bottom: none; }
+        #history-list li:hover { background-color: #e9ecef; }
+        .history-timestamp { font-size: 0.75em; color: #6c757d; margin-left: 10px; }
+        .history-contract-name {
+            flex-grow: 1; /* Allows the name to take up available space */
+            margin-right: 10px; /* Space between name and timestamp */
+            word-break: break-word; /* Prevent overflow for long names */
+        }
+
+
+        @media (max-width: 768px) {
+            .info-item { width: 100%; padding-right: 0; }
+            .button-group { flex-direction: column; gap: 5px; }
+            .button-group .btn { width: 100%; }
+            .current-wifi-info p strong, #unlock-result p strong { width: 100px; }
+        }
+        .button-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .btn { border-radius: 6px; font-weight: 500; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, opacity 0.2s ease-in-out; }
+        .btn:disabled { opacity: 0.65; cursor: not-allowed; }
+        #copiar-btn { margin-top: 15px; margin-bottom: 10px; }
+        #set-wifi-btn, #unlock-btn { margin-top: 15px; }
+        #message-area { margin-top: 15px; padding: 10px; border-radius: 5px; display: none; font-size: 0.9rem; }
+        h1 { color: #343a40; text-align: center; font-weight: bold; font-size: 2rem; }
+        h3, h4 { color: #343a40; font-weight: 600; }
+        #current-wifi-info { border-bottom: 1px solid #dee2e6; padding-bottom: 15px; margin-bottom: 15px; }
+        /* Adjust input group for removed button */
+        #wifi-senha.form-control {
+             border-top-right-radius: .25rem !important; /* Restore radius */
+             border-bottom-right-radius: .25rem !important;
+        }
+        .input-group-append .btn:first-child { /* Adjust radius if only one button left */
+             border-top-left-radius: 0;
+             border-bottom-left-radius: 0;
+        }
+
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+    <h1 class="my-4">Microsiris</h1>
+
+    <div id="message-area"></div>
+
+    <div class="form-group mb-3">
+        <label for="numero" class="font-weight-bold">Contrato:</label>
+        <input type="text" class="form-control" id="numero" value="" placeholder="Digite o contrato (6 dígitos)" maxlength="6" pattern="\d{6}">
+    </div>
+    <div class="button-group mb-4">
+        <button id="enviar" class="btn btn-primary">Pesquisar Contrato</button>
+        <button id="colar-btn" class="btn btn-secondary">Colar da Área de Transferência</button>
+    </div>
+
+    <div id="history-section" style="display: none;">
+        <h4 class="mb-2" style="font-size: 1.1rem;">Histórico Recente:</h4>
+        <ul id="history-list" class="list-group"> </ul>
+    </div>
+
+    <div id="loading">
+        <div class="spinner-border text-primary" role="status"><span class="sr-only">Carregando...</span></div>
+        <p>Aguarde, buscando dados do contrato...</p>
+    </div>
+
+    <div id="resultado" style="display:none;">
+        <h3 class="mt-3 mb-3">Dados do Contrato:</h3>
+        <div id="resultado-dados"></div>
+        <button id="copiar-btn" class="btn btn-secondary btn-sm">Copiar Dados Formatados</button>
+    </div>
+
+    <div id="unlock-section" style="display:none;">
+        <h4 class="mb-3">Desbloqueio</h4>
+           <div id="unlock-loading">
+             <div class="spinner-border text-warning spinner-border-sm" role="status"><span class="sr-only">Desbloqueando...</span></div>
+             <p class="text-sm">Aguarde, processando desbloqueio...</p>
+         </div>
+        <div id="unlock-result" class="text-sm mb-3"></div>
+        <button id="unlock-btn" class="btn btn-warning">Desbloquear Contrato</button>
+    </div>
+
+    <div id="wifi-settings" style="display:none;">
+        <h3 class="mt-4 mb-3">Configurações Wi-Fi</h3>
+        <div id="current-wifi-info-container">
+            <h4 class="text-muted mb-2" style="font-size: 1rem;">Informações Atuais:</h4>
+             <div id="current-wifi-loading">
+                 <div class="spinner-border text-info spinner-border-sm" role="status"><span class="sr-only">Carregando Wi-Fi...</span></div>
+                 <p class="text-sm text-muted">Buscando informações atuais do Wi-Fi...</p>
+             </div>
+            <div id="current-wifi-info" class="current-wifi-info" style="display: none;"></div>
+        </div>
+        <form id="wifi-form">
+            <h4 class="text-muted mt-3 mb-2" style="font-size: 1rem;">Atualizar Configurações:</h4>
+            <input type="hidden" id="wifi-olt"><input type="hidden" id="wifi-slot"><input type="hidden" id="wifi-pon"><input type="hidden" id="wifi-mac"><input type="hidden" id="wifi-id"><input type="hidden" id="wifi-isnokia">
+            <div class="form-group">
+                <label for="wifi-ssid" class="font-weight-bold">Novo Nome da Rede Wi-Fi (SSID 2.4GHz):</label>
+                <input type="text" class="form-control" id="wifi-ssid" placeholder="Ex: MinhaRede">
+            </div>
+            <div class="form-group">
+                <label for="wifi-senha" class="font-weight-bold">Nova Senha da Rede Wi-Fi:</label>
+                <div class="input-group">
+                     <input type="text" class="form-control" id="wifi-senha" placeholder="Mínimo 8 caracteres">
+                     <div class="input-group-append">
+                         <button type="button" id="generate-password-btn" class="btn btn-info" title="Gerar Senha Aleatória"><i class="fas fa-random"></i></button>
+                         </div>
+                </div>
+            </div>
+             <p class="text-muted small mb-3">O nome da rede 5GHz será "<span id="ssid-5g-preview" class="font-weight-bold"></span>" e a senha será a mesma.</p>
+            <button type="button" id="set-wifi-btn" class="btn btn-success">Atualizar Wi-Fi</button>
+        </form>
+           <div id="wifi-loading">
+             <div class="spinner-border text-success" role="status"><span class="sr-only">Atualizando...</span></div>
+             <p>Aguarde, atualizando configurações Wi-Fi...</p>
+         </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    // Global variables
+    let dadosFormatados = '';
+    let contractData = {};
+    const MAX_HISTORY_ITEMS = 5;
+
+    // --- DOM Elements ---
+    const numeroInput = document.getElementById('numero');
+    const enviarBtn = document.getElementById('enviar');
+    const colarBtn = document.getElementById('colar-btn');
+    const loadingDiv = document.getElementById('loading');
+    const resultadoDiv = document.getElementById('resultado');
+    const resultadoDadosDiv = document.getElementById('resultado-dados');
+    const copiarBtn = document.getElementById('copiar-btn');
+    const messageArea = document.getElementById('message-area');
+    const historySection = document.getElementById('history-section');
+    const historyList = document.getElementById('history-list');
+
+    // Wi-Fi elements
+    const wifiSettingsDiv = document.getElementById('wifi-settings');
+    const wifiForm = document.getElementById('wifi-form');
+    const setWifiBtn = document.getElementById('set-wifi-btn');
+    const wifiLoadingDiv = document.getElementById('wifi-loading');
+    const wifiSsidInput = document.getElementById('wifi-ssid');
+    const wifiSenhaInput = document.getElementById('wifi-senha');
+    const generatePasswordBtn = document.getElementById('generate-password-btn');
+    const ssid5gPreview = document.getElementById('ssid-5g-preview');
+    const currentWifiInfoDiv = document.getElementById('current-wifi-info');
+    const currentWifiLoadingDiv = document.getElementById('current-wifi-loading');
+
+    // Unlock elements
+    const unlockSectionDiv = document.getElementById('unlock-section');
+    const unlockBtn = document.getElementById('unlock-btn');
+    const unlockLoadingDiv = document.getElementById('unlock-loading');
+    const unlockResultDiv = document.getElementById('unlock-result');
+
+    // --- Helper Functions ---
+    function showMessage(message, type = 'danger', duration = 5000) {
+        const alertClass = `alert-${type}`;
+        messageArea.textContent = message;
+        messageArea.className = `alert ${alertClass} alert-dismissible fade show`;
+        messageArea.style.display = 'block';
+        if (duration > 0) {
+            setTimeout(() => {
+                 if (typeof $ !== 'undefined' && $.fn.alert) { $(messageArea).alert('close'); }
+                 else { messageArea.style.display = 'none'; }
+            }, duration);
+        }
+    }
+
+    function generateRandomPassword(length = 8) {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let password = '';
+        for (let i = 0; i < length; i++) { password += chars.charAt(Math.floor(Math.random() * chars.length)); }
+        return password;
+    }
+
+    async function copyToClipboard(text, successMessage = 'Copiado!') {
+        if (!text || text === 'N/A') { showMessage('Nenhum texto para copiar.', 'warning', 2000); return; }
+        try {
+            await navigator.clipboard.writeText(text);
+            showMessage(successMessage, 'success', 2000);
+        } catch (err) {
+            console.error('Falha ao copiar: ', err); showMessage('Erro ao copiar para a área de transferência.', 'danger');
+        }
+    }
+
+    // --- History Functions ---
+    function getHistory() {
+        const history = localStorage.getItem('microsirisHistory');
+        return history ? JSON.parse(history) : [];
+    }
+
+    // Modified to accept contract number and subscriber name
+    function addToHistory(contractNumber, subscriberName) {
+        if (!contractNumber || !/^\d{6}$/.test(contractNumber)) return;
+        let history = getHistory();
+        const timestamp = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        // Remove existing entry for this contract number
+        history = history.filter(item => item.contract !== contractNumber);
+        // Add new entry to the beginning
+        history.unshift({ contract: contractNumber, name: subscriberName || 'N/A', time: timestamp });
+        // Trim history if it exceeds max items
+        if (history.length > MAX_HISTORY_ITEMS) { history.pop(); }
+        localStorage.setItem('microsirisHistory', JSON.stringify(history));
+        displayHistory();
+    }
+
+    function displayHistory() {
+        const history = getHistory();
+        historyList.innerHTML = '';
+        if (history.length > 0) {
+            historySection.style.display = 'block';
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center py-1 px-2';
+                li.style.cursor = 'pointer';
+
+                // Display contract number and subscriber name
+                const contractInfoSpan = document.createElement('span');
+                contractInfoSpan.className = 'history-contract-name'; // Add class for styling
+                contractInfoSpan.textContent = `${item.contract} - ${item.name}`;
+                li.appendChild(contractInfoSpan);
+
+                // Display timestamp
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'history-timestamp badge badge-light badge-pill';
+                timeSpan.textContent = item.time;
+                li.appendChild(timeSpan);
+
+                li.addEventListener('click', () => {
+                    numeroInput.value = item.contract;
+                    showMessage(`Contrato ${item.contract} (${item.name}) carregado do histórico.`, 'info', 2000);
+                });
+                historyList.appendChild(li);
+            });
+        } else {
+            historySection.style.display = 'none';
+        }
+    }
+
+    // --- Event Listeners ---
+    generatePasswordBtn.addEventListener('click', () => {
+        const newPassword = generateRandomPassword(8);
+        wifiSenhaInput.value = newPassword;
+        wifiSenhaInput.type = 'text'; // Ensure it's text type
+        showMessage('Senha aleatória gerada!', 'info', 2000);
+    });
+
+    enviarBtn.addEventListener('click', async () => {
+        const numero = numeroInput.value.trim();
+        if (!/^\d{6}$/.test(numero)) { showMessage('Por favor, insira um número de contrato válido (6 dígitos).'); return; }
+        // Reset UI
+        enviarBtn.disabled = true; colarBtn.disabled = true; loadingDiv.style.display = 'block';
+        resultadoDiv.style.display = 'none'; wifiSettingsDiv.style.display = 'none'; unlockSectionDiv.style.display = 'none';
+        currentWifiInfoDiv.style.display = 'none'; currentWifiInfoDiv.innerHTML = ''; currentWifiLoadingDiv.style.display = 'none';
+        unlockResultDiv.innerHTML = ''; messageArea.style.display = 'none'; contractData = {}; dadosFormatados = '';
+        try {
+            // Fetch Contract Data
+            const formData = new FormData(); formData.append('info', numero);
+            console.log("Fetching contract data for:", numero);
+            const response = await fetch('http://192.168.0.3/Osiris/process/main.php', { method: 'POST', body: formData });
+            if (!response.ok) { const errorText = await response.text(); console.error('Main API Server response:', errorText); throw new Error(`Erro: ${response.status} ${response.statusText}`); }
+            const data = await response.json(); console.log("Contract data received:", data);
+            contractData = data;
+            // Display Contract Data
+            resultadoDadosDiv.innerHTML = '';
+            const agora = new Date(); const dataAtual = agora.toLocaleDateString('pt-BR'); const horaAtual = agora.toLocaleTimeString('pt-BR');
+            let hasData = false;
+            for (const [key, value] of Object.entries(data)) {
+                if (value !== null && value !== "null" && value !== "") {
+                    hasData = true; const item = document.createElement('div'); item.className = 'info-item';
+                    const safeValue = String(value).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    item.innerHTML = `<strong>${key}:</strong> ${safeValue}`; resultadoDadosDiv.appendChild(item);
+                }
+            }
+            if (!hasData) { showMessage('Nenhum dado encontrado para este contrato.', 'warning'); return; }
+
+            // Add to history AFTER successfully fetching and parsing data
+            addToHistory(numero, data.assinante);
+
+            // Prepare Formatted Data
+            let campos = [ `Assinante: ${data.assinante}`, `MAC: ${data.mac_onu}`, `OLT: ${data.nomeolt}`, `SLOT: ${data.slot}`, `PON: ${data.pon}`, `ADMINSTATE: ${data.adminstate}`, `OPERSTATE: ${data.operstate}`, `DOWNLOAD: ${data.down}`, `UPLOAD: ${data.up}`, `RX ONU: ${data.rxpower}`, `TX ONU: ${data.txpower}`, `RX OLT: ${data.oltrx}`, `IP ONU: ${data.gateway || 'N/A'}`, `DNS 1: ${data.dns1}`, `DNS 2: ${data.dns2}`, `ID Equipamento: ${data.hardver}`, `Versão Software: ${data.softver}`, `Tempo Ligado: ${data.uptime}`, `Distância(M): ${data.distancia}`, `Corrente(mA): ${data.current}`, `Temperatura(°C): ${data.temp}`, `Tensão(V): ${data.voltage}` ];
+            dadosFormatados = `Osiris: ${campos.filter(v => v && !v.includes(': undefined') && !v.includes(': null') && !v.includes(': N/A')).join(', ')} (${dataAtual}, ${horaAtual})`;
+            resultadoDiv.style.display = 'block';
+            // Setup Sections
+            const requiredKeys = ['olt', 'slot', 'pon', 'mac_onu', 'id'];
+            const hasRequiredData = requiredKeys.every(key => data[key] !== null && data[key] !== undefined && data[key] !== "null");
+            if (hasRequiredData) {
+                wifiSettingsDiv.style.display = 'block'; currentWifiLoadingDiv.style.display = 'block'; currentWifiInfoDiv.style.display = 'none';
+                wifiSsidInput.value = ''; wifiSenhaInput.value = ''; wifiSenhaInput.type = 'text'; // Default to text now
+                updateSsid5gPreview();
+                document.getElementById('wifi-olt').value = data.olt; document.getElementById('wifi-slot').value = data.slot; document.getElementById('wifi-pon').value = data.pon; document.getElementById('wifi-mac').value = data.mac_onu; document.getElementById('wifi-id').value = data.id; document.getElementById('wifi-isnokia').value = data.isnokia || 'false';
+                unlockSectionDiv.style.display = 'block'; unlockResultDiv.innerHTML = '';
+                fetchCurrentWifiInfo(data);
+            } else {
+                console.warn("Dados essenciais ausentes."); wifiSettingsDiv.style.display = 'none'; unlockSectionDiv.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Erro no processo de busca:', error); showMessage(`Ocorreu um erro ao buscar os dados: ${error.message}`);
+            resultadoDiv.style.display = 'none'; wifiSettingsDiv.style.display = 'none'; unlockSectionDiv.style.display = 'none';
+        } finally {
+            enviarBtn.disabled = false; colarBtn.disabled = false; loadingDiv.style.display = 'none';
+        }
+    });
+
+    async function fetchCurrentWifiInfo(cData) {
+        currentWifiLoadingDiv.style.display = 'block'; currentWifiInfoDiv.style.display = 'none'; currentWifiInfoDiv.innerHTML = '';
+        try {
+            const wifiFormData = new FormData();
+            wifiFormData.append('olt', cData.olt); wifiFormData.append('slot', cData.slot); wifiFormData.append('pon', cData.pon);
+            wifiFormData.append('mac', cData.mac_onu); wifiFormData.append('modelo', cData.modelo || ''); wifiFormData.append('id', cData.id);
+            wifiFormData.append('isnokia', cData.isnokia || 'false');
+            console.log("Fetching current Wi-Fi data with:", Object.fromEntries(wifiFormData));
+            const wifiResponse = await fetch('http://192.168.0.3/Osiris/process/wifi.php', { method: 'POST', body: wifiFormData });
+            if (!wifiResponse.ok) { const errorText = await wifiResponse.text(); console.error('wifi.php response error:', errorText); throw new Error(`Erro ${wifiResponse.status}: ${wifiResponse.statusText}`); }
+            const wifiData = await wifiResponse.json(); console.log("Current Wi-Fi data received:", wifiData);
+            displayCurrentWifiInfo(wifiData); // Use the helper function
+        } catch (error) {
+            console.error('Erro ao buscar informações atuais do Wi-Fi:', error);
+            currentWifiInfoDiv.innerHTML = `<p class="text-danger">Não foi possível carregar as informações atuais do Wi-Fi. (${error.message})</p>`;
+            currentWifiInfoDiv.style.display = 'block';
+        } finally {
+             currentWifiLoadingDiv.style.display = 'none';
+        }
+    }
+
+    function displayCurrentWifiInfo(wifiData) {
+        const ssid24 = wifiData.ssid || 'N/A';
+        const pass24 = wifiData.passwifi || 'N/A';
+        const canal24 = wifiData["canal-wifi"] || 'N/A';
+        const ssid5 = wifiData.ssid5g || 'N/A';
+        const pass5 = wifiData.passwifi5g || 'N/A';
+        const canal5 = wifiData["canal-wifi5g"] || 'N/A';
+
+        currentWifiInfoDiv.innerHTML = `
+            <p><strong>SSID 2.4G:</strong> <span id="current-ssid-24">${ssid24}</span> ${ssid24 !== 'N/A' ? '<button class="copy-btn" data-target="current-ssid-24" title="Copiar SSID 2.4G"><i class="far fa-copy"></i></button>' : ''}</p>
+            <p><strong>Senha 2.4G:</strong> <span id="current-pass-24">${pass24}</span> ${pass24 !== 'N/A' ? '<button class="copy-btn" data-target="current-pass-24" title="Copiar Senha 2.4G"><i class="far fa-copy"></i></button>' : ''}</p>
+            <p><strong>Canal 2.4G:</strong> ${canal24}</p>
+            <hr style="border-top: 1px dashed #ccc;">
+            <p><strong>SSID 5G:</strong> <span id="current-ssid-5">${ssid5}</span> ${ssid5 !== 'N/A' ? '<button class="copy-btn" data-target="current-ssid-5" title="Copiar SSID 5G"><i class="far fa-copy"></i></button>' : ''}</p>
+            <p><strong>Senha 5G:</strong> <span id="current-pass-5">${pass5}</span> ${pass5 !== 'N/A' ? '<button class="copy-btn" data-target="current-pass-5" title="Copiar Senha 5G"><i class="far fa-copy"></i></button>' : ''}</p>
+            <p><strong>Canal 5G:</strong> ${canal5}</p>
+        `;
+        currentWifiInfoDiv.style.display = 'block';
+
+        // Add event listeners to the new copy buttons
+        currentWifiInfoDiv.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const targetId = event.currentTarget.getAttribute('data-target');
+                const textToCopy = document.getElementById(targetId)?.textContent;
+                const successMsg = targetId.includes('ssid') ? `SSID "${textToCopy}" copiado!` : `Senha copiada!`;
+                copyToClipboard(textToCopy, successMsg);
+            });
+        });
+    }
+
+
+    unlockBtn.addEventListener('click', async () => {
+        if (!contractData || !contractData.olt || !contractData.mac_onu || !contractData.slot || !contractData.pon || !contractData.id) { showMessage('Dados necessários para o desbloqueio não estão disponíveis.', 'warning'); return; }
+        unlockBtn.disabled = true; unlockLoadingDiv.style.display = 'block'; unlockResultDiv.innerHTML = ''; messageArea.style.display = 'none';
+        try {
+            const unlockFormData = new FormData();
+            unlockFormData.append('ipolt', contractData.olt); unlockFormData.append('mac', contractData.mac_onu); unlockFormData.append('slot', contractData.slot);
+            unlockFormData.append('pon', contractData.pon); unlockFormData.append('id', contractData.id); unlockFormData.append('isnokia', contractData.isnokia || 'false');
+            unlockFormData.append('nivel', '3');
+            console.log("Sending data to desbloquear.php:", Object.fromEntries(unlockFormData));
+            const unlockResponse = await fetch('http://192.168.0.3/Osiris/process/desbloquear.php', { method: 'POST', body: unlockFormData });
+            if (!unlockResponse.ok) { const errorText = await unlockResponse.text(); console.error('Unlock API Server response:', errorText); throw new Error(`Erro: ${unlockResponse.status} ${unlockResponse.statusText}`); }
+            const unlockResult = await unlockResponse.json(); console.log("Unlock response received:", unlockResult);
+            unlockResultDiv.innerHTML = ` <p><strong>Status:</strong> ${unlockResult.st || 'N/A'}</p> <p><strong>Contrato:</strong> ${unlockResult.ctt || 'N/A'}</p> <p><strong>Data Expiração:</strong> ${unlockResult.data || 'N/A'}</p> <p><strong>Situação:</strong> ${unlockResult.situacao || 'N/A'}</p> <p><strong>Desbloqueio Realizado:</strong> ${unlockResult.desbloqueio ? 'Sim' : 'Não'}</p> `;
+            if (unlockResult.desbloqueio) { showMessage('Contrato desbloqueado com sucesso!', 'success'); } else { const failureReason = unlockResult.message || '(Resposta não indicou sucesso)'; showMessage(`Falha ao desbloquear. ${failureReason}`, 'warning'); }
+        } catch (error) {
+            console.error('Erro ao desbloquear:', error); showMessage(`Erro durante o desbloqueio: ${error.message}`);
+            unlockResultDiv.innerHTML = `<p class="text-danger">Falha ao processar desbloqueio.</p>`;
+        } finally {
+            unlockBtn.disabled = false; unlockLoadingDiv.style.display = 'none';
+        }
+    });
+
+    copiarBtn.addEventListener('click', () => { copyToClipboard(dadosFormatados, 'Dados formatados copiados!'); });
+
+    colarBtn.addEventListener('click', () => {
+        navigator.clipboard.readText()
+            .then(text => { numeroInput.value = text.trim().substring(0, 6); })
+            .catch(err => {
+                console.error('Erro ao colar:', err);
+                if (err.name === 'NotAllowedError' || err.name === 'SecurityError') { showMessage('Permissão para colar negada.'); } else { showMessage('Erro ao colar da área de transferência.'); }
+            });
+    });
+
+    wifiSsidInput.addEventListener('input', updateSsid5gPreview);
+    function updateSsid5gPreview() { const ssidBase = wifiSsidInput.value.trim(); ssid5gPreview.textContent = ssidBase ? `${ssidBase}.5G` : '(Nome da Rede 5G)'; }
+    updateSsid5gPreview();
+
+    setWifiBtn.addEventListener('click', async () => {
+        const ssid = wifiSsidInput.value.trim(); const senha = wifiSenhaInput.value;
+        if (!ssid) { showMessage('Por favor, insira o nome da rede Wi-Fi (SSID).'); return; }
+        if (!senha || senha.length < 8) { showMessage('A senha do Wi-Fi deve ter pelo menos 8 caracteres.'); return; }
+
+        // Show loading spinner and disable button
+        setWifiBtn.disabled = true;
+        wifiLoadingDiv.style.display = 'block';
+        messageArea.style.display = 'none'; // Hide previous messages
+
+        try {
+            const wifiFormData = new FormData();
+            wifiFormData.append('olt', document.getElementById('wifi-olt').value);
+            wifiFormData.append('slot', document.getElementById('wifi-slot').value);
+            wifiFormData.append('pon', document.getElementById('wifi-pon').value);
+            wifiFormData.append('mac', document.getElementById('wifi-mac').value);
+            wifiFormData.append('id', document.getElementById('wifi-id').value);
+            wifiFormData.append('isnokia', document.getElementById('wifi-isnokia').value);
+            wifiFormData.append('ssid', `${ssid} 2.4G`);
+            wifiFormData.append('senha', senha);
+            wifiFormData.append('ssid5g', `${ssid} 5G`);
+            wifiFormData.append('senha5g', senha);
+            wifiFormData.append('canalwf', '0'); // Assuming '0' means auto or default
+            wifiFormData.append('visivelwf', '0'); // Assuming '0' means visible
+            wifiFormData.append('statuswf', 'enable');
+            wifiFormData.append('visivelwf5g', '0'); // Assuming '0' means visible
+            wifiFormData.append('statuswf5g', 'enable');
+            wifiFormData.append('canalwf5g', '0'); // Assuming '0' means auto or default
+
+            console.log("Sending data to setWifi.php:", Object.fromEntries(wifiFormData));
+
+            const wifiResponse = await fetch('http://192.168.0.3/Osiris/process/setWifi.php', {
+                method: 'POST',
+                body: wifiFormData
+            });
+
+            // Check if response is OK before trying to parse JSON
+            if (!wifiResponse.ok) {
+                const errorText = await wifiResponse.text();
+                console.error('setWifi.php response error:', errorText);
+                throw new Error(`Erro ${wifiResponse.status}: ${wifiResponse.statusText}`);
+            }
+
+            // Parse the JSON response
+            const wifiResult = await wifiResponse.json();
+            console.log('Wi-Fi Update Response (JSON):', wifiResult);
+
+            // Check if the update was successful based on the JSON response structure
+            // Assuming 'result' and 'result2' indicate success for 2.4G and 5G respectively
+            if (wifiResult.result === true || wifiResult.result2 === true) {
+                 showMessage('Configurações de Wi-Fi atualizadas com sucesso!', 'success');
+                 // Update the current info section with the *new* data from the response
+                 displayCurrentWifiInfo(wifiResult);
+            } else {
+                 // Handle cases where the API returns OK status but indicates failure in the JSON
+                 const failureReason = wifiResult.message || JSON.stringify(wifiResult); // Use message if available, otherwise show the whole response
+                 showMessage(`Falha ao atualizar Wi-Fi. ${failureReason}`, 'warning');
+                 // Optionally, re-fetch current info if update failed to show actual state
+                 if (contractData) { fetchCurrentWifiInfo(contractData); }
+            }
+
+        } catch (error) {
+            console.error('Erro ao atualizar Wi-Fi:', error);
+            showMessage(`Erro ao atualizar Wi-Fi: ${error.message}`, 'danger');
+            // Optionally, re-fetch current info on error
+            if (contractData) { fetchCurrentWifiInfo(contractData); }
+        } finally {
+            // Hide loading spinner and re-enable button
+            setWifiBtn.disabled = false;
+            wifiLoadingDiv.style.display = 'none';
+        }
+    });
+
+
+    // --- Initial Setup ---
+    document.addEventListener('DOMContentLoaded', () => {
+        resultadoDiv.style.display = 'none'; wifiSettingsDiv.style.display = 'none'; unlockSectionDiv.style.display = 'none';
+        loadingDiv.style.display = 'none'; wifiLoadingDiv.style.display = 'none'; unlockLoadingDiv.style.display = 'none';
+        currentWifiLoadingDiv.style.display = 'none'; messageArea.style.display = 'none';
+        displayHistory(); // Load and display history
+    });
+
+</script>
+
+</body>
+</html>

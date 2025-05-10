@@ -1,110 +1,93 @@
 import socket
 import threading
+import select
 import logging
 
-# Configuração do logging
 logging.basicConfig(filename='proxy.log', level=logging.DEBUG)
 
-# Função para lidar com o cliente
+BUFFER_SIZE = 8192
+
+def tunnel(client, remote):
+    sockets = [client, remote]
+    try:
+        while True:
+            readable, _, _ = select.select(sockets, [], [])
+            for s in readable:
+                data = s.recv(BUFFER_SIZE)
+                if not data:
+                    return
+                if s is client:
+                    remote.sendall(data)
+                else:
+                    client.sendall(data)
+    finally:
+        client.close()
+        remote.close()
+
 def handle_client(client_socket):
     try:
-        # Recebe a requisição do cliente
-        request = client_socket.recv(4096)
-        
+        request = client_socket.recv(BUFFER_SIZE)
         if not request:
-            print("Erro: Nenhum dado recebido do cliente.")
             return
-        
-        print("\n===== NOVA REQUISIÇÃO =====")
-        request_decoded = request.decode(errors='ignore')
-        
-        # Exibir a requisição de forma detalhada
-        print(f"Requisição recebida:\n{request_decoded}")
-        logging.debug(f"Requisição recebida:\n{request_decoded}")
-        
-        # Dividir os cabeçalhos da requisição
-        headers = request_decoded.split('\r\n')
-        request_line = headers[0].split(' ')
-        method, path, protocol = request_line
-        print(f"Tipo de requisição: {method}")
-        print(f"Caminho solicitado: {path}")
-        print(f"Protocolo: {protocol}")
-        
-        # Exibir corpo de requisição (se for POST, PUT, PATCH, etc.)
-        if method in ['POST', 'PUT', 'PATCH']:
-            content_length = next((line.split(':')[1].strip() for line in headers if line.lower().startswith('content-length:')), None)
-            if content_length:
-                content_length = int(content_length)
-                body = request[-content_length:].decode(errors='ignore')
-                print(f"Corpo da requisição: {body}")
-                logging.debug(f"Corpo da requisição:\n{body}")
-        
-        # Identificar o host no cabeçalho e conectar ao servidor de destino
-        host = '127.0.0.1'  # Fallback
-        for line in headers:
+
+        request_str = request.decode(errors='ignore')
+        lines = request_str.split('\r\n')
+        request_line = lines[0]
+        parts = request_line.split(' ')
+
+        if len(parts) < 3:
+            return
+
+        method, path, protocol = parts
+        print(f"\n===== NOVA REQUISIÇÃO =====\n{request_line}")
+        logging.debug(f"Requisição: {request_line}")
+
+        if method == 'CONNECT':
+            host, port = path.split(':')
+            port = int(port)
+            print(f"[+] Estabelecendo túnel para {host}:{port}")
+
+            remote_socket = socket.create_connection((host, port))
+            client_socket.sendall(b'HTTP/1.1 200 Connection Established\r\n\r\n')
+            tunnel(client_socket, remote_socket)
+            return
+
+        # HTTP normal (GET, POST etc.)
+        host = None
+        for line in lines:
             if line.lower().startswith('host:'):
-                host = line.split(':')[1].strip()
+                host = line.split(':', 1)[1].strip()
                 break
-        
-        # Conectar ao servidor remoto
-        remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        remote_socket.connect((host, 80))
+        if not host:
+            return
 
-        # Enviar a requisição para o servidor remoto
-        remote_socket.send(request)
-
-        # Receber a resposta do servidor remoto
+        print(f"[+] Encaminhando para {host} na porta 80")
+        remote_socket = socket.create_connection((host, 80))
+        remote_socket.sendall(request)
         while True:
-            response = remote_socket.recv(4096)
-            if len(response) == 0:
+            response = remote_socket.recv(BUFFER_SIZE)
+            if not response:
                 break
-            
-            # Exibir a resposta recebida
-            print("\n===== RESPOSTA DO SERVIDOR =====")
-            response_decoded = response.decode(errors='ignore')
-            headers, body = response_decoded.split('\r\n\r\n', 1)  # Separar cabeçalhos e corpo
-            
-            print(f"Cabeçalhos da resposta:\n{headers}")
-            print(f"Corpo da resposta:\n{body}")
-            logging.debug(f"Resposta recebida:\n{response_decoded}")
-            
-            # Enviar a resposta de volta para o cliente
-            client_socket.send(response)
-        
+            client_socket.sendall(response)
         remote_socket.close()
-    
-    except socket.timeout:
-        print("Erro: Tempo limite de conexão excedido.")
-        logging.error("Erro: Tempo limite de conexão excedido.")
-    
-    except socket.error as e:
-        print(f"Erro de rede: {e}")
-        logging.error(f"Erro de rede: {e}")
-    
+
     except Exception as e:
-        print(f"Erro inesperado: {e}")
-        logging.error(f"Erro inesperado: {e}")
-    
+        print(f"[!] Erro: {e}")
+        logging.error(f"Erro: {e}")
     finally:
         client_socket.close()
 
-# Função principal para iniciar o proxy
 def start_proxy(listen_ip='0.0.0.0', listen_port=8080):
-    proxy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    proxy_socket.bind((listen_ip, listen_port))
-    proxy_socket.listen(5)
-    
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind((listen_ip, listen_port))
+    server.listen(100)
     print(f"[*] Proxy escutando em {listen_ip}:{listen_port}")
-    logging.info(f"Proxy escutando em {listen_ip}:{listen_port}")
 
     while True:
-        client_socket, addr = proxy_socket.accept()
-        print(f"[*] Conexão recebida de {addr}")
-        logging.info(f"Conexão recebida de {addr}")
-        
-        # Criar uma thread para cada cliente
-        client_thread = threading.Thread(target=handle_client, args=(client_socket,))
-        client_thread.start()
+        client_sock, addr = server.accept()
+        print(f"[+] Conexão recebida de {addr}")
+        threading.Thread(target=handle_client, args=(client_sock,), daemon=True).start()
 
 if __name__ == '__main__':
     start_proxy()
