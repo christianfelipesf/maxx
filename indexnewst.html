@@ -77,109 +77,108 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const servicesEndpoint = 'http://localhost:3000/api/services'; // Endereço da API
-      const servicesDirectory = 'servicos'; // Diretório dos serviços
-      const listContainer = document.getElementById('services-list');
-      const loadingMessage = document.getElementById('loading-message');
-      const toggleButton = document.getElementById('toggle-style');
+    const servicesEndpoint1 = 'http://localhost:3000/api/services'; // Primeiro endpoint
+    const servicesEndpoint2 = '/api/services'; // Segundo endpoint (fallback)
+    const servicesDirectory = 'servicos'; // Diretório dos serviços
+    const listContainer = document.getElementById('services-list');
+    const loadingMessage = document.getElementById('loading-message');
+    const toggleButton = document.getElementById('toggle-style');
 
-      // Estilo atual que pode ser trocado dinamicamente
-      let estiloAtual = 'desativado'; // 'cinza', 'zebrado', 'desativado', 'porServico'
+    // Estilo atual que pode ser trocado dinamicamente
+    let estiloAtual = 'desativado'; // 'cinza', 'zebrado', 'desativado', 'porServico'
 
-      // Mapeamento de serviços
-      const serviceMap = {
-        "SUPERMICRO.html": {
-          name: "Supermicro BIOS", icon: "🖥️", bg: "#209cee", text: "white"
-        },
-        "formatador_osiris.html": {
-          name: "Formatador Osiris", icon: "🛠️", bg: "#ffdd57", text: "black"
-        },
-        "gerador_de_senha.html": {
-          name: "Gerador de Senha", icon: "🔑", bg: "#48c78e", text: "white"
-        },
-        "gerar_qrcode.html": {
-          name: "Gerar QR Code Wi-Fi", icon: "📶", bg: "#ff3860", text: "white"
-        },
-        "maxx_background.html": {
-          name: "Background Maxx", icon: "🖼️", bg: "#7957d5", text: "white"
-        },
-        "osiris_download.html": {
-          name: "Download Osiris", icon: "⬇️", bg: "#00d1b2", text: "white"
-        },
-        "prestacao_de_contas.html": {
-          name: "Prestação de Contas", icon: "🧾", bg: "#ff6b6b", text: "white"
-        },
-        "relatorio.html": {
-          name: "Relatório de Atendimento", icon: "📋", bg: "#ff9f43", text: "black"
-        },
-        "solicitar_de_recursos.html": {
-          name: "Solicitar Recursos", icon: "📨", bg: "#6c5ce7", text: "white"
-        }
-      };
+    // Mapeamento de serviços
+    const serviceMap = {
+    "SUPERMICRO.html": { name: "Supermicro BIOS", icon: "🖥️", bg: "#209cee", text: "white" },
+    "formatador_osiris.html": { name: "Formatador Osiris", icon: "🛠️", bg: "#ffdd57", text: "black" },
+    "gerador_de_senha.html": { name: "Gerador de Senha", icon: "🔑", bg: "#48c78e", text: "white" },
+    "gerar_qrcode.html": { name: "Gerar QR Code Wi-Fi", icon: "📶", bg: "#ff3860", text: "white" },
+    "maxx_background.html": { name: "Background Maxx", icon: "🖼️", bg: "#7957d5", text: "white" },
+    "osiris_download.html": { name: "Download Osiris", icon: "⬇️", bg: "#00d1b2", text: "white" },
+    "prestacao_de_contas.html": { name: "Prestação de Contas", icon: "🧾", bg: "#ff6b6b", text: "white" },
+    "relatorio.html": { name: "Relatório de Atendimento", icon: "📋", bg: "#ff9f43", text: "black" },
+    "solicitar_de_recursos.html": { name: "Solicitar Recursos", icon: "📨", bg: "#6c5ce7", text: "white" }
+    };
 
-      // Aplica o estilo conforme o tipo
-      function aplicarEstilo(a, index, item) {
-        if (estiloAtual === 'desativado') {
-          a.classList.add('is-desativado');
-        } else if (estiloAtual === 'porServico') {
-          a.style.backgroundColor = item.bg;
-          a.style.color = item.text;
-        } else if (estiloAtual === 'zebrado') {
-          a.style.backgroundColor = index % 2 === 0 ? "#f0f0f0" : "#333";
-          a.style.color = index % 2 === 0 ? "#000" : "#fff";
-        } else if (estiloAtual === 'cinza') {
-          a.style.backgroundColor = "#dcdcdc";
-          a.style.color = "#000";
-        }
-      }
+    // Aplica o estilo conforme o tipo
+    function aplicarEstilo(a, index, item) {
+    if (estiloAtual === 'desativado') {
+        a.classList.add('is-desativado');
+    } else if (estiloAtual === 'porServico') {
+        a.style.backgroundColor = item.bg;
+        a.style.color = item.text;
+    } else if (estiloAtual === 'zebrado') {
+        a.style.backgroundColor = index % 2 === 0 ? "#f0f0f0" : "#333";
+        a.style.color = index % 2 === 0 ? "#000" : "#fff";
+    } else if (estiloAtual === 'cinza') {
+        a.style.backgroundColor = "#dcdcdc";
+        a.style.color = "#000";
+    }
+    }
 
-      async function renderServicos() {
-        listContainer.innerHTML = '';
-        try {
-          const response = await fetch(servicesEndpoint);
-          if (!response.ok) throw new Error("Erro ao buscar serviços.");
-          const htmlFilenames = await response.json();
+    // Função para buscar serviços com fallback
+    async function fetchServices(endpoint) {
+    try {
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error("Erro ao buscar serviços.");
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+    }
 
-          if (!Array.isArray(htmlFilenames) || htmlFilenames.length === 0) {
-            listContainer.innerHTML = `<li><em>Nenhum serviço encontrado.</em></li>`;
-            return;
-          }
+    async function renderServicos() {
+    listContainer.innerHTML = '';
+    let services = await fetchServices(servicesEndpoint1); // Tenta o primeiro endpoint
 
-          htmlFilenames.forEach((filename, index) => {
-            const item = serviceMap[filename];
-            if (!item) return;
+    // Se a primeira API falhar, tenta a segunda
+    if (!services) {
+        console.log("Tentando o segundo endpoint...");
+        services = await fetchServices(servicesEndpoint2);
+    }
 
-            const li = document.createElement('li');
-            const a = document.createElement('a');
-            a.href = `${servicesDirectory}/${filename}`;
-            a.innerHTML = `${item.icon} ${item.name}`;
+    if (!services) {
+        listContainer.innerHTML = `<li class="has-text-danger">Erro ao carregar os serviços.</li>`;
+        return;
+    }
 
-            aplicarEstilo(a, index, item);
+    if (!Array.isArray(services) || services.length === 0) {
+        listContainer.innerHTML = `<li><em>Nenhum serviço encontrado.</em></li>`;
+        return;
+    }
 
-            li.appendChild(a);
-            listContainer.appendChild(li);
-          });
-        } catch (error) {
-          console.error(error);
-          listContainer.innerHTML = `<li class="has-text-danger">Erro ao carregar os serviços.</li>`;
-        }
-      }
+    services.forEach((filename, index) => {
+        const item = serviceMap[filename];
+        if (!item) return;
 
-      // Botão de alternância entre estilos
-      toggleButton.addEventListener('click', () => {
-        if (estiloAtual === 'porServico') {
-          estiloAtual = 'zebrado';
-        } else if (estiloAtual === 'zebrado') {
-          estiloAtual = 'cinza';
-        } else if (estiloAtual === 'cinza') {
-          estiloAtual = 'desativado'; // Alterna para o estilo 'desativado'
-        } else {
-          estiloAtual = 'porServico'; // Retorna ao estilo normal
-        }
-        renderServicos(); // Re-renderiza com o novo estilo
-      });
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `${servicesDirectory}/${filename}`;
+        a.innerHTML = `${item.icon} ${item.name}`;
 
-      renderServicos();
+        aplicarEstilo(a, index, item);
+
+        li.appendChild(a);
+        listContainer.appendChild(li);
+    });
+    }
+
+    // Botão de alternância entre estilos
+    toggleButton.addEventListener('click', () => {
+    if (estiloAtual === 'porServico') {
+        estiloAtual = 'zebrado';
+    } else if (estiloAtual === 'zebrado') {
+        estiloAtual = 'cinza';
+    } else if (estiloAtual === 'cinza') {
+        estiloAtual = 'desativado'; // Alterna para o estilo 'desativado'
+    } else {
+        estiloAtual = 'porServico'; // Retorna ao estilo normal
+    }
+    renderServicos(); // Re-renderiza com o novo estilo
+    });
+
+    renderServicos(); // Chama a função para renderizar os serviços
     });
   </script>
 </body>
