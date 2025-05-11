@@ -199,7 +199,7 @@
       });
 
       // Escolher a imagem com base no estilo
-      const imagemNome = isInverted ? 'm2.png' : 'm1.png';
+      const imagemNome = isInverted ? 'm2.png' : 'm3.png';
       const imagemBytes = await fetch(imagemNome).then(res => res.arrayBuffer());
       const imagemEmbed = await pdfDoc.embedPng(imagemBytes);
 

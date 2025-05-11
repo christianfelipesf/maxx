@@ -13,6 +13,11 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
 
   <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
     .menu-list a {
       display: block;
       padding: 12px 20px;
@@ -20,16 +25,15 @@
       margin-bottom: 10px;
       font-size: 1.1rem;
       font-weight: bold;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
       text-decoration: none;
       opacity: 0;
-      transform: translateY(20px); /* Inicialmente os serviços estarão abaixo */
-      transition: opacity 0.5s ease, transform 0.5s ease; /* Animação para opacidade e movimento */
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
     }
 
     .menu-list a.visible {
       opacity: 1;
-      transform: translateY(0); /* Serviço se move para sua posição original */
+      transform: translateY(0);
     }
 
     .menu-list a:hover {
@@ -63,22 +67,49 @@
       display: none;
     }
 
-    /* Animação de carregamento */
-    .loading-spinner {
-      margin-top: 50px;
-      text-align: center;
+    #services-menu {
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+
+  /* Garante que vá até o fim da tela, mas não mais que isso */
+  height: 80vh;
+  /*overflow-y: auto;*/
+  max-height: 90vh; 
+}
+
+    #services-menu.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
-    .loading-spinner .spinner {
+    #loading-message {
+      transition: opacity 0.5s ease;
+    }
+
+    .fade-out {
+      opacity: 0;
+    }
+
+    .loading-spinner {
+      text-align: center;
+      padding: 30px 0;
+    }
+
+    .spinner {
       border: 4px solid #f3f3f3;
       border-top: 4px solid #041461;
       border-radius: 50%;
       width: 50px;
       height: 50px;
       animation: spin 0.4s linear infinite;
+      margin: 0 auto;
     }
 
-    /* Animação de rotação */
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -88,13 +119,14 @@
 <body>
   <section class="section">
     <div class="container">
-      <h1 class="title has-text-centered">Plataforma de Serviços</h1>
+      
 
       <div class="has-text-centered is-style-toggle">
         <button id="toggle-style" class="button is-link is-small">Alternar Estilo</button>
       </div>
 
       <div class="menu" id="services-menu">
+        <h1 class="title has-text-centered">Plataforma de Serviços</h1>
         <p class="menu-label">Serviços Disponíveis</p>
         <ul class="menu-list" id="services-list">
           <li id="loading-message">Carregando serviços...</li>
@@ -105,7 +137,7 @@
       </div>
     </div>
   </section>
-    <!-- Importando o serviceMap.js -->
+
   <script src="/js/utils.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -116,22 +148,15 @@
       const loadingMessage = document.getElementById('loading-message');
       const toggleButton = document.getElementById('toggle-style');
       const loadingSpinner = document.getElementById('loading-spinner');
+      const servicesMenu = document.getElementById('services-menu');
 
       let estiloAtual = 'desativado'; 
 
-      const serviceMap = {
-        "SUPERMICRO.html": { name: "Supermicro BIOS", icon: "🖥️", bg: "#209cee", text: "white" },
-        "formatador_osiris.html": { name: "Formatador Osiris", icon: "🛠️", bg: "#ffdd57", text: "black" },
-        "gerador_de_senha.html": { name: "Gerador de Senha", icon: "🔑", bg: "#48c78e", text: "white" },
-        "gerar_qrcode.html": { name: "Gerar QR Code Wi-Fi", icon: "📶", bg: "#ff3860", text: "white" },
-        "maxx_background.html": { name: "Background Maxx", icon: "🖼️", bg: "#7957d5", text: "white" },
-        "osiris_download.html": { name: "Download Osiris", icon: "⬇️", bg: "#00d1b2", text: "white" },
-        "prestacao_de_contas.html": { name: "Prestação de Contas", icon: "🧾", bg: "#ff6b6b", text: "white" },
-        "relatorio.html": { name: "Relatório de Atendimento", icon: "📋", bg: "#ff9f43", text: "black" },
-        "solicitar_de_recursos.html": { name: "Solicitar Recursos", icon: "📨", bg: "#6c5ce7", text: "white" }
-      };
-
       function aplicarEstilo(a, index, item) {
+        a.classList.remove('is-desativado');
+        a.style.backgroundColor = '';
+        a.style.color = '';
+
         if (estiloAtual === 'desativado') {
           a.classList.add('is-desativado');
         } else if (estiloAtual === 'porServico') {
@@ -159,16 +184,17 @@
 
       async function renderServicos() {
         listContainer.innerHTML = '';
-        loadingSpinner.style.display = 'block'; // Exibe o spinner enquanto carrega
+        loadingMessage.classList.remove('fade-out');
+        loadingSpinner.style.display = 'block';
 
         let services = await fetchServices(servicesEndpoint1); 
-
         if (!services) {
           console.log("Tentando o segundo endpoint...");
           services = await fetchServices(servicesEndpoint2);
         }
 
-        loadingSpinner.style.display = 'none'; // Esconde o spinner quando os dados são carregados
+        loadingSpinner.style.display = 'none';
+        loadingMessage.classList.add('fade-out');
 
         if (!services) {
           listContainer.innerHTML = `<li class="has-text-danger">Erro ao carregar os serviços.</li>`;
@@ -180,7 +206,6 @@
           return;
         }
 
-        // Exibe os serviços um a um com animação
         services.forEach((filename, index) => {
           const item = serviceMap[filename];
           if (!item) return;
@@ -195,10 +220,9 @@
           li.appendChild(a);
           listContainer.appendChild(li);
 
-          // Adiciona a classe 'visible' com um pequeno delay
           setTimeout(() => {
             a.classList.add('visible');
-          }, 100 * index); // Delay de 100ms entre os itens
+          }, 100 * index);
         });
       }
 
@@ -216,6 +240,7 @@
       });
 
       renderServicos();
+      servicesMenu.classList.add('visible'); // ativa a animação de entrada do bloco
     });
   </script>
 </body>
