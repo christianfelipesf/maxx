@@ -17,20 +17,27 @@
   <style>
     .menu-list a {
       display: block;
-      padding: 10px 15px;
-      color: #363636;
-      border-radius: 8px;
-      transition: background 0.2s;
+      padding: 12px 20px;
+      border-radius: 10px;
+      margin-bottom: 10px;
       font-size: 1.1rem;
+      font-weight: bold;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
     }
+
     .menu-list a:hover {
-      background-color: #f5f5f5;
+      transform: scale(1.02);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
-    .icon-label {
-      margin-right: 8px;
-    }
+
     .menu-label {
       font-size: 1.25rem;
+      margin-bottom: 10px;
+    }
+
+    .container {
+      max-width: 600px;
     }
   </style>
 </head>
@@ -55,17 +62,43 @@
       const listContainer = document.getElementById('services-list');
       const loadingMessage = document.getElementById('loading-message');
 
-      // Nome e ícone amigável para cada arquivo
       const serviceMap = {
-        "SUPERMICRO.html":               { name: "Supermicro BIOS", icon: "🖥️" },
-        "formatador_osiris.html":        { name: "Formatador Osiris", icon: "🛠️" },
-        "gerador_de_senha.html":         { name: "Gerador de Senha", icon: "🔑" },
-        "gerar_qrcode.html":             { name: "Gerar QR Code Wi-Fi", icon: "📶" },
-        "maxx_background.html":          { name: "Background Maxx", icon: "🖼️" },
-        "osiris_download.html":          { name: "Download Osiris", icon: "⬇️" },
-        "prestacao_de_contas.html":      { name: "Prestação de Contas", icon: "🧾" },
-        "relatorio.html":                { name: "Relatório de Atendimento", icon: "📋" },
-        "solicitar_de_recursos.html":    { name: "Solicitar Recursos", icon: "📨" }
+        "SUPERMICRO.html": {
+          name: "Supermicro BIOS", icon: "🖥️",
+          colorBg: "#209cee", colorText: "white"
+        },
+        "formatador_osiris.html": {
+          name: "Formatador Osiris", icon: "🛠️",
+          colorBg: "#ffdd57", colorText: "black"
+        },
+        "gerador_de_senha.html": {
+          name: "Gerador de Senha", icon: "🔑",
+          colorBg: "#48c78e", colorText: "white"
+        },
+        "gerar_qrcode.html": {
+          name: "Gerar QR Code Wi-Fi", icon: "📶",
+          colorBg: "#ff3860", colorText: "white"
+        },
+        "maxx_background.html": {
+          name: "Background Maxx", icon: "🖼️",
+          colorBg: "#7957d5", colorText: "white"
+        },
+        "osiris_download.html": {
+          name: "Download Osiris", icon: "⬇️",
+          colorBg: "#00d1b2", colorText: "white"
+        },
+        "prestacao_de_contas.html": {
+          name: "Prestação de Contas", icon: "🧾",
+          colorBg: "#ff6b6b", colorText: "white"
+        },
+        "relatorio.html": {
+          name: "Relatório de Atendimento", icon: "📋",
+          colorBg: "#ff9f43", colorText: "black"
+        },
+        "solicitar_de_recursos.html": {
+          name: "Solicitar Recursos", icon: "📨",
+          colorBg: "#6c5ce7", colorText: "white"
+        }
       };
 
       async function fetchAndGenerateList() {
@@ -87,7 +120,9 @@
             const li = document.createElement('li');
             const a = document.createElement('a');
             a.href = `${servicesDirectory}/${filename}`;
-            a.innerHTML = `<span class="icon-label">${item.icon}</span>${item.name}`;
+            a.innerHTML = `${item.icon} ${item.name}`;
+            a.style.backgroundColor = item.colorBg;
+            a.style.color = item.colorText;
             li.appendChild(a);
             listContainer.appendChild(li);
           });
