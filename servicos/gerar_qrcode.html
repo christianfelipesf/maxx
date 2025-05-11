@@ -197,6 +197,26 @@
         height: qrSize
       });
 
+      // Escolher a imagem com base no estilo
+      const imagemNome = isInverted ? 'm2.png' : 'm1.png';
+      const imagemBytes = await fetch(imagemNome).then(res => res.arrayBuffer());
+      const imagemEmbed = await pdfDoc.embedPng(imagemBytes);
+
+      // Dimensões reduzidas da imagem
+      const imgWidth = 80;
+      const imgHeight = 80;
+
+      // Posição: abaixo do QR code
+      const imgX = (400 - imgWidth) / 2;
+      const imgY = qrYAdjusted - imgHeight - 150; //20
+
+      page.drawImage(imagemEmbed, {
+        x: imgX,
+        y: imgY,
+        width: imgWidth,
+        height: imgHeight
+      });
+
       const pdfBytes = await pdfDoc.save();
       return new Blob([pdfBytes], { type: 'application/pdf' });
     }
