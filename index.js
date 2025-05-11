@@ -26,6 +26,9 @@ app.use(express.static(__dirname, { index: 'indexnewst.html' }));
 app.get('/api/services', async (req, res) => {
   const servicesPath = path.join(__dirname, 'servicos');
 
+  // Lista de serviços que NÃO devem aparecer no frontend
+  const servicosExcluidos = ['osiris_download.html', 'teste.html'];
+
   try {
     const files = await fs.readdir(servicesPath);
     const htmlFiles = [];
@@ -34,7 +37,7 @@ app.get('/api/services', async (req, res) => {
       const filePath = path.join(servicesPath, file);
       const stats = await fs.stat(filePath);
 
-      if (stats.isFile() && file.endsWith('.html')) {
+      if (stats.isFile() && file.endsWith('.html') && !servicosExcluidos.includes(file)) {
         htmlFiles.push(file);
       }
     }
@@ -45,6 +48,7 @@ app.get('/api/services', async (req, res) => {
     res.status(500).json({ message: 'Erro ao listar os serviços.', error: error.message });
   }
 });
+
 // Gera um nome de arquivo com hash aleatório
 const generateFilename = () => {
   return crypto.randomBytes(8).toString("hex") + ".xlsx";

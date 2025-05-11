@@ -131,6 +131,7 @@
                     const response = await fetch(servicesEndpoint);
                     if (!response.ok) throw new Error("Erro ao buscar serviços.");
                     const htmlFilenames = await response.json();
+                    console.log(htmlFilenames)
                     if (loadingMessage) loadingMessage.remove();
                     if (!Array.isArray(htmlFilenames) || htmlFilenames.length === 0) {
                         container.innerHTML = `<p>Nenhum serviço encontrado.</p>`;
