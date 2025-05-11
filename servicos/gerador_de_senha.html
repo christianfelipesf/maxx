@@ -1,229 +1,90 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Senhas</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css">
-    <style>
-        .slider {
-            display: block;
-        }
-        .hidden {
-            display: none;
-        }
-        .popup {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #48c774;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-        .popup.show {
-            opacity: 1;
-        }
-        .history-box {
-            margin-top: 20px;
-        }
-        .bottom-button {
-            margin-top: 30px;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gerador de Senha</title>
+  <link href="	https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .btn-grande {
+      padding: 1.5rem 3rem;
+      font-size: 2rem;
+      transition: all 0.25s ease;
+    }
+
+    .btn-grande:hover {
+      background-color: #218838;
+      transform: scale(1.05);
+    }
+
+    .btn-grande.clicked {
+      transform: scale(0.97);
+    }
+
+    #senhaCopiada {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      transition: all 0.4s ease;
+      z-index: 1050;
+    }
+
+    #senhaCopiada.mostrar {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #senhaCopiada.trocar {
+      animation: leveFlash 0.3s;
+    }
+
+    @keyframes leveFlash {
+      0%   { opacity: 0.8; transform: translateX(-50%) scale(0.98); }
+      50%  { opacity: 1; transform: translateX(-50%) scale(1.02); }
+      100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    }
+  </style>
 </head>
-<body class="has-background-light">
-    <section class="section">
-        <div class="container">
-            <h1 class="title has-text-centered">Gerador de Senhas Seguras</h1>
-            <div class="box">
-                <div class="field">
-                    <label class="label">Tamanho da Senha</label>
-                    <input id="length" class="slider" type="range" min="8" max="24" value="10" oninput="updateLengthDisplay(this.value); generatePassword()">
-                    <p id="lengthDisplay">10</p>
-                </div>
-                <div class="field">
-                    <label class="checkbox">
-                        <input id="uppercase" type="checkbox" onchange="generatePassword()"> Incluir Letras Maiúsculas
-                    </label>
-                </div>
-                <div class="field">
-                    <label class="checkbox">
-                        <input id="symbols" type="checkbox" onchange="toggleSymbolRange(); addSymbolsGradually()"> Incluir Símbolos
-                    </label>
-                </div>
-                <div id="symbolRangeContainer" class="field hidden">
-                    <label class="label">Porcentagem Máxima de Símbolos</label>
-                    <input id="symbolPercentage" class="slider" type="range" min="0" max="100" value="50" oninput="updateSymbolPercentage(this.value); addSymbolsGradually()">
-                    <p id="symbolPercentageDisplay">50%</p>
-                </div>
-                <div class="field">
-                    <button class="button is-primary" onclick="generatePassword()">Gerar Senha</button>
-                </div>
-                <div class="field">
-                    <label class="label">Senha Gerada</label>
-                    <div class="control">
-                        <input id="password" class="input" type="text" readonly>
-                    </div>
-                </div>
-                <button class="button is-link" onclick="copyToClipboard()">Copiar Senha</button>
-                <button class="button is-link " onclick="voltar()"><i class="fas fa-arrow-left"></i> Voltar</button>
-            </div>
-            <div class="bottom-button">
-                
-            </div>
-            <div class="box history-box">
-                <h2 class="subtitle">Histórico de Senhas Copiadas</h2>
-                <ul id="passwordHistory"></ul>
-            </div>
-        </div>
-    </section>
+<body>
+  <div class="container text-center mt-5">
+    <h1 class="mb-4">Gerador de Senha</h1>
+    <button id="botaoGerar" class="btn btn-success btn-grande mb-4" onclick="gerarSenha()">Gerar Senha</button>
+  </div>
 
-    <div id="popup" class="popup">Senha copiada para a área de transferência!</div>
-    
-    <script>
-        let originalPassword = "";
-        let modifiedPassword = "";
+  <!-- Popup fixo no rodapé -->
+  <div id="senhaCopiada" class="alert alert-success shadow">
+    <!-- Senha será exibida aqui -->
+  </div>
 
-        function updateLengthDisplay(value) {
-            document.getElementById("lengthDisplay").textContent = value;
+  <script>
+    function gerarSenha() {
+      const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+      let senha = '';
+      for (let i = 0; i < 8; i++) {
+        senha += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+      }
+
+      navigator.clipboard.writeText(senha).then(() => {
+        const senhaDiv = document.getElementById('senhaCopiada');
+        const botao = document.getElementById('botaoGerar');
+
+        // Efeito de atualização se já houver conteúdo
+        if (senhaDiv.textContent.trim() !== '') {
+          senhaDiv.classList.remove('trocar');
+          void senhaDiv.offsetWidth;
+          senhaDiv.classList.add('trocar');
         }
 
-        function updateSymbolPercentage(value) {
-            document.getElementById("symbolPercentageDisplay").textContent = value + "%";
-        }
+        senhaDiv.textContent = `Senha copiada: ${senha}`;
+        senhaDiv.classList.add('mostrar');
 
-        function toggleSymbolRange() {
-            const symbolRangeContainer = document.getElementById("symbolRangeContainer");
-            symbolRangeContainer.classList.toggle("hidden");
-        }
-
-        function generatePassword() {
-            const length = parseInt(document.getElementById("length").value);
-            const includeUppercase = document.getElementById("uppercase").checked;
-            const output = document.getElementById("password");
-            
-            let letters = "abcdefghjkmnpqrstuvwxyz";
-            const numbers = "23456789";
-            
-            if (includeUppercase) {
-                letters += "ABCDEFGHJKMNPQRSTUVWXYZ";
-            }
-            
-            let charset = letters + numbers;
-            let password = "";
-            
-            for (let i = 0; i < length; i++) {
-                password += charset.charAt(Math.floor(Math.random() * charset.length));
-            }
-            
-            originalPassword = password;
-            modifiedPassword = password;
-            output.value = password;
-        }
-
-        function addSymbolsGradually() {
-            const output = document.getElementById("password");
-            const useSymbols = document.getElementById("symbols").checked;
-            const symbolPercentage = parseInt(document.getElementById("symbolPercentage").value);
-            const symbols = "!@#$%&*()_+-=[]{}|'\",.<>?";
-            
-            if (useSymbols && originalPassword) {
-                if (symbolPercentage === 0) {
-                    output.value = originalPassword;
-                    modifiedPassword = originalPassword;
-                    return;
-                }
-
-                const length = originalPassword.length;
-                const maxSymbols = Math.floor((length * symbolPercentage) / 100);
-                let passwordArray = originalPassword.split('');
-                
-                for (let i = 0; i < maxSymbols; i++) {
-                    const symbolIndex = Math.floor(Math.random() * length);
-                    const randomSymbol = symbols.charAt(Math.floor(Math.random() * symbols.length));
-                    passwordArray[symbolIndex] = randomSymbol;
-                }
-                
-                modifiedPassword = passwordArray.join('');
-                output.value = modifiedPassword;
-            }
-        }
-        
-        function copyToClipboard() {
-            const passwordField = document.getElementById("password");
-            passwordField.select();
-            document.execCommand("copy");
-            saveToHistory();
-            showPopup();
-        }
-
-        function saveToHistory() {
-            const historyList = document.getElementById("passwordHistory");
-            const now = new Date().toLocaleString();
-            
-            // Recupera histórico do localStorage ou cria um novo
-            let history = JSON.parse(localStorage.getItem('passwordHistory')) || [];
-
-            history.unshift({
-                time: now,
-                originalPassword: originalPassword,
-                modifiedPassword: modifiedPassword
-            });
-
-            // Limita o número de senhas no histórico (por exemplo, 10)
-            if (history.length > 10) {
-                history.pop();
-            }
-
-            // Salva novamente no localStorage
-            localStorage.setItem('passwordHistory', JSON.stringify(history));
-
-            // Atualiza a UI com o histórico salvo
-            updateHistoryUI(history);
-        }
-
-        function updateHistoryUI(history) {
-            const historyList = document.getElementById("passwordHistory");
-            historyList.innerHTML = ''; // Limpa o histórico atual
-            history.forEach(item => {
-                const listItem = document.createElement("li");
-                listItem.innerHTML = `<strong>${item.time}</strong><br>Original: ${item.originalPassword}<br>Com Símbolos: ${item.modifiedPassword}`;
-                historyList.appendChild(listItem);
-            });
-        }
-
-        function showPopup() {
-            const popup = document.getElementById("popup");
-            popup.classList.add("show");
-            setTimeout(() => {
-                popup.classList.remove("show");
-            }, 2000);
-        }
-
-        // Carrega o histórico salvo ao carregar a página
-        window.onload = function() {
-            const history = JSON.parse(localStorage.getItem('passwordHistory')) || [];
-            updateHistoryUI(history);
-            generatePassword();
-        }
-        function voltar() {
-            const hostname = window.location.hostname;
-            
-            if (hostname.includes("onrender.com")) {
-                window.location.href = "../indexnewst.html";
-            } else {
-            window.location.href = "../index.html";
-            }
-        }
-    </script>
+        // Efeito no botão
+        botao.classList.add('clicked');
+        setTimeout(() => botao.classList.remove('clicked'), 150);
+      });
+    }
+  </script>
 </body>
 </html>
