@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wi-Fi QR PDF Visual</title>
-  <!-- Bulma CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
   <style>
     * {
@@ -48,7 +47,7 @@
       width: auto;
       max-width: 100%;
       height: auto;
-      aspect-ratio: 2 / 3; /* Mantém a proporção do PDF 400x600 */
+      aspect-ratio: 2 / 3;
       border: 1px solid #ccc;
       border-radius: 6px;
       display: block;
@@ -64,7 +63,7 @@
     }
 
     #qrBorderRadius {
-      display: none; /* Oculta o campo do raio da borda */
+      display: none;
     }
 
     @media print {
@@ -123,6 +122,11 @@
     let qrBorderRadius = 30;
     let ssid = "MinhaRede";
     let password = "minhasenha123";
+
+    function getParametroURL(nome) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(nome);
+    }
 
     function atualizarParametros() {
       ssid = document.getElementById('ssid').value || "MinhaRede";
@@ -207,7 +211,7 @@
       const segundo = String(agora.getSeconds()).padStart(2, '0');
       return `${ano}-${mes}-${dia}_${hora}-${minuto}-${segundo}`;
     }
-    
+
     async function baixarPdf() {
       const blob = await gerarPdfBlob();
       const url = URL.createObjectURL(blob);
@@ -231,10 +235,20 @@
       newTab.document.title = "Visualização do QR Code";
     }
 
+    window.addEventListener('load', () => {
+      const senhaURL = getParametroURL('senha');
+      const ssidURL = getParametroURL('ssid');
+      if (senhaURL) {
+        document.getElementById('password').value = senhaURL;
+      }
+      if (ssidURL) {
+        document.getElementById('ssid').value = ssidURL;
+      }
+      atualizarParametros();
+    });
+
     document.getElementById('ssid').addEventListener('input', atualizarParametros);
     document.getElementById('password').addEventListener('input', atualizarParametros);
-
-    window.addEventListener('load', renderizarPdf);
   </script>
 </body>
 </html>
