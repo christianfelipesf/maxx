@@ -42,19 +42,40 @@
       margin-bottom: 1rem;
     }
 
-    /* Estilo para o estado 'desativado' - Apaga as cores mas mantém a interatividade */
     .is-desativado {
-      background-color: #041461 !important; /* Cor de fundo apagada */
-      color: #f0f0f0 !important; /* Cor de texto mais suave */
+      background-color: #041461 !important;
+      color: #f0f0f0 !important;
     }
 
-    /* Hover para o estado 'desativado' */
     .is-desativado:hover {
-      background-color: #c6c6c6; /* Cor de fundo ao passar o mouse */
+      background-color: #c6c6c6;
     }
+
     .has-text-centered.is-style-toggle { 
-        display: none; /* Remove o elemento da renderização o alternar estilos*/
+      display: none;
     }
+
+    /* Animação de carregamento */
+    .loading-spinner {
+      margin-top: 50px;
+      text-align: center;
+    }
+
+    .loading-spinner .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 2s linear infinite;
+    }
+
+    /* Animação de rotação */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
   </style>
 </head>
 <body>
@@ -71,23 +92,25 @@
         <ul class="menu-list" id="services-list">
           <li id="loading-message">Carregando serviços...</li>
         </ul>
+        <div id="loading-spinner" class="loading-spinner" style="display: none;">
+          <div class="spinner"></div>
+        </div>
       </div>
     </div>
   </section>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-    const servicesEndpoint1 = '/api/services'; // Primeiro endpoint
-    const servicesEndpoint2 = 'http://localhost:3000/api/services'; // Segundo endpoint (fallback)
-    const servicesDirectory = 'servicos'; // Diretório dos serviços
+    const servicesEndpoint1 = '/api/services'; 
+    const servicesEndpoint2 = 'http://localhost:3000/api/services'; 
+    const servicesDirectory = 'servicos'; 
     const listContainer = document.getElementById('services-list');
     const loadingMessage = document.getElementById('loading-message');
     const toggleButton = document.getElementById('toggle-style');
+    const loadingSpinner = document.getElementById('loading-spinner');
 
-    // Estilo atual que pode ser trocado dinamicamente
-    let estiloAtual = 'desativado'; // 'cinza', 'zebrado', 'desativado', 'porServico'
+    let estiloAtual = 'desativado'; 
 
-    // Mapeamento de serviços
     const serviceMap = {
     "SUPERMICRO.html": { name: "Supermicro BIOS", icon: "🖥️", bg: "#209cee", text: "white" },
     "formatador_osiris.html": { name: "Formatador Osiris", icon: "🛠️", bg: "#ffdd57", text: "black" },
@@ -100,7 +123,6 @@
     "solicitar_de_recursos.html": { name: "Solicitar Recursos", icon: "📨", bg: "#6c5ce7", text: "white" }
     };
 
-    // Aplica o estilo conforme o tipo
     function aplicarEstilo(a, index, item) {
     if (estiloAtual === 'desativado') {
         a.classList.add('is-desativado');
@@ -116,7 +138,6 @@
     }
     }
 
-    // Função para buscar serviços com fallback
     async function fetchServices(endpoint) {
     try {
         const response = await fetch(endpoint);
@@ -130,13 +151,16 @@
 
     async function renderServicos() {
     listContainer.innerHTML = '';
-    let services = await fetchServices(servicesEndpoint1); // Tenta o primeiro endpoint
+    loadingSpinner.style.display = 'block'; // Exibe o spinner enquanto carrega
 
-    // Se a primeira API falhar, tenta a segunda
+    let services = await fetchServices(servicesEndpoint1); 
+
     if (!services) {
         console.log("Tentando o segundo endpoint...");
         services = await fetchServices(servicesEndpoint2);
     }
+
+    loadingSpinner.style.display = 'none'; // Esconde o spinner quando os dados são carregados
 
     if (!services) {
         listContainer.innerHTML = `<li class="has-text-danger">Erro ao carregar os serviços.</li>`;
@@ -164,21 +188,20 @@
     });
     }
 
-    // Botão de alternância entre estilos
     toggleButton.addEventListener('click', () => {
     if (estiloAtual === 'porServico') {
         estiloAtual = 'zebrado';
     } else if (estiloAtual === 'zebrado') {
         estiloAtual = 'cinza';
     } else if (estiloAtual === 'cinza') {
-        estiloAtual = 'desativado'; // Alterna para o estilo 'desativado'
+        estiloAtual = 'desativado'; 
     } else {
-        estiloAtual = 'porServico'; // Retorna ao estilo normal
+        estiloAtual = 'porServico'; 
     }
-    renderServicos(); // Re-renderiza com o novo estilo
+    renderServicos();
     });
 
-    renderServicos(); // Chama a função para renderizar os serviços
+    renderServicos();
     });
   </script>
 </body>
