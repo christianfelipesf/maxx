@@ -6,6 +6,11 @@
   <title>Gerador de Senha</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    body {
+      /*transition: background-color 1s ease-in-out;*/
+      background-color: #f8fff8;
+    }
+
     .btn-grande {
       padding: 1.5rem 3rem;
       font-size: 2rem;
@@ -51,8 +56,31 @@
       display: none;
     }
 
+    @keyframes verdeVariando {
+      0% { background-color: #e9fce9; }
+      50% { background-color: #d2f5d2; }
+      100% { background-color: #e9fce9; }
+    }
+
+    .animado {
+      animation: verdeVariando 1s ease-in-out;
+    }
+
+    h1 {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 3rem;
+      font-weight: bold;
+      color: #2e7d32;
+      text-shadow: 1px 1px 2px #c8e6c9;
+      margin-bottom: 2rem;
+    }
+
     /* Estilo em telas menores */
     @media (max-width: 767px) {
+      h1 {
+        font-size: 2.2rem;
+      }
+
       #senhaCopiadaContainer {
         align-items: center;
       }
@@ -61,54 +89,73 @@
         display: inline-block;
         position: relative;
         z-index: 1060;
-        
       }
 
       #senhaCopiada {
-      margin-top: 5px;
-        z-index: 1050; /* Fica abaixo do botão */
+        margin-top: 5px;
+        z-index: 1050;
       }
     }
   </style>
 </head>
 <body>
   <div class="container text-center mt-5">
-    <h1 class="mb-4">Gerador de Senha</h1>
+    <h1>Gerador de Senha</h1>
     <button id="botaoGerar" class="btn btn-success btn-grande mb-4" onclick="gerarSenha()">Gerar Senha</button>
   </div>
 
-  <!-- Container do popup e botão juntos -->
   <div id="senhaCopiadaContainer">
-  <a id="botaoQr" class="btn btn-secondary" href="#" target="_blank">Gerar QR Code</a> 
+    <a id="botaoQr" class="btn btn-secondary" href="#" target="_blank">Gerar QR Code</a> 
     <div id="senhaCopiada" class="alert alert-success shadow mb-0 px-3 py-2">Senha copiada:</div>
-    
   </div>
 
   <script>
-    function gerarSenha() {
-      const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-      let senha = '';
-      for (let i = 0; i < 8; i++) {
-        senha += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-      }
+  const tonsDeVerde = [
+    '#e8f5e9',
+    '#d0f0d2',
+    '#c8e6c9',
+    '#b9f6ca',
+    '#a5d6a7',
+    '#81c784',
+    '#66bb6a',
+    '#aed581'
+  ];
+  let corAtual = -1;
 
-      navigator.clipboard.writeText(senha).then(() => {
-        const senhaDiv = document.getElementById('senhaCopiada');
-        const botao = document.getElementById('botaoGerar');
-        const container = document.getElementById('senhaCopiadaContainer');
-        const botaoQr = document.getElementById('botaoQr');
-
-        senhaDiv.textContent = `Senha copiada: ${senha}`;
-        container.classList.add('mostrar');
-
-        botao.classList.add('clicked');
-        setTimeout(() => botao.classList.remove('clicked'), 150);
-
-        // Atualiza o botão com link da senha
-        botaoQr.href = `https://plataformacontact.com/servicos/gerar_qrcode.html?senha=${encodeURIComponent(senha)}`;
-        botaoQr.style.display = 'inline-block'; // Exibe o botão
-      });
+  function gerarSenha() {
+    const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    let senha = '';
+    for (let i = 0; i < 8; i++) {
+      senha += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
-  </script>
+
+    navigator.clipboard.writeText(senha).then(() => {
+      const senhaDiv = document.getElementById('senhaCopiada');
+      const botao = document.getElementById('botaoGerar');
+      const container = document.getElementById('senhaCopiadaContainer');
+      const botaoQr = document.getElementById('botaoQr');
+
+      senhaDiv.textContent = `Senha copiada: ${senha}`;
+      container.classList.add('mostrar');
+
+      botao.classList.add('clicked');
+      setTimeout(() => botao.classList.remove('clicked'), 150);
+
+      // Gera nova cor sem repetir a anterior
+      let novaCor;
+      do {
+        novaCor = Math.floor(Math.random() * tonsDeVerde.length);
+      } while (novaCor === corAtual);
+      corAtual = novaCor;
+      document.body.style.backgroundColor = tonsDeVerde[corAtual]; // Mudança instantânea
+
+      // Atualiza o botão com link do QR Code
+      botaoQr.href = `https://plataformacontact.com/servicos/gerar_qrcode.html?senha=${encodeURIComponent(senha)}`;
+      botaoQr.style.display = 'inline-block';
+    });
+  }
+</script>
+
+
 </body>
 </html>

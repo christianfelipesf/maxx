@@ -98,6 +98,13 @@
     .loading-spinner {
       text-align: center;
       padding: 30px 0;
+      display: flex;
+      justify-content: center; /* Centraliza o spinner horizontalmente */
+      align-items: center; /* Centraliza o spinner verticalmente */
+      position: absolute; /* Permite que o spinner fique sobre o conteúdo */
+      top: 50%; /* Posiciona o spinner verticalmente no centro */
+      left: 50%; /* Posiciona o spinner horizontalmente no centro */
+      transform: translate(-50%, -50%); /* Ajusta para que o spinner seja perfeitamente centralizado */
     }
 
     .spinner {
