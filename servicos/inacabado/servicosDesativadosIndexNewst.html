@@ -43,18 +43,18 @@
       margin-bottom: 1rem;
     }
 
-    /* Estilo para o estado 'desativado' - Apaga as cores mas mantém a interatividade */
+    /* Estilo para o estado desativado */
     .is-desativado {
-      background-color: #303030 !important; /* Cor de fundo apagada */
-      color: #f0f0f0 !important; /* Cor de texto mais suave */
+      background-color: #474646 !important; /* Cor do fundo */
+      color: #dbdbdb !important; /* Cor do texto */
+      pointer-events: none; /* Desabilita a interação (não clica) */
     }
 
-    /* Hover para o estado 'desativado' */
+    /* Hover para o estado desativado */
     .is-desativado:hover {
-      background-color: #c6c6c6; /* Cor de fundo ao passar o mouse */
-    }
-    .has-text-centered.is-style-toggle { 
-        display: none; /* Remove o elemento da renderização o alternar estilos*/
+      transform: scale(1.02);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      background-color: #f4f4f4; /* Mesmo fundo ao passar o mouse */
     }
   </style>
 </head>
@@ -173,7 +173,7 @@
         } else if (estiloAtual === 'zebrado') {
           estiloAtual = 'cinza';
         } else if (estiloAtual === 'cinza') {
-          estiloAtual = 'desativado'; // Alterna para o estilo 'desativado'
+          estiloAtual = 'desativado'; // Alterna para desativado
         } else {
           estiloAtual = 'porServico'; // Retorna ao estilo normal
         }
