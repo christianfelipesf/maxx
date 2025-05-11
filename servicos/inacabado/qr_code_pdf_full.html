@@ -98,7 +98,7 @@
     <div class="buttons-container">
       <button class="button is-primary" onclick="baixarPdf()">Baixar PDF</button>
       <button class="button is-link" onclick="inverterEstilo()">Inverter Estilo</button>
-      <button class="button is-dark" onclick="abrirCanvasEmNovaGuia()">Imprimir Imagem</button>
+      <button class="button is-info" onclick="abrirCanvasEmNovaGuia()">Abrir Imagem</button>
     </div>
 
     <div class="pdf-container">
@@ -231,33 +231,51 @@
   const canvas = document.getElementById('pdfCanvas');
   const imgData = canvas.toDataURL();
 
-  // Criar uma nova janela para impressão
   const newWindow = window.open('', '', 'width=800,height=600');
   newWindow.document.write(`
     <html>
       <head>
-        <title>Imprimir Canvas</title>
+        <title>Impressão</title>
         <style>
-          body {
-            text-align: center;
+          html, body {
             margin: 0;
             padding: 0;
+            height: 100%;
+            width: 100%;
           }
           img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain; /* Garante que a imagem caiba sem distorcer */
+            width: 100vw;
+            height: 100vh;
+            object-fit: fill;
+            display: block;
+          }
+          @media print {
+            @page {
+              margin: 0;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              height: 100%;
+              width: 100%;
+            }
+            img {
+              width: 100vw;
+              height: 100vh;
+              object-fit: fill;
+            }
           }
         </style>
       </head>
       <body>
-        <img src="${imgData}" onload="window.print(); window.close();">
+        <img src="${imgData}" onload="window.print(); window.onafterprint = () => window.close();">
       </body>
     </html>
   `);
-
   newWindow.document.close();
 }
+
+
 
 
     window.addEventListener('load', () => {
