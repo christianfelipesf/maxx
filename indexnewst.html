@@ -77,8 +77,8 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-    const servicesEndpoint1 = 'http://localhost:3000/api/services'; // Primeiro endpoint
-    const servicesEndpoint2 = '/api/services'; // Segundo endpoint (fallback)
+    const servicesEndpoint1 = '/api/services'; // Primeiro endpoint
+    const servicesEndpoint2 = 'http://localhost:3000/api/services'; // Segundo endpoint (fallback)
     const servicesDirectory = 'servicos'; // Diretório dos serviços
     const listContainer = document.getElementById('services-list');
     const loadingMessage = document.getElementById('loading-message');
