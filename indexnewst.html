@@ -22,6 +22,14 @@
       font-weight: bold;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       text-decoration: none;
+      opacity: 0;
+      transform: translateY(20px); /* Inicialmente os serviços estarão abaixo */
+      transition: opacity 0.5s ease, transform 0.5s ease; /* Animação para opacidade e movimento */
+    }
+
+    .menu-list a.visible {
+      opacity: 1;
+      transform: translateY(0); /* Serviço se move para sua posição original */
     }
 
     .menu-list a:hover {
@@ -63,11 +71,11 @@
 
     .loading-spinner .spinner {
       border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
+      border-top: 4px solid #041461;
       border-radius: 50%;
       width: 50px;
       height: 50px;
-      animation: spin 2s linear infinite;
+      animation: spin 0.4s linear infinite;
     }
 
     /* Animação de rotação */
@@ -75,7 +83,6 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
   </style>
 </head>
 <body>
@@ -101,107 +108,113 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-    const servicesEndpoint1 = '/api/services'; 
-    const servicesEndpoint2 = 'http://localhost:3000/api/services'; 
-    const servicesDirectory = 'servicos'; 
-    const listContainer = document.getElementById('services-list');
-    const loadingMessage = document.getElementById('loading-message');
-    const toggleButton = document.getElementById('toggle-style');
-    const loadingSpinner = document.getElementById('loading-spinner');
+      const servicesEndpoint1 = '/api/services'; 
+      const servicesEndpoint2 = 'http://localhost:3000/api/services'; 
+      const servicesDirectory = 'servicos'; 
+      const listContainer = document.getElementById('services-list');
+      const loadingMessage = document.getElementById('loading-message');
+      const toggleButton = document.getElementById('toggle-style');
+      const loadingSpinner = document.getElementById('loading-spinner');
 
-    let estiloAtual = 'desativado'; 
+      let estiloAtual = 'desativado'; 
 
-    const serviceMap = {
-    "SUPERMICRO.html": { name: "Supermicro BIOS", icon: "🖥️", bg: "#209cee", text: "white" },
-    "formatador_osiris.html": { name: "Formatador Osiris", icon: "🛠️", bg: "#ffdd57", text: "black" },
-    "gerador_de_senha.html": { name: "Gerador de Senha", icon: "🔑", bg: "#48c78e", text: "white" },
-    "gerar_qrcode.html": { name: "Gerar QR Code Wi-Fi", icon: "📶", bg: "#ff3860", text: "white" },
-    "maxx_background.html": { name: "Background Maxx", icon: "🖼️", bg: "#7957d5", text: "white" },
-    "osiris_download.html": { name: "Download Osiris", icon: "⬇️", bg: "#00d1b2", text: "white" },
-    "prestacao_de_contas.html": { name: "Prestação de Contas", icon: "🧾", bg: "#ff6b6b", text: "white" },
-    "relatorio.html": { name: "Relatório de Atendimento", icon: "📋", bg: "#ff9f43", text: "black" },
-    "solicitar_de_recursos.html": { name: "Solicitar Recursos", icon: "📨", bg: "#6c5ce7", text: "white" }
-    };
+      const serviceMap = {
+        "SUPERMICRO.html": { name: "Supermicro BIOS", icon: "🖥️", bg: "#209cee", text: "white" },
+        "formatador_osiris.html": { name: "Formatador Osiris", icon: "🛠️", bg: "#ffdd57", text: "black" },
+        "gerador_de_senha.html": { name: "Gerador de Senha", icon: "🔑", bg: "#48c78e", text: "white" },
+        "gerar_qrcode.html": { name: "Gerar QR Code Wi-Fi", icon: "📶", bg: "#ff3860", text: "white" },
+        "maxx_background.html": { name: "Background Maxx", icon: "🖼️", bg: "#7957d5", text: "white" },
+        "osiris_download.html": { name: "Download Osiris", icon: "⬇️", bg: "#00d1b2", text: "white" },
+        "prestacao_de_contas.html": { name: "Prestação de Contas", icon: "🧾", bg: "#ff6b6b", text: "white" },
+        "relatorio.html": { name: "Relatório de Atendimento", icon: "📋", bg: "#ff9f43", text: "black" },
+        "solicitar_de_recursos.html": { name: "Solicitar Recursos", icon: "📨", bg: "#6c5ce7", text: "white" }
+      };
 
-    function aplicarEstilo(a, index, item) {
-    if (estiloAtual === 'desativado') {
-        a.classList.add('is-desativado');
-    } else if (estiloAtual === 'porServico') {
-        a.style.backgroundColor = item.bg;
-        a.style.color = item.text;
-    } else if (estiloAtual === 'zebrado') {
-        a.style.backgroundColor = index % 2 === 0 ? "#f0f0f0" : "#333";
-        a.style.color = index % 2 === 0 ? "#000" : "#fff";
-    } else if (estiloAtual === 'cinza') {
-        a.style.backgroundColor = "#dcdcdc";
-        a.style.color = "#000";
-    }
-    }
+      function aplicarEstilo(a, index, item) {
+        if (estiloAtual === 'desativado') {
+          a.classList.add('is-desativado');
+        } else if (estiloAtual === 'porServico') {
+          a.style.backgroundColor = item.bg;
+          a.style.color = item.text;
+        } else if (estiloAtual === 'zebrado') {
+          a.style.backgroundColor = index % 2 === 0 ? "#f0f0f0" : "#333";
+          a.style.color = index % 2 === 0 ? "#000" : "#fff";
+        } else if (estiloAtual === 'cinza') {
+          a.style.backgroundColor = "#dcdcdc";
+          a.style.color = "#000";
+        }
+      }
 
-    async function fetchServices(endpoint) {
-    try {
-        const response = await fetch(endpoint);
-        if (!response.ok) throw new Error("Erro ao buscar serviços.");
-        return await response.json();
-    } catch (error) {
-        console.error(error);
-        return null;
-    }
-    }
+      async function fetchServices(endpoint) {
+        try {
+          const response = await fetch(endpoint);
+          if (!response.ok) throw new Error("Erro ao buscar serviços.");
+          return await response.json();
+        } catch (error) {
+          console.error(error);
+          return null;
+        }
+      }
 
-    async function renderServicos() {
-    listContainer.innerHTML = '';
-    loadingSpinner.style.display = 'block'; // Exibe o spinner enquanto carrega
+      async function renderServicos() {
+        listContainer.innerHTML = '';
+        loadingSpinner.style.display = 'block'; // Exibe o spinner enquanto carrega
 
-    let services = await fetchServices(servicesEndpoint1); 
+        let services = await fetchServices(servicesEndpoint1); 
 
-    if (!services) {
-        console.log("Tentando o segundo endpoint...");
-        services = await fetchServices(servicesEndpoint2);
-    }
+        if (!services) {
+          console.log("Tentando o segundo endpoint...");
+          services = await fetchServices(servicesEndpoint2);
+        }
 
-    loadingSpinner.style.display = 'none'; // Esconde o spinner quando os dados são carregados
+        loadingSpinner.style.display = 'none'; // Esconde o spinner quando os dados são carregados
 
-    if (!services) {
-        listContainer.innerHTML = `<li class="has-text-danger">Erro ao carregar os serviços.</li>`;
-        return;
-    }
+        if (!services) {
+          listContainer.innerHTML = `<li class="has-text-danger">Erro ao carregar os serviços.</li>`;
+          return;
+        }
 
-    if (!Array.isArray(services) || services.length === 0) {
-        listContainer.innerHTML = `<li><em>Nenhum serviço encontrado.</em></li>`;
-        return;
-    }
+        if (!Array.isArray(services) || services.length === 0) {
+          listContainer.innerHTML = `<li><em>Nenhum serviço encontrado.</em></li>`;
+          return;
+        }
 
-    services.forEach((filename, index) => {
-        const item = serviceMap[filename];
-        if (!item) return;
+        // Exibe os serviços um a um com animação
+        services.forEach((filename, index) => {
+          const item = serviceMap[filename];
+          if (!item) return;
 
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = `${servicesDirectory}/${filename}`;
-        a.innerHTML = `${item.icon} ${item.name}`;
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = `${servicesDirectory}/${filename}`;
+          a.innerHTML = `${item.icon} ${item.name}`;
 
-        aplicarEstilo(a, index, item);
+          aplicarEstilo(a, index, item);
 
-        li.appendChild(a);
-        listContainer.appendChild(li);
-    });
-    }
+          li.appendChild(a);
+          listContainer.appendChild(li);
 
-    toggleButton.addEventListener('click', () => {
-    if (estiloAtual === 'porServico') {
-        estiloAtual = 'zebrado';
-    } else if (estiloAtual === 'zebrado') {
-        estiloAtual = 'cinza';
-    } else if (estiloAtual === 'cinza') {
-        estiloAtual = 'desativado'; 
-    } else {
-        estiloAtual = 'porServico'; 
-    }
-    renderServicos();
-    });
+          // Adiciona a classe 'visible' com um pequeno delay
+          setTimeout(() => {
+            a.classList.add('visible');
+          }, 100 * index); // Delay de 100ms entre os itens
+        });
+      }
 
-    renderServicos();
+      toggleButton.addEventListener('click', () => {
+        if (estiloAtual === 'porServico') {
+          estiloAtual = 'zebrado';
+        } else if (estiloAtual === 'zebrado') {
+          estiloAtual = 'cinza';
+        } else if (estiloAtual === 'cinza') {
+          estiloAtual = 'desativado'; 
+        } else {
+          estiloAtual = 'porServico'; 
+        }
+        renderServicos();
+      });
+
+      renderServicos();
     });
   </script>
 </body>
