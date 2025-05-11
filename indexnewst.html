@@ -49,7 +49,7 @@
       <h1 class="title has-text-centered">Plataforma de Serviços</h1>
 
       <div class="has-text-centered is-style-toggle">
-        <button id="toggle-style" class="button is-link is-small">Alternar Estilo</button>
+        <button id="toggle-style" class="button is-link is-small" disabled>Alternar Estilo</button>
       </div>
 
       <div class="menu" id="services-menu">
@@ -63,7 +63,7 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const servicesEndpoint = '/api/services';
+      const servicesEndpoint = 'http://localhost:3000/api/services';//'/api/services';
       const servicesDirectory = 'servicos';
       const listContainer = document.getElementById('services-list');
       const loadingMessage = document.getElementById('loading-message');
@@ -71,6 +71,7 @@
 
       // Estilo atual que pode ser trocado dinamicamente
       let estiloAtual = 'cinza'; // ou 'zebrado', 'cinza'
+      document.querySelector('.has-text-centered.is-style-toggle').remove(); // ocutar alternar serviço
 
       const serviceMap = {
         "SUPERMICRO.html": {
