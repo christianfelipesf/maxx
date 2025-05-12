@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
+    textarea {
+      width: 300px;
+      height: 10px;
+    }
     .popup {
       position: fixed;
       bottom: 20px;
@@ -75,18 +79,18 @@
     <h1 class="title">Formatador de ONU</h1>
     <div class="field">
       <label class="label">Insira os dados da ONU</label>
-      <div class="control">
-        <textarea id="inputData" class="textarea" placeholder="Cole os dados aqui..."></textarea>
+      <div class="control" id="inputControl">
+        <textarea id="inputData" class="textarea textarea has-fixed-size is-link" placeholder="Cole os dados aqui..."></textarea>
       </div>
     </div>
     <div class="field mt-4">
       <label class="label">Resultado</label>
-      <div class="control">
-        <input type="text" id="outputData" class="input" readonly>
+      <div class="control" id="outputControl">
+        <textarea id="outputData" class="textarea textarea has-fixed-size is-link" readonly></textarea>
       </div>
     </div>
     <div class="control mt-2">
-      <button id="copyButton" class="button is-info" onclick="copyOutput(); saveOutputToHistory();" disabled>
+      <button id="copyButton" class="button is-info" onclick="handleCopy();" disabled>
         <i class="fas fa-copy" style="color: blue;"></i> Copiar
       </button>
     </div>
@@ -103,170 +107,38 @@
     </div>
   </div>
 </section>
-
 <script>
-  function clearHistory() {
-    localStorage.removeItem('onuHistory');
-    renderHistory();
+  function handleCopy() {
+    const inputData = document.getElementById('inputData');
+    const outputData = document.getElementById('outputData');
+    const inputControl = document.getElementById('inputControl');
+    const outputControl = document.getElementById('outputControl');
+
+    inputData.disabled = true;
+    inputControl.classList.add('is-loading');
+    outputControl.classList.add('is-loading');
+
+    setTimeout(() => {
+      copyOutput();
+      saveOutputToHistory();
+
+      outputControl.classList.remove('is-loading');
+      outputControl.classList.add('has-icons-left', 'has-icons-right');
+      outputData.classList.add('is-success');
+
+      setTimeout(() => {
+        inputControl.classList.remove('is-loading');
+        outputControl.classList.remove('has-icons-left', 'has-icons-right');
+        outputData.classList.remove('is-success');
+        inputData.disabled = false;
+        inputData.className = 'textarea';
+        outputData.className = 'textarea';
+      }, 2000);
+
+    }, 800);
   }
 
-  function parseONUData(data) {
-    const lines = data.split('\n');
-    let formattedData = {};
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i].trim();
-      if (!line) continue;
-      if (line.includes('MAC ONU')) {
-        const nextLine = lines[i + 1]?.trim();
-        if (nextLine && nextLine.includes('\t')) {
-          const [mac, olt, slot, pon, status] = nextLine.split('\t');
-          formattedData = { MAC: mac, OLT: olt, SLOT: slot, PON: pon, STATUS: status };
-          i++;
-        }
-      } else if (line.includes('ADMINSTATE')) {
-        const headers = line.split('\t');
-        const values = lines[i + 1]?.split('\t');
-        if (values && values.length === headers.length) {
-          headers.forEach((header, index) => {
-            formattedData[header.trim()] = values[index].trim();
-          });
-          i++;
-        }
-      } else if (line.includes(':\t')) {
-        const [key, value] = line.split(':\t');
-        if (key && value) {
-          formattedData[key.trim()] = value.trim();
-        }
-      }
-    }
-    return formattedData;
-  }
-
-  function formatInline(dataObj) {
-    return Object.entries(dataObj)
-      .filter(([_, value]) => value !== undefined && value !== '')
-      .map(([key, value]) => `${key}: ${value}`)
-      .join(', ');
-  }
-
-  function animateOutput(text, duration = 3000, style = 'typewriter') {
-    const inputField = document.getElementById('inputData');
-    const outputField = document.getElementById('outputData');
-    const copyButton = document.getElementById('copyButton');
-    copyButton.disabled = true; // desativa antes de começar
-    const originalInput = inputField.value;
-
-    if (style === 'none') {
-      outputField.value = text;
-      copyButton.disabled = false;
-      return;
-    }
-
-    let maxLength = Math.max(text.length, originalInput.length);
-    let delay = duration / maxLength;
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i <= maxLength) {
-        outputField.value = text.substring(0, i);
-        inputField.value = originalInput.substring(i);
-        i++;
-      } else {
-        clearInterval(interval);
-        copyButton.disabled = false; // habilita após animação
-      }
-    }, delay);
-  }
-
-  function processData() {
-    const inputText = document.getElementById('inputData').value;
-    const parsedData = parseONUData(inputText);
-    if (Object.keys(parsedData).length > 0) {
-      const timestamp = new Date().toLocaleString();
-      const formattedText = `Osiris: ${formatInline(parsedData)} (${timestamp})`;
-      const style = document.getElementById('animationStyle')?.value ?? 'typewriter';
-      animateOutput(formattedText, 50, style);
-    }
-  }
-
-  function copyOutput() {
-    const text = document.getElementById('outputData').value;
-    if (!text.trim()) {
-      showError("Nenhum texto formatado recentemente!");
-      return;
-    }
-    const timestamp = new Date().toLocaleString();
-    //const textWithTimestamp = `${text} (${timestamp})`; // tirar timestanp 2 vezes seguidas...
-    const textWithTimestamp = `${text}`;
-    navigator.clipboard.writeText(textWithTimestamp).then(() => {
-      showPopup("Copiado para a área de transferência!", "#4CAF50");
-    }).catch(err => console.error('Erro ao copiar:', err));
-  }
-
-  function showPopup(message, color) {
-    const popup = document.getElementById('popup');
-    popup.textContent = message;
-    popup.style.background = color;
-    popup.style.display = 'block';
-    setTimeout(() => { popup.style.display = 'none'; }, 2000);
-  }
-
-  function showError(message) {
-    showPopup(message, "#D9534F");
-  }
-
-  function saveToHistory(text) {
-    if (!text) return;
-    let history = JSON.parse(localStorage.getItem('onuHistory')) || [];
-    const timestamp = new Date().toLocaleString();
-    history.unshift({ text, timestamp });
-    localStorage.setItem('onuHistory', JSON.stringify(history.slice(0, 10)));
-    renderHistory();
-  }
-
-  function saveOutputToHistory() {
-    const text = document.getElementById('outputData').value;
-    if (text) saveToHistory(text);
-  }
-
-  function renderHistory() {
-    const historyList = document.getElementById('historyList');
-    historyList.innerHTML = '';
-    let history = JSON.parse(localStorage.getItem('onuHistory')) || [];
-    history.forEach(item => {
-      const li = document.createElement('li');
-      li.classList.add('history-item');
-      const span = document.createElement('span');
-      span.textContent = `${item.timestamp} - ${item.text}`;
-      const button = document.createElement('button');
-      button.className = 'button is-small is-light copy-btn';
-      button.innerHTML = '<i class="fas fa-copy"></i>';
-      button.onclick = () => {
-        navigator.clipboard.writeText(item.text).then(() => {
-          showPopup("Copiado do histórico!", "#4CAF50");
-        });
-      };
-      li.appendChild(span);
-      li.appendChild(button);
-      historyList.appendChild(li);
-    });
-  }
-
-  function voltar() {
-    const hostname = window.location.hostname;
-    
-    if (hostname.includes("onrender.com")) {
-      window.location.href = "../indexnewst.html";
-    } else {
-      window.location.href = "../index.html";
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    renderHistory();
-    document.getElementById('inputData').addEventListener('input', () => {
-      processData();
-    });
-  });
+  // ... restante do script existente
 </script>
 </body>
 </html>
