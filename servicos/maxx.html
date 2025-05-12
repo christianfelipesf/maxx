@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emulação de Janela Delphi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilo customizado para o fundo escuro */
+        body {
+            background-color: #1a202c; /* Cor de fundo escura similar à imagem */
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ocupa a altura total da viewport */
+            width: 100vw; /* Ocupa a largura total da viewport */
+            margin: 0;
+            overflow: hidden; /* Evita scroll no body */
+        }
+        .window-container {
+            background-color: #e0e0e0; /* Cor de fundo da janela (cinza claro) */
+            width: 100%; /* Ocupa a largura total do body */
+            height: 100vh; /* Ocupa a altura total do body */
+            border-radius: 0; /* Remove border-radius para tela cheia */
+            overflow: hidden;
+            box-shadow: none; /* Remove sombra para tela cheia */
+            display: flex;
+            flex-direction: column;
+        }
+        .header-bar {
+            background-color: #005792; /* Cor da barra de título (azul) */
+            color: white;
+            padding: 4px 8px;
+            font-size: 0.875rem; /* sm */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0; /* Impede que a barra de título encolha */
+        }
+        .menu-bar {
+            background-color: #f0f0f0; /* Cor da barra de menu (cinza claro) */
+            padding: 4px 8px;
+            font-size: 0.875rem; /* sm */
+            border-bottom: 1px solid #d1d5db; /* gray-300 */
+            flex-shrink: 0; /* Impede que a barra de menu encolha */
+            display: flex; /* Usa flexbox para os itens de menu */
+            gap: 16px; /* Espaço entre os itens */
+        }
+        .menu-item {
+            position: relative; /* Necessário para posicionar o dropdown */
+            cursor: pointer;
+            padding: 4px 0; /* Padding para a área clicável */
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%; /* Posiciona abaixo do item de menu */
+            left: 0;
+            background-color: white;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 10; /* Garante que o dropdown fique acima de outros elementos */
+            min-width: 120px; /* Largura mínima do dropdown */
+            display: none; /* Inicialmente oculto */
+        }
+        .dropdown-menu span {
+            display: block;
+            padding: 8px 12px;
+            cursor: pointer;
+            white-space: nowrap; /* Evita quebra de linha nos itens */
+        }
+        .dropdown-menu span:hover {
+            background-color: #f0f0f0; /* gray-200 */
+        }
+        .main-content {
+            flex-grow: 1;
+            background-color: #2d3748; /* Cor de fundo da área principal (azul escuro) */
+            position: relative; /* Para posicionar as janelas flutuantes */
+            padding: 16px; /* p-4 */
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Centraliza o conteúdo */
+            overflow: auto; /* Adiciona scroll se o conteúdo exceder a altura */
+        }
+        .logo-placeholder {
+            color: rgba(255, 255, 255, 0.1); /* Cor clara e semi-transparente */
+            font-size: 6rem; /* Texto grande */
+            font-weight: bold;
+            text-align: center;
+            pointer-events: none; /* Ignora eventos de mouse */
+        }
+        .draggable-window {
+             background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: absolute; /* Posição flutuante */
+            top: 50%; /* Centraliza verticalmente */
+            left: 50%; /* Centraliza horizontalmente */
+            transform: translate(-50%, -50%); /* Ajuste para centralização exata */
+             padding: 0; /* Remove padding do container principal */
+            display: flex;
+            flex-direction: column;
+            cursor: grab; /* Muda o cursor para indicar que é arrastável */
+            z-index: 20; /* Garante que as janelas arrastáveis fiquem acima do logo */
+        }
+         .draggable-window.dragging {
+            cursor: grabbing; /* Muda o cursor ao arrastar */
+        }
+        .window-header {
+            background-color: #005792; /* Cor da barra de título da janela */
+            color: white;
+            padding: 8px 16px;
+            font-size: 1rem; /* base */
+            font-weight: bold;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            cursor: grab; /* Cursor para arrastar */
+        }
+         .window-content {
+            padding: 16px; /* Adiciona padding ao conteúdo interno */
+        }
+
+        /* Estilos específicos para a janela de Alertas */
+        .alerts-window {
+             width: 90%; /* Largura responsiva */
+            max-width: 600px; /* Largura máxima */
+        }
+        .alerts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px; /* mb-2 */
+        }
+        .alerts-table th, .alerts-table td {
+            border: 1px solid #d1d5db; /* gray-300 */
+            padding: 4px;
+            text-align: left;
+            font-size: 0.75rem; /* xs */
+        }
+        .alerts-table th {
+            background-color: #f0f0f0; /* Cor de fundo do cabeçalho */
+        }
+        .status-indicators {
+            display: flex;
+            flex-wrap: wrap; /* Permite quebra de linha */
+            gap: 16px; /* gap-4 */
+            margin-bottom: 16px; /* mb-4 */
+            font-size: 0.875rem; /* sm */
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+        }
+        .status-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+            margin-right: 4px; /* mr-1 */
+        }
+
+        /* Estilos específicos para a janela de Manutenção de Atendimento */
+        .manutencao-window {
+            width: 95%; /* Largura responsiva */
+            max-width: 900px; /* Largura máxima */
+            display: none; /* Inicialmente oculta */
+        }
+        .manutencao-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Colunas responsivas */
+            gap: 8px; /* gap-2 */
+            margin-bottom: 16px; /* mb-4 */
+        }
+        .manutencao-grid label {
+            font-size: 0.875rem; /* sm */
+            display: block;
+            margin-bottom: 4px; /* mb-1 */
+        }
+         .manutencao-grid input, .manutencao-grid select {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 4px;
+            font-size: 0.875rem; /* sm */
+        }
+         .search-section {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px; /* gap-2 */
+            margin-bottom: 16px; /* mb-4 */
+        }
+        .search-section select {
+             padding: 4px;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 4px;
+            font-size: 0.875rem; /* sm */
+        }
+         .search-section input {
+            flex-grow: 1; /* Ocupa o espaço restante */
+             padding: 4px;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 4px;
+            font-size: 0.875rem; /* sm */
+        }
+         .search-section button {
+             background-color: #005792; /* Cor do botão de pesquisa (azul) */
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.875rem; /* sm */
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+         }
+         .search-section button:hover {
+            background-color: #00416a; /* Azul mais escuro no hover */
+         }
+         .manutencao-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px; /* mb-4 */
+         }
+         .manutencao-table th, .manutencao-table td {
+            border: 1px solid #d1d5db; /* gray-300 */
+            padding: 4px;
+            text-align: left;
+            font-size: 0.75rem; /* xs */
+         }
+         .manutencao-table th {
+            background-color: #f0f0f0; /* Cor de fundo do cabeçalho */
+         }
+         .info-bar {
+            display: flex;
+            justify-content: space-around;
+            font-size: 0.875rem; /* sm */
+            margin-bottom: 16px; /* mb-4 */
+         }
+         .info-bar span {
+            font-weight: bold;
+         }
+         .bottom-fields-grid {
+             display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Colunas responsivas */
+            gap: 8px; /* gap-2 */
+            margin-bottom: 16px; /* mb-4 */
+         }
+          .bottom-fields-grid label {
+            font-size: 0.875rem; /* sm */
+            display: block;
+            margin-bottom: 4px; /* mb-1 */
+        }
+         .bottom-fields-grid input {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 4px;
+            font-size: 0.875rem; /* sm */
+        }
+        .icon-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Colunas responsivas */
+            gap: 8px; /* gap-2 */
+            justify-items: center; /* Centraliza os itens na célula */
+        }
+        .icon-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.75rem; /* xs */
+            text-align: center;
+            padding: 4px;
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 4px;
+             background-color: #f0f0f0; /* gray-200 */
+             transition: background-color 0.2s ease;
+        }
+         .icon-button:hover {
+            background-color: #d1d5db; /* gray-300 */
+         }
+         .icon-button img {
+            width: 24px; /* Tamanho dos ícones */
+            height: 24px;
+            margin-bottom: 4px; /* Espaço entre ícone e texto */
+         }
+         .icon-placeholder {
+             width: 24px; /* Tamanho dos ícones */
+            height: 24px;
+            background-color: #9ca3af; /* gray-400 */
+            border-radius: 4px;
+             margin-bottom: 4px; /* Espaço entre ícone e texto */
+         }
+
+
+        .footer-bar {
+            background-color: #f0f0f0; /* Cor do rodapé (cinza claro) */
+            padding: 4px 8px;
+            font-size: 0.75rem; /* xs */
+            border-top: 1px solid #d1d5db; /* gray-300 */
+            display: flex;
+            justify-content: space-between;
+            flex-shrink: 0; /* Impede que a barra de rodapé encolha */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="window-container">
+        <div class="header-bar">
+            <span>TELECOMUNICAÇÕES NORDESTE LTDA - VERSÃO: 4.4.3.8</span>
+            <div>
+                <span class="inline-block px-1 cursor-pointer hover:bg-blue-700">-</span>
+                <span class="inline-block px-1 cursor-pointer hover:bg-blue-700">□</span>
+                <span class="inline-block px-1 cursor-pointer hover:bg-red-600">X</span>
+            </div>
+        </div>
+
+        <div class="menu-bar">
+            <div class="menu-item">
+                <span>Cadastros</span>
+                <div class="dropdown-menu">
+                    <span>Novo Cadastro</span>
+                    <span>Buscar Cadastro</span>
+                    <span>Relatórios de Cadastro</span>
+                </div>
+            </div>
+             <div class="menu-item">
+                <span>Estoque</span>
+                 <div class="dropdown-menu">
+                    <span>Entrada de Material</span>
+                    <span>Saída de Material</span>
+                    <span>Inventário</span>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span>Compras</span>
+                 <div class="dropdown-menu">
+                    <span>Nova Compra</span>
+                    <span>Pedidos</span>
+                    <span>Fornecedores</span>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span>Financeiro</span>
+                 <div class="dropdown-menu">
+                    <span>Contas a Pagar</span>
+                    <span>Contas a Receber</span>
+                    <span>Fluxo de Caixa</span>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span>Equipamentos</span>
+                 <div class="dropdown-menu">
+                    <span>Cadastro de Equipamentos</span>
+                    <span>Manutenção</span>
+                    <span>Histórico</span>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span>Utilitários</span>
+                 <div class="dropdown-menu">
+                    <span>Calculadora</span>
+                    <span>Agenda</span>
+                    <span>Configurações</span>
+                </div>
+            </div>
+            <div class="menu-item" id="atendimentoMenuItem">
+                <span>Atendimento</span>
+                 <div class="dropdown-menu">
+                    <span>Novo Atendimento</span>
+                    <span>Consultar Atendimento</span>
+                    <span id="openManutencao">Manutenções</span> <span>Relatórios de Atendimento</span>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span>Relatórios</span>
+                 <div class="dropdown-menu">
+                    <span>Relatórios Gerais</span>
+                    <span>Relatórios Personalizados</span>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span>CRM</span>
+                 <div class="dropdown-menu">
+                    <span>Clientes</span>
+                    <span>Interações</span>
+                    <span>Campanhas</span>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span>Sobre</span>
+                 <div class="dropdown-menu">
+                    <span>Sobre o Sistema</span>
+                    <span>Licença</span>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span>ANATEL</span>
+                 <div class="dropdown-menu">
+                    <span>Consultar ANATEL</span>
+                    <span>Relatórios ANATEL</span>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span>Auditoria Fiscal</span>
+                 <div class="dropdown-menu">
+                    <span>Executar Auditoria</span>
+                    <span>Logs de Auditoria</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="logo-placeholder">ATENA</div>
+
+            <div class="draggable-window alerts-window" id="alertsWindow">
+                <div class="window-header" id="alertsHeader">Alertas</div>
+                <div class="window-content">
+                    <table class="alerts-table">
+                        <thead>
+                            <tr>
+                                <th>CONTRATO</th>
+                                <th>TIPO DE REGISTRO</th>
+                                <th>BAIRRO</th>
+                                <th>LOGRADOURO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                             <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                             <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                             <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                            </tbody>
+                    </table>
+
+                    <div class="status-indicators">
+                        <div class="status-item">
+                            <span class="status-color bg-red-500"></span>
+                            <span>Pendente</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-color bg-yellow-400"></span>
+                            <span>Em Análise</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-color bg-green-500"></span>
+                            <span>Concluído</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-color bg-blue-500"></span>
+                            <span>Sendo Resolvido</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-color bg-gray-400"></span>
+                            <span>Sem Procedência</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center gap-4">
+                        <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm py-1 px-3 rounded">Relatório</button>
+                        <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm py-1 px-3 rounded">Responder</button>
+                        <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm py-1 px-3 rounded">Status</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="draggable-window manutencao-window" id="manutencaoWindow">
+                <div class="window-header" id="manutencaoHeader">Manutenção de Atendimento ( CONTRATOS )</div>
+                <div class="window-content">
+                    <div class="manutencao-grid">
+                        <div>
+                            <label for="centroAtendimento">CENTRO DE ATENDIMENTO</label>
+                            <select id="centroAtendimento">
+                                <option value="">TODOS</option>
+                                </select>
+                        </div>
+                         <div>
+                            <label for="tipoChamada">TIPO DE CHAMADA</label>
+                            <select id="tipoChamada">
+                                <option value="">TODOS</option>
+                                </select>
+                        </div>
+                         <div>
+                            <label for="pontoSenha">N º PONTO SENHA</label>
+                            <select id="pontoSenha">
+                                <option value="">TODOS</option>
+                                </select>
+                        </div>
+                         <div>
+                            <label for="situacaoTV">SITUAÇÃO TV</label>
+                            <select id="situacaoTV">
+                                <option value="">TODOS</option>
+                                </select>
+                        </div>
+                         <div>
+                            <label for="situacaoNET">SITUAÇÃO NET</label>
+                            <select id="situacaoNET">
+                                <option value="">TODOS</option>
+                                </select>
+                        </div>
+                         <div>
+                            <label for="situacaoTelFixo">SIT . TEL FIXO</label>
+                            <select id="situacaoTelFixo">
+                                <option value="">TODOS</option>
+                                </select>
+                        </div>
+                         <div>
+                            <label for="situacaoTelMovel">SIT . TEL MOVEL</label>
+                            <select id="situacaoTelMovel">
+                                <option value="">TODOS</option>
+                                </select>
+                        </div>
+                         <div>
+                            <label for="situacaoGPON">SITUAÇÃO GPON</label>
+                            <select id="situacaoGPON">
+                                <option value="">TODOS</option>
+                                </select>
+                        </div>
+                        <div>
+                            <label for="situacaoIPTV">SITUAÇÃO IPTV</label>
+                            <select id="situacaoIPTV">
+                                <option value="">TODOS</option>
+                                </select>
+                        </div>
+                    </div>
+
+                    <div class="search-section">
+                        <label for="pesquisarPor" class="sr-only">Pesquisar Por</label> <select id="pesquisarPor">
+                            <option value="contrato">CONTRATO</option>
+                            </select>
+                        <label for="contratoPesquisa" class="sr-only">Número do Contrato</label> <input type="text" id="contratoPesquisa" placeholder="CONTRATO">
+                        <button id="btnPesquisar">Pesquisar</button>
+                    </div>
+
+                    <table class="manutencao-table">
+                        <thead>
+                            <tr>
+                                <th>N º CONT</th>
+                                <th>NOME DO ASSINANTE</th>
+                                <th>TEL./CEL .</th>
+                                <th>LOGRADOURO</th>
+                                <th>GPON</th>
+                                <th>IPTV</th>
+                                <th>INTERNET</th>
+                                <th>TEL . FIXO</th>
+                                <th>TEL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                            </tr>
+                             <tr>
+                                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                            </tr>
+                             <tr>
+                                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-bar">
+                        <span>INDICE DE INADIMPLÊNCIA : <span>0 %</span></span>
+                        <span>NÚMERO DE PONTOS ACUMULADOS : <span>0</span></span>
+                    </div>
+
+                    <div class="bottom-fields-grid">
+                        <div>
+                            <label for="campoN2">Nº</label>
+                            <input type="text" id="campoN2">
+                        </div>
+                         <div>
+                            <label for="campoAPSL">AP/SL</label>
+                            <input type="text" id="campoAPSL">
+                        </div>
+                         <div>
+                            <label for="campoBL">BL</label>
+                            <input type="text" id="campoBL">
+                        </div>
+                         <div>
+                            <label for="campoCEP">CEP</label>
+                            <input type="text" id="campoCEP">
+                        </div>
+                         <div>
+                            <label for="campoBairro">BAIRRO</label>
+                            <input type="text" id="campoBairro">
+                        </div>
+                         <div>
+                            <label for="campoNode">NODE</label>
+                            <input type="text" id="campoNode">
+                        </div>
+                         <div>
+                            <label for="campoComplemento">COMPLEMENTO</label>
+                            <input type="text" id="campoComplemento">
+                        </div>
+                    </div>
+
+                    <div class="icon-buttons-grid">
+                        <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Contrato</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Assinante</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>OS</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Cta . Rec .</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Resumo</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Diário de Bordo</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Reg . Atend .</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Impressos</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>At . Cadastro</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Endereço</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Pt Adicional</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Revista</span>
+                        </div>
+                         <div class="icon-button">
+                             <div class="icon-placeholder"></div> <span>Carné</span>
+                        </div>
+                         <div class="icon-button" id="closeManutencao">
+                             <div class="icon-placeholder"></div> <span>Sair</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="footer-bar">
+            <span>USUÁRIO CHRISTIAN COSTA</span>
+            <span>CONTROLE 12/05/2025 BAIXA 12/05/2025 MÊS 06/2025</span>
+            <span>CIDADE SÃO LUÍS</span>
+            <span>V 4.4.3.8</span>
+        </div>
+    </div>
+
+    <script>
+        // Script para tornar as janelas arrastáveis
+        const alertsWindow = document.getElementById('alertsWindow');
+        const alertsHeader = document.getElementById('alertsHeader');
+        const manutencaoWindow = document.getElementById('manutencaoWindow');
+        const manutencaoHeader = document.getElementById('manutencaoHeader');
+
+        // Função genérica para tornar um elemento arrastável
+        function makeDraggable(windowElement, headerElement) {
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+
+            headerElement.addEventListener("mousedown", dragStart);
+            document.addEventListener("mouseup", dragEnd);
+            document.addEventListener("mousemove", drag);
+
+            function dragStart(e) {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+
+                if (e.target === headerElement) {
+                    isDragging = true;
+                    windowElement.classList.add('dragging'); // Adiciona classe para mudar o cursor
+                }
+            }
+
+            function dragEnd(e) {
+                initialX = currentX;
+                initialY = currentY;
+
+                isDragging = false;
+                windowElement.classList.remove('dragging'); // Remove classe do cursor
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+
+                xOffset = currentX;
+                yOffset = currentY;
+
+                setTranslate(currentX, currentY, windowElement);
+            }
+
+            function setTranslate(xPos, yPos, el) {
+                el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
+            }
+        }
+
+        // Torna a janela de Alertas arrastável
+        makeDraggable(alertsWindow, alertsHeader);
+        // Torna a janela de Manutenção arrastável
+        makeDraggable(manutencaoWindow, manutencaoHeader);
+
+
+        // Script para exibir/ocultar dropdowns ao passar o mouse
+        const menuItems = document.querySelectorAll('.menu-item');
+
+        menuItems.forEach(item => {
+            const dropdown = item.querySelector('.dropdown-menu');
+            if (dropdown) {
+                item.addEventListener('mouseenter', () => {
+                    dropdown.style.display = 'block';
+                });
+                item.addEventListener('mouseleave', () => {
+                    dropdown.style.display = 'none';
+                });
+            }
+        });
+
+        // Script para abrir/fechar a janela de Manutenção
+        const openManutencaoBtn = document.getElementById('openManutencao');
+        const closeManutencaoBtn = document.getElementById('closeManutencao'); // Botão "Sair"
+
+        openManutencaoBtn.addEventListener('click', () => {
+            manutencaoWindow.style.display = 'flex'; // Exibe a janela (usando flex para layout interno)
+        });
+
+        closeManutencaoBtn.addEventListener('click', () => {
+            manutencaoWindow.style.display = 'none'; // Oculta a janela
+             // Opcional: Resetar a posição da janela ao fechar
+            setTranslate(0, 0, manutencaoWindow);
+             xOffset = 0;
+             yOffset = 0;
+        });
+
+        // Placeholder para a funcionalidade do botão Pesquisar
+        const btnPesquisar = document.getElementById('btnPesquisar');
+        btnPesquisar.addEventListener('click', () => {
+            const contrato = document.getElementById('contratoPesquisa').value;
+            console.log('Pesquisar contrato:', contrato);
+            // Aqui você adicionaria a lógica para buscar os dados e preencher a tabela
+            alert('Funcionalidade de Pesquisa ainda não implementada.'); // Usando alert temporariamente
+        });
+
+    </script>
+
+</body>
+</html>
