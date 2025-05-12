@@ -195,7 +195,8 @@
       return;
     }
     const timestamp = new Date().toLocaleString();
-    const textWithTimestamp = `${text} (${timestamp})`;
+    //const textWithTimestamp = `${text} (${timestamp})`; // tirar timestanp 2 vezes seguidas...
+    const textWithTimestamp = `${text}`;
     navigator.clipboard.writeText(textWithTimestamp).then(() => {
       showPopup("Copiado para a área de transferência!", "#4CAF50");
     }).catch(err => console.error('Erro ao copiar:', err));
