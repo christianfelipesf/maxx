@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/webp" href="logorounded.webp">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plataforma Serviços</title>
+
+  <meta property="og:title" content="Plataforma Serviços" />
+  <meta property="og:description" content="Serviços para usuário contact center." />
+  <meta property="og:image" content="https://christianfelipesf.github.io/maxx/simples.jpg" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+  <!-- SortableJS para drag and drop -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    .menu-list a {
+      display: block;
+      padding: 12px 20px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      text-decoration: none;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .menu-list a.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .menu-list a:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .menu-label {
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+    }
+
+    .container {
+      max-width: 600px;
+    }
+
+    .is-style-toggle {
+      margin-bottom: 1rem;
+    }
+
+    .is-desativado {
+      background-color: #041461 !important;
+      color: #f0f0f0 !important;
+    }
+
+    .is-desativado:hover {
+      background-color: #c6c6c6;
+    }
+
+    .has-text-centered.is-style-toggle { 
+      display: none;
+    }
+
+    #services-menu {
+      background-color: #f5f5f5;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      height: 80vh;
+      max-height: 90vh;
+    }
+
+    #services-menu.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #loading-message {
+      transition: opacity 0.5s ease;
+    }
+
+    .fade-out {
+      opacity: 0;
+    }
+
+    .loading-spinner {
+      text-align: center;
+      padding: 30px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #041461;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 0.4s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Arrastar com estilo */
+    .dragging {
+      transform: scale(1.05);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+    }
+
+    .placeholder {
+      background: rgba(0, 0, 0, 0.05);
+      border: 2px dashed #ccc;
+      height: 48px;
+      margin: 8px 0;
+      border-radius: 8px;
+      transition: all 0.25s ease;
+    }
+
+    .menu-list li {
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+  </style>
+</head>
+<body>
+  <section class="section">
+    <div class="container">
+
+      <div class="has-text-centered is-style-toggle">
+        <button id="toggle-style" class="button is-link is-small">Alternar Estilo</button>
+      </div>
+
+      <div class="menu" id="services-menu">
+        <h1 class="title has-text-centered">Plataforma de Serviços</h1>
+        <p class="menu-label">Serviços Disponíveis</p>
+        <ul class="menu-list" id="services-list">
+          <li id="loading-message">Carregando serviços...</li>
+        </ul>
+        <div id="loading-spinner" class="loading-spinner" style="display: none;">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const serviceMap = {
+      "wifi.html": { name: "Configurar Wi-Fi", icon: "📶", bg: "#e6f7ff", text: "#003366" },
+      "bloqueio.html": { name: "Bloqueio de Internet", icon: "🚫", bg: "#ffe6e6", text: "#660000" },
+      "reset.html": { name: "Reiniciar Modem", icon: "🔁", bg: "#fffbe6", text: "#665c00" },
+      "consulta.html": { name: "Consultar Equipamento", icon: "🔍", bg: "#e6ffe6", text: "#004d00" }
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const servicesEndpoint1 = '/api/services'; 
+      const servicesEndpoint2 = 'http://localhost:3000/api/services'; 
+      const servicesDirectory = 'servicos'; 
+      const listContainer = document.getElementById('services-list');
+      const loadingMessage = document.getElementById('loading-message');
+      const toggleButton = document.getElementById('toggle-style');
+      const loadingSpinner = document.getElementById('loading-spinner');
+      const servicesMenu = document.getElementById('services-menu');
+
+      let estiloAtual = 'desativado'; 
+
+      function aplicarEstilo(a, index, item) {
+        a.classList.remove('is-desativado');
+        a.style.backgroundColor = '';
+        a.style.color = '';
+
+        if (estiloAtual === 'desativado') {
+          a.classList.add('is-desativado');
+        } else if (estiloAtual === 'porServico') {
+          a.style.backgroundColor = item.bg;
+          a.style.color = item.text;
+        } else if (estiloAtual === 'zebrado') {
+          a.style.backgroundColor = index % 2 === 0 ? "#f0f0f0" : "#333";
+          a.style.color = index % 2 === 0 ? "#000" : "#fff";
+        } else if (estiloAtual === 'cinza') {
+          a.style.backgroundColor = "#dcdcdc";
+          a.style.color = "#000";
+        }
+      }
+
+      async function fetchServices(endpoint) {
+        try {
+          const response = await fetch(endpoint);
+          if (!response.ok) throw new Error("Erro ao buscar serviços.");
+          return await response.json();
+        } catch (error) {
+          console.error(error);
+          return null;
+        }
+      }
+
+      async function renderServicos() {
+        listContainer.innerHTML = '';
+        loadingMessage.classList.remove('fade-out');
+        loadingSpinner.style.display = 'block';
+
+        let services = await fetchServices(servicesEndpoint1); 
+        if (!services) {
+          console.log("Tentando o segundo endpoint...");
+          services = await fetchServices(servicesEndpoint2);
+        }
+
+        loadingSpinner.style.display = 'none';
+        loadingMessage.classList.add('fade-out');
+
+        if (!services) {
+          listContainer.innerHTML = `<li class="has-text-danger">Erro ao carregar os serviços.</li>`;
+          return;
+        }
+
+        if (!Array.isArray(services) || services.length === 0) {
+          listContainer.innerHTML = `<li><em>Nenhum serviço encontrado.</em></li>`;
+          return;
+        }
+
+        services.forEach((filename, index) => {
+          const item = serviceMap[filename];
+          if (!item) return;
+
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = `${servicesDirectory}/${filename}`;
+          a.innerHTML = `${item.icon} ${item.name}`;
+
+          aplicarEstilo(a, index, item);
+
+          li.appendChild(a);
+          listContainer.appendChild(li);
+
+          setTimeout(() => {
+            a.classList.add('visible');
+          }, 100 * index);
+        });
+      }
+
+      toggleButton.addEventListener('click', () => {
+        if (estiloAtual === 'porServico') {
+          estiloAtual = 'zebrado';
+        } else if (estiloAtual === 'zebrado') {
+          estiloAtual = 'cinza';
+        } else if (estiloAtual === 'cinza') {
+          estiloAtual = 'desativado'; 
+        } else {
+          estiloAtual = 'porServico'; 
+        }
+        renderServicos();
+      });
+
+      renderServicos().then(() => {
+        new Sortable(listContainer, {
+          animation: 200,
+          ghostClass: 'dragging',
+          chosenClass: 'dragging',
+          dragClass: 'dragging',
+          swapThreshold: 0.65,
+          easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+          onStart: (evt) => {
+            evt.item.style.transition = "none";
+          },
+          onEnd: (evt) => {
+            evt.item.style.transition = "";
+          }
+        });
+      });
+
+      servicesMenu.classList.add('visible');
+    });
+  </script>
+</body>
+</html>

@@ -107,6 +107,20 @@ app.post("/gerar-planilha", async (req, res) => {
   }
 });
 
+
+// Rota que retorna a hora atual
+app.get('/hora', (req, res) => {
+  const agora = new Date();
+  const horaAtual = agora.toLocaleTimeString('pt-BR', { hour12: false });
+  
+  res.json({ hora: horaAtual });
+});
+
+// Inicia o servidor
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
+
 // Rota para gerar o PDF com QR Code de Wi-Fi
 app.post('/gerar-pdf-wifi', async (req, res) => {
   const { ssid, password } = req.body;
@@ -151,6 +165,8 @@ app.post('/gerar-pdf-wifi', async (req, res) => {
     res.status(500).json({ message: 'Erro ao gerar o PDF.' });
   }
 });
+
+
 
 // Inicia o servidor
 app.listen(port, () => {
