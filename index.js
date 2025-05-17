@@ -116,10 +116,6 @@ app.get('/hora', (req, res) => {
   res.json({ hora: horaAtual });
 });
 
-// Inicia o servidor
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
 
 // Rota para gerar o PDF com QR Code de Wi-Fi
 app.post('/gerar-pdf-wifi', async (req, res) => {
