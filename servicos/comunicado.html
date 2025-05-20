@@ -117,26 +117,25 @@
             color: #333333;
         }
 
-        /* Estilo para os botões de ação (escondidos por padrão, aparecem no hover do body) */
+        /* Estilo para os botões de ação (sempre visíveis e alinhados à esquerda) */
         .action-button {
             position: fixed;
-            left: 20px;
+            left: 20px; /* Alinhado à esquerda */
             background-color: rgba(0, 0, 0, 0.5); /* Semi-transparente */
             color: white;
             padding: 8px 12px;
             border-radius: 8px;
             border: none;
             cursor: pointer;
-            opacity: 0; /* Escondido por padrão */
-            transition: opacity 0.3s ease-in-out;
             z-index: 10;
             font-size: 14px;
             display: flex;
             flex-direction: column; /* Para quebra de linha no texto do botão */
-            align-items: center;
+            align-items: flex-start; /* Alinha o texto à esquerda */
             justify-content: center;
             gap: 2px; /* Espaçamento entre as linhas do texto */
-            text-align: left;
+            text-align: left; /* Alinha o texto à esquerda */
+            transition: background-color 0.3s ease-in-out; /* Transição para hover */
         }
 
         .action-button:hover {
@@ -311,6 +310,48 @@
             font-size: 1.5rem;
             display: none; /* Escondido por padrão */
         }
+
+        /* Media queries para responsividade em telas menores */
+        @media (max-width: 600px) {
+            .action-button {
+                left: 10px; /* Ajusta a posição na esquerda para telas menores */
+                padding: 6px 10px; /* Reduz o padding */
+                font-size: 12px; /* Reduz o tamanho da fonte */
+            }
+
+            #downloadPngButton {
+                top: 20px; /* Move para o topo para evitar sobreposição no centro */
+                transform: translateY(0);
+            }
+
+            #generateAIBtn {
+                top: 70px; /* Posiciona abaixo do botão de download no topo */
+                transform: translateY(0);
+            }
+
+            .text-editor-toolbar {
+                top: 10px; /* Ajusta a posição da toolbar */
+                padding: 5px 10px;
+                gap: 5px;
+            }
+
+            .text-editor-toolbar button {
+                padding: 4px 8px;
+                font-size: 12px;
+            }
+
+            .ai-modal-content {
+                padding: 20px;
+            }
+
+            .ai-modal-header h3 {
+                font-size: 20px;
+            }
+
+            .ai-modal-close {
+                font-size: 24px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -394,47 +435,11 @@
             const aiOutputDisplay = document.getElementById('aiOutputDisplay');
             const loadingOverlay = document.getElementById('loadingOverlay');
 
-            let hideActionButtonsTimeout; // Timeout para esconder os botões de ação
-
             // Habilita a edição do título e do conteúdo
             noticeTitle.contentEditable = "true";
             noticeContent.contentEditable = "true";
 
-            // --- Lógica para o botão de download (visibilidade e captura) ---
-
-            // Função para mostrar os botões de ação
-            function showActionButtons() {
-                clearTimeout(hideActionButtonsTimeout);
-                downloadPngButton.style.opacity = '1';
-                downloadPngButton.style.pointerEvents = 'auto';
-                generateAIBtn.style.opacity = '1';
-                generateAIBtn.style.pointerEvents = 'auto';
-            }
-
-            // Função para esconder os botões de ação
-            function hideActionButtons() {
-                hideActionButtonsTimeout = setTimeout(() => {
-                    downloadPngButton.style.opacity = '0';
-                    downloadPngButton.style.pointerEvents = 'none';
-                    generateAIBtn.style.opacity = '0';
-                    generateAIBtn.style.pointerEvents = 'none';
-                }, 3000); // 3 segundos
-            }
-
-            // Mostra os botões ao passar o mouse sobre o corpo da página
-            document.body.addEventListener('mouseenter', showActionButtons);
-
-            // Esconde os botões ao sair o mouse do corpo da página após um tempo
-            document.body.addEventListener('mouseleave', hideActionButtons);
-
-            // Impede que os botões desapareçam se o mouse entrar neles
-            downloadPngButton.addEventListener('mouseenter', showActionButtons);
-            generateAIBtn.addEventListener('mouseenter', showActionButtons);
-
-            // Reinicia o timeout para esconder os botões se o mouse sair deles
-            downloadPngButton.addEventListener('mouseleave', hideActionButtons);
-            generateAIBtn.addEventListener('mouseleave', hideActionButtons);
-
+            // --- Lógica para o botão de download (captura) ---
 
             // Função para capturar e baixar o PNG
             downloadPngButton.addEventListener('click', () => {
