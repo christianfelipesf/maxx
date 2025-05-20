@@ -117,25 +117,42 @@
             color: #333333;
         }
 
-        /* Estilo para o botão de download (agora fixo na esquerda) */
-        .download-button {
+        /* Estilo para os botões de ação (escondidos por padrão, aparecem no hover do body) */
+        .action-button {
             position: fixed;
-            top: 50%;
             left: 20px;
-            transform: translateY(-50%);
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparente */
             color: white;
             padding: 8px 12px;
             border-radius: 8px;
             border: none;
             cursor: pointer;
-            opacity: 0;
+            opacity: 0; /* Escondido por padrão */
             transition: opacity 0.3s ease-in-out;
             z-index: 10;
             font-size: 14px;
             display: flex;
+            flex-direction: column; /* Para quebra de linha no texto do botão */
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            gap: 2px; /* Espaçamento entre as linhas do texto */
+            text-align: left;
+        }
+
+        .action-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Posição específica para o botão de download */
+        #downloadPngButton {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Posição específica para o botão de gerar IA */
+        #generateAIBtn {
+            top: calc(50% + 60px); /* Posiciona abaixo do botão de download */
+            transform: translateY(-50%);
         }
 
         /* Estilos para a barra de ferramentas de edição de texto */
@@ -304,10 +321,6 @@
     </div>
 
     <div class="card">
-        <button id="downloadPngButton" class="download-button">
-            ⬇️ Baixar PNG
-        </button>
-
         <div class="icons">
             <div class="icon icon-warning">!</div>
             <div class="icon icon-alert">!</div>
@@ -329,8 +342,12 @@
         </div>
     </div>
 
-    <button id="generateAIBtn" class="download-button" style="top: calc(50% + 60px); opacity: 1; pointer-events: auto;">
-        ✨ Gerar com IA
+    <button id="downloadPngButton" class="action-button">
+        ⬇️ Baixar PNG
+    </button>
+
+    <button id="generateAIBtn" class="action-button">
+        ✨ Gerar<br>com inteligência artificial
     </button>
 
     <div id="aiGeneratorModal" class="ai-modal-overlay">
@@ -377,8 +394,7 @@
             const aiOutputDisplay = document.getElementById('aiOutputDisplay');
             const loadingOverlay = document.getElementById('loadingOverlay');
 
-
-            let hideButtonTimeout; // Timeout para esconder o botão de download
+            let hideActionButtonsTimeout; // Timeout para esconder os botões de ação
 
             // Habilita a edição do título e do conteúdo
             noticeTitle.contentEditable = "true";
@@ -386,154 +402,162 @@
 
             // --- Lógica para o botão de download (visibilidade e captura) ---
 
-            // Mostra o botão ao passar o mouse sobre o corpo da página
-            document.body.addEventListener('mouseenter', () => {
-                clearTimeout(hideButtonTimeout); // Limpa qualquer timeout existente para esconder o botão
+            // Função para mostrar os botões de ação
+            function showActionButtons() {
+                clearTimeout(hideActionButtonsTimeout);
                 downloadPngButton.style.opacity = '1';
                 downloadPngButton.style.pointerEvents = 'auto';
-            });
+                generateAIBtn.style.opacity = '1';
+                generateAIBtn.style.pointerEvents = 'auto';
+            }
 
-            // Esconde o botão ao sair o mouse do corpo da página após um tempo
-            document.body.addEventListener('mouseleave', () => {
-                hideButtonTimeout = setTimeout(() => {
+            // Função para esconder os botões de ação
+            function hideActionButtons() {
+                hideActionButtonsTimeout = setTimeout(() => {
                     downloadPngButton.style.opacity = '0';
                     downloadPngButton.style.pointerEvents = 'none';
+                    generateAIBtn.style.opacity = '0';
+                    generateAIBtn.style.pointerEvents = 'none';
                 }, 3000); // 3 segundos
-            });
+            }
 
-            // Impede que o botão desapareça se o mouse entrar nele
-            downloadPngButton.addEventListener('mouseenter', () => {
-                clearTimeout(hideButtonTimeout);
-            });
+            // Mostra os botões ao passar o mouse sobre o corpo da página
+            document.body.addEventListener('mouseenter', showActionButtons);
 
-            // Reinicia o timeout para esconder o botão se o mouse sair dele
-            downloadPngButton.addEventListener('mouseleave', () => {
-                hideButtonTimeout = setTimeout(() => {
-                    downloadPngButton.style.opacity = '0';
-                    downloadPngButton.style.pointerEvents = 'none';
-                }, 3000);
-            });
+            // Esconde os botões ao sair o mouse do corpo da página após um tempo
+            document.body.addEventListener('mouseleave', hideActionButtons);
+
+            // Impede que os botões desapareçam se o mouse entrar neles
+            downloadPngButton.addEventListener('mouseenter', showActionButtons);
+            generateAIBtn.addEventListener('mouseenter', showActionButtons);
+
+            // Reinicia o timeout para esconder os botões se o mouse sair deles
+            downloadPngButton.addEventListener('mouseleave', hideActionButtons);
+            generateAIBtn.addEventListener('mouseleave', hideActionButtons);
 
 
             // Função para capturar e baixar o PNG
             downloadPngButton.addEventListener('click', () => {
-                // Esconde o botão de download e a barra de ferramentas temporariamente antes de capturar
-                downloadPngButton.style.opacity = '0';
-                downloadPngButton.style.pointerEvents = 'none';
+                // Esconde a barra de ferramentas temporariamente antes de capturar
                 textEditorToolbar.style.opacity = '0'; // Esconde a toolbar
                 textEditorToolbar.style.pointerEvents = 'none';
-                generateAIBtn.style.opacity = '0'; // Esconde o botão de gerar IA
+
+                // Temporariamente esconde os botões de ação para a captura
+                downloadPngButton.style.opacity = '0';
+                downloadPngButton.style.pointerEvents = 'none';
+                generateAIBtn.style.opacity = '0';
                 generateAIBtn.style.pointerEvents = 'none';
 
+
                 // Captura o elemento body inteiro
-                html2canvas(document.body, { // Altera o alvo para document.body
-                    scale: 3, // Aumenta a escala para uma melhor resolução (e.g., 3x a resolução original do elemento)
-                    useCORS: true, // Necessário se houver imagens externas
-                    logging: false // Desabilita logs no console
+                html2canvas(document.body, {
+                    scale: 3,
+                    useCORS: true,
+                    logging: false
                 }).then(canvas => {
-                    // Cria um link para download
                     const link = document.createElement('a');
                     link.download = 'comunicado_maxx_internet.png';
 
-                    // Define as dimensões para post de Instagram (e.g., 1080x1350 para retrato)
                     const instagramWidth = 1080;
-                    const instagramHeight = 1350; // Proporção 4:5 para retrato
+                    const instagramHeight = 1350;
 
-                    // Cria um novo canvas para redimensionar e cortar a imagem capturada
                     const finalCanvas = document.createElement('canvas');
                     const ctx = finalCanvas.getContext('2d');
 
                     finalCanvas.width = instagramWidth;
                     finalCanvas.height = instagramHeight;
 
-                    // Calcula a proporção de aspecto do canvas capturado e do alvo
                     const capturedAspectRatio = canvas.width / canvas.height;
                     const instagramAspectRatio = instagramWidth / instagramHeight;
 
-                    let sx, sy, sWidth, sHeight; // Source (recorte do canvas original)
-                    let dx, dy, dWidth, dHeight; // Destination (onde desenhar no canvas final)
-
+                    let sx, sy, sWidth, sHeight;
                     if (capturedAspectRatio > instagramAspectRatio) {
-                        // O canvas capturado é mais largo que o Instagram. Corta as laterais.
                         sHeight = canvas.height;
                         sWidth = sHeight * instagramAspectRatio;
                         sx = (canvas.width - sWidth) / 2;
                         sy = 0;
                     } else {
-                        // O canvas capturado é mais alto que o Instagram. Corta o topo/base.
                         sWidth = canvas.width;
                         sHeight = sWidth / instagramAspectRatio;
                         sx = 0;
                         sy = (canvas.height - sHeight) / 2;
                     }
 
-                    // Desenha a parte recortada do canvas original no canvas final, preenchendo-o
                     ctx.drawImage(canvas, sx, sy, sWidth, sHeight, 0, 0, instagramWidth, instagramHeight);
 
-                    // Converte o canvas final para URL de dados PNG
                     link.href = finalCanvas.toDataURL('image/png');
-                    link.click(); // Simula o clique para iniciar o download
+                    link.click();
 
-                    // Restaura a visibilidade do botão e da barra de ferramentas após a captura
-                    downloadPngButton.style.opacity = '1';
-                    downloadPngButton.style.pointerEvents = 'auto';
+                    // Restaura a visibilidade dos botões e da barra de ferramentas após a captura
                     textEditorToolbar.style.opacity = '1';
                     textEditorToolbar.style.pointerEvents = 'auto';
+                    downloadPngButton.style.opacity = '1';
+                    downloadPngButton.style.pointerEvents = 'auto';
                     generateAIBtn.style.opacity = '1';
                     generateAIBtn.style.pointerEvents = 'auto';
                 }).catch(error => {
                     console.error('Erro ao gerar a imagem:', error);
-                    // Restaura a visibilidade do botão e da barra de ferramentas em caso de erro
-                    downloadPngButton.style.opacity = '1';
-                    downloadPngButton.style.pointerEvents = 'auto';
+                    // Restaura a visibilidade dos botões e da barra de ferramentas em caso de erro
                     textEditorToolbar.style.opacity = '1';
                     textEditorToolbar.style.pointerEvents = 'auto';
+                    downloadPngButton.style.opacity = '1';
+                    downloadPngButton.style.pointerEvents = 'auto';
                     generateAIBtn.style.opacity = '1';
                     generateAIBtn.style.pointerEvents = 'auto';
-                    // Você pode adicionar um modal de erro aqui, se desejar
                 });
             });
 
             // --- Lógica para a barra de ferramentas de edição de texto ---
 
-            let currentEditableElement = null; // Para rastrear qual elemento está sendo editado
+            let currentEditableElement = null;
 
-            // Mostra a barra de ferramentas ao focar em um elemento editável
+            // Função para mostrar a barra de ferramentas
+            function showToolbar() {
+                textEditorToolbar.style.opacity = '1';
+                textEditorToolbar.style.pointerEvents = 'auto';
+            }
+
+            // Função para esconder a barra de ferramentas
+            function hideToolbar() {
+                textEditorToolbar.style.opacity = '0';
+                textEditorToolbar.style.pointerEvents = 'none';
+            }
+
+            // Event listener para quando um elemento editável ganha foco
             noticeTitle.addEventListener('focus', () => {
                 currentEditableElement = noticeTitle;
-                textEditorToolbar.style.opacity = '1';
+                showToolbar();
             });
             noticeContent.addEventListener('focus', () => {
                 currentEditableElement = noticeContent;
-                textEditorToolbar.style.opacity = '1';
+                showToolbar();
             });
 
-            // Esconde a barra de ferramentas ao perder o foco, a menos que o foco esteja na própria barra
-            document.addEventListener('selectionchange', () => {
-                const selection = window.getSelection();
-                if (!selection.isCollapsed && currentEditableElement) {
-                    textEditorToolbar.style.opacity = '1';
-                } else if (!textEditorToolbar.contains(document.activeElement)) {
-                    // Esconde se não houver seleção e o foco não estiver na toolbar
-                    textEditorToolbar.style.opacity = '0';
-                }
-            });
-
-            // Esconde a barra de ferramentas se o foco sair dos elementos editáveis e da própria barra
-            document.addEventListener('click', (event) => {
-                if (!noticeTitle.contains(event.target) &&
-                    !noticeContent.contains(event.target) &&
-                    !textEditorToolbar.contains(event.target) &&
-                    !aiGeneratorModal.contains(event.target) && // Não esconde se o clique for no modal AI
-                    event.target !== generateAIBtn) { // Não esconde se o clique for no botão de gerar IA
-                    textEditorToolbar.style.opacity = '0';
+            // Event listener para quando um elemento perde o foco
+            document.body.addEventListener('focusout', (event) => {
+                // Verifica se o foco está saindo de um elemento editável e não indo para a toolbar
+                if ((event.target === noticeTitle || event.target === noticeContent) &&
+                    !textEditorToolbar.contains(event.relatedTarget)) {
+                    hideToolbar();
                     currentEditableElement = null;
                 }
             });
 
-            // Botões de formatação
+            // Event listener para cliques em qualquer lugar do documento para esconder a toolbar
+            document.addEventListener('click', (event) => {
+                if (!noticeTitle.contains(event.target) &&
+                    !noticeContent.contains(event.target) &&
+                    !textEditorToolbar.contains(event.target) &&
+                    !aiGeneratorModal.contains(event.target) &&
+                    event.target !== generateAIBtn &&
+                    event.target !== downloadPngButton) {
+                    hideToolbar();
+                    currentEditableElement = null;
+                }
+            });
+
             boldButton.addEventListener('click', (event) => {
-                event.preventDefault(); // Impede que o foco saia do contenteditable
+                event.preventDefault();
                 document.execCommand('bold', false, null);
             });
 
@@ -551,11 +575,11 @@
 
             generateAIBtn.addEventListener('click', () => {
                 aiGeneratorModal.style.display = 'flex';
-                aiPromptInput.value = ''; // Limpa o input
-                aiOutputDisplay.style.display = 'none'; // Esconde o display de saída
-                generateAiTextBtn.style.display = 'block'; // Mostra o botão Gerar
-                useAiTextBtn.style.display = 'none'; // Esconde o botão Usar
-                loadingOverlay.style.display = 'none'; // Garante que o loading esteja escondido
+                aiPromptInput.value = '';
+                aiOutputDisplay.style.display = 'none';
+                generateAiTextBtn.style.display = 'block';
+                useAiTextBtn.style.display = 'none';
+                loadingOverlay.style.display = 'none';
             });
 
             closeAiModal.addEventListener('click', () => {
@@ -569,14 +593,14 @@
             generateAiTextBtn.addEventListener('click', async () => {
                 const promptText = aiPromptInput.value.trim();
                 if (!promptText) {
-                    alert('Por favor, digite um prompt para gerar o comunicado.'); // Substituir por modal personalizado
+                    alert('Por favor, digite um prompt para gerar o comunicado.');
                     return;
                 }
 
-                loadingOverlay.style.display = 'flex'; // Mostra o overlay de carregamento
-                aiPromptInput.disabled = true; // Desabilita o input
-                generateAiTextBtn.disabled = true; // Desabilita o botão Gerar
-                cancelAiBtn.disabled = true; // Desabilita o botão Cancelar
+                loadingOverlay.style.display = 'flex';
+                aiPromptInput.disabled = true;
+                generateAiTextBtn.disabled = true;
+                cancelAiBtn.disabled = true;
 
                 const prompt = `Gere um comunicado formal e conciso para uma empresa de internet com base na seguinte descrição: "${promptText}". Inclua uma saudação, o corpo da mensagem e uma despedida com o nome da empresa "Maxx Internet". Formate o texto com quebras de linha e use tags <strong> para destacar informações importantes.`;
                 let chatHistory = [];
@@ -598,55 +622,48 @@
                         result.candidates[0].content && result.candidates[0].content.parts &&
                         result.candidates[0].content.parts.length > 0) {
                         const generatedText = result.candidates[0].content.parts[0].text;
-                        aiOutputDisplay.innerHTML = generatedText.replace(/\n/g, '<br>'); // Converte quebras de linha para HTML
-                        aiOutputDisplay.style.display = 'block'; // Mostra o texto gerado
-                        useAiTextBtn.style.display = 'block'; // Mostra o botão para usar o texto
-                        generateAiTextBtn.style.display = 'none'; // Esconde o botão Gerar
+                        aiOutputDisplay.innerHTML = generatedText.replace(/\n/g, '<br>');
+                        aiOutputDisplay.style.display = 'block';
+                        useAiTextBtn.style.display = 'block';
+                        generateAiTextBtn.style.display = 'none';
                     } else {
                         console.error("Estrutura de resposta inesperada ou conteúdo ausente.");
-                        alert("Erro ao gerar comunicado: Resposta inválida da IA."); // Substituir por modal personalizado
+                        alert("Erro ao gerar comunicado: Resposta inválida da IA.");
                     }
                 } catch (error) {
                     console.error("Erro ao chamar a API Gemini para geração:", error);
-                    alert("Erro ao gerar comunicado: Verifique sua conexão ou tente novamente."); // Substituir por modal personalizado
+                    alert("Erro ao gerar comunicado: Verifique sua conexão ou tente novamente.");
                 } finally {
-                    loadingOverlay.style.display = 'none'; // Esconde o overlay de carregamento
-                    aiPromptInput.disabled = false; // Habilita o input
-                    generateAiTextBtn.disabled = false; // Habilita o botão Gerar
-                    cancelAiBtn.disabled = false; // Habilita o botão Cancelar
+                    loadingOverlay.style.display = 'none';
+                    aiPromptInput.disabled = false;
+                    generateAiTextBtn.disabled = false;
+                    cancelAiBtn.disabled = false;
                 }
             });
 
             useAiTextBtn.addEventListener('click', () => {
                 const generatedTextHtml = aiOutputDisplay.innerHTML;
-                // Extrai o título e o corpo do comunicado gerado
-                // Uma abordagem simples é procurar por "Comunicado" e assumir o resto como conteúdo
-                let titleMatch = generatedTextHtml.match(/<strong>Comunicado<\/strong>|<br>Comunicado<br>/i);
-                let newTitle = "Comunicado"; // Default
+                let newTitle = "Comunicado";
                 let newContent = generatedTextHtml;
 
+                let titleMatch = generatedTextHtml.match(/<strong>Comunicado<\/strong>|<br>Comunicado<br>/i);
                 if (titleMatch) {
-                    // Se "Comunicado" estiver no texto, tenta extrair o título e o corpo
                     let parts = generatedTextHtml.split(titleMatch[0]);
                     if (parts.length > 1) {
                         newContent = parts[1].trim();
-                        // Se o título for parte do texto, podemos tentar extrair um título mais específico se a IA gerar um
-                        // Por simplicidade, vamos manter "Comunicado" como título fixo por agora
                     }
                 }
                 
-                // Remove o título do conteúdo se ele for o primeiro elemento
                 if (newContent.startsWith("Comunicado<br>")) {
                     newContent = newContent.substring("Comunicado<br>".length).trim();
                 } else if (newContent.startsWith("Comunicado</strong><br>")) {
                     newContent = newContent.substring("Comunicado</strong><br>".length).trim();
                 }
 
+                noticeTitle.innerHTML = newTitle;
+                noticeContent.innerHTML = newContent;
 
-                noticeTitle.innerHTML = newTitle; // Define o título
-                noticeContent.innerHTML = newContent; // Define o conteúdo
-
-                aiGeneratorModal.style.display = 'none'; // Esconde o modal
+                aiGeneratorModal.style.display = 'none';
             });
         });
     </script>

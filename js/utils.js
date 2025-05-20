@@ -8,5 +8,6 @@ const serviceMap = {
   "osiris_download.html": { name: "Download Osiris", icon: "⬇️", bg: "#00d1b2", text: "white" },
   "prestacao_de_contas.html": { name: "Prestação de Contas", icon: "🧾", bg: "#ff6b6b", text: "white" },
   "relatorio.html": { name: "Relatório de Atendimento", icon: "📋", bg: "#ff9f43", text: "black" },
-  "solicitar_de_recursos.html": { name: "Solicitar Recursos", icon: "📨", bg: "#6c5ce7", text: "white" }
+  "solicitar_de_recursos.html": { name: "Solicitar Recursos", icon: "📨", bg: "#6c5ce7", text: "white" },
+  "comunicado.html": { name: "Comunicados MAXX", icon: "📨", bg: "#6c5ce7", text: "white" }
 };
