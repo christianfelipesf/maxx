@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <link rel="icon" type="image/svg+xml" href="icofile.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunicado Maxx Internet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset básico e fontes */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #FF9300 0%, #FF7000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden; /* Evita rolagem horizontal */
+        }
+
+        /* Estilos do card principal */
+        .card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 450px; /* Aumenta um pouco a largura máxima */
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden; /* Garante que elementos filhos não vazem */
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Ícones de alerta e aviso */
+        .icons {
+            position: absolute;
+            top: 20px;
+            left: 24px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon-warning {
+            background: #FFC200; /* Amarelo */
+        }
+
+        .icon-alert {
+            background: #FF6A00; /* Laranja */
+        }
+
+        /* Pontos decorativos */
+        .dots {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            color: #ccc; /* Cor mais suave */
+            font-size: 28px;
+            letter-spacing: 6px;
+            z-index: 10;
+        }
+
+        /* Título do comunicado */
+        .title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700; /* Bold */
+            color: #FF7000;
+            margin-bottom: 16px;
+            margin-top: 60px; /* Espaço para os ícones */
+            cursor: text;
+            line-height: 1.2;
+        }
+
+        /* Conteúdo do comunicado */
+        .text {
+            font-size: 15px;
+            color: #333333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            cursor: text;
+            text-align: justify; /* Justifica o texto */
+        }
+
+        /* Estilos para o conteúdo editável */
+        .text[contenteditable="true"]:focus,
+        .title[contenteditable="true"]:focus {
+            outline: none;
+            border: 1px dashed #FF7000;
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        /* Rodapé */
+        .footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .footer .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FF7000;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer .instagram {
+            font-size: 15px;
+            color: #666;
+        }
+
+        /* Estilo para os botões de ação (sempre visíveis e alinhados à esquerda) */
+        .action-button {
+            position: fixed;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.6); /* Mais escuro */
+            color: white;
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 4px;
+            text-align: left;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-button:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+            transform: translateY(-3px);
+        }
+
+        /* Posição específica para o botão de download */
+        #downloadPngButton {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Posição específica para o botão de gerar IA */
+        #generateAIBtn {
+            top: calc(50% + 80px); /* Posiciona abaixo do botão de download com mais espaço */
+            transform: translateY(-50%);
+        }
+
+        /* Estilos para a barra de ferramentas de edição de texto */
+        .text-editor-toolbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.85); /* Mais opaco */
+            padding: 10px 20px;
+            border-radius: 10px;
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none; /* Impede cliques quando invisível */
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .text-editor-toolbar.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .text-editor-toolbar button {
+            background-color: #FF7000;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .text-editor-toolbar button:hover {
+            background-color: #FF9300;
+            transform: translateY(-1px);
+        }
+
+        /* Estilos para o modal de geração AI */
+        .ai-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Mais escuro */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .ai-modal-overlay.active {
+            opacity: 1;
+        }
+
+        .ai-modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px; /* Bordas mais arredondadas */
+            width: 95%;
+            max-width: 700px; /* Aumenta a largura máxima do modal */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transform: translateY(20px);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .ai-modal-overlay.active .ai-modal-content {
+            transform: translateY(0);
+        }
+
+        .ai-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .ai-modal-header h3 {
+            font-size: 26px;
+            color: #FF7000;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .ai-modal-close {
+            font-size: 36px; /* Ícone maior */
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s ease;
+        }
+
+        .ai-modal-close:hover {
+            color: #666;
+            transform: rotate(90deg); /* Efeito de rotação */
+        }
+
+        .ai-modal-body textarea {
+            width: 100%;
+            min-height: 150px; /* Altura mínima maior */
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            resize: vertical;
+            font-size: 16px;
+            color: #444;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .ai-modal-body textarea:focus {
+            border-color: #FF9300;
+            box-shadow: 0 0 0 3px rgba(255, 147, 0, 0.2);
+            outline: none;
+        }
+
+        .ai-modal-body .ai-output-display {
+            background-color: #fefefe;
+            border: 1px solid #eee;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 120px;
+            max-height: 350px;
+            overflow-y: auto;
+            font-size: 16px;
+            color: #555;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.7;
+            box-shadow: inset 0 1px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .ai-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .ai-modal-footer button {
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .ai-modal-footer .btn-primary {
+            background-color: #FF7000;
+            color: white;
+        }
+
+        .ai-modal-footer .btn-primary:hover {
+            background-color: #FF9300;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 112, 0, 0.3);
+        }
+
+        .ai-modal-footer .btn-secondary {
+            background-color: #e0e0e0;
+            color: #555;
+        }
+
+        .ai-modal-footer .btn-secondary:hover {
+            background-color: #d0d0d0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Overlay de carregamento */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-size: 1.8rem;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #FF7000;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Media queries para responsividade */
+        @media (max-width: 768px) {
+            .card {
+                padding: 20px;
+            }
+
+            .title {
+                font-size: 28px;
+                margin-top: 50px;
+            }
+
+            .text {
+                font-size: 14px;
+            }
+
+            .action-button {
+                left: 10px;
+                padding: 8px 12px;
+                font-size: 13px;
+                border-radius: 8px;
+            }
+
+            #downloadPngButton {
+                top: 20px;
+                transform: translateY(0);
+            }
+
+            #generateAIBtn {
+                top: 80px;
+                transform: translateY(0);
+            }
+
+            .text-editor-toolbar {
+                top: 10px;
+                padding: 8px 15px;
+                gap: 8px;
+                border-radius: 8px;
+            }
+
+            .text-editor-toolbar button {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+
+            .ai-modal-content {
+                padding: 25px;
+                border-radius: 16px;
+            }
+
+            .ai-modal-header h3 {
+                font-size: 22px;
+            }
+
+            .ai-modal-close {
+                font-size: 30px;
+            }
+
+            .ai-modal-body textarea,
+            .ai-modal-body .ai-output-display {
+                font-size: 14px;
+            }
+
+            .ai-modal-footer button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .card {
+                padding: 18px;
+                border-radius: 12px;
+            }
+
+            .icons {
+                top: 15px;
+                left: 18px;
+                gap: 8px;
+            }
+
+            .icon {
+                width: 36px;
+                height: 36px;
+                font-size: 20px;
+            }
+
+            .dots {
+                top: 15px;
+                right: 18px;
+                font-size: 24px;
+            }
+
+            .title {
+                font-size: 24px;
+                margin-top: 45px;
+            }
+
+            .text {
+                font-size: 13px;
+            }
+
+            .action-button {
+                left: 8px;
+                padding: 7px 10px;
+                font-size: 12px;
+                border-radius: 7px;
+            }
+
+            #downloadPngButton {
+                top: 15px;
+            }
+
+            #generateAIBtn {
+                top: 70px;
+            }
+
+            .text-editor-toolbar {
+                top: 8px;
+                padding: 6px 12px;
+                gap: 6px;
+                border-radius: 7px;
+            }
+
+            .text-editor-toolbar button {
+                padding: 5px 8px;
+                font-size: 12px;
+            }
+
+            .ai-modal-content {
+                padding: 20px;
+                border-radius: 14px;
+            }
+
+            .ai-modal-header h3 {
+                font-size: 20px;
+            }
+
+            .ai-modal-close {
+                font-size: 28px;
+            }
+
+            .ai-modal-body textarea,
+            .ai-modal-body .ai-output-display {
+                font-size: 13px;
+                min-height: 100px;
+            }
+
+            .ai-modal-footer button {
+                padding: 8px 15px;
+                font-size: 13px;
+            }
+
+            .loading-overlay {
+                font-size: 1.3rem;
+            }
+
+            .loading-spinner {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="textEditorToolbar" class="text-editor-toolbar">
+        <button id="boldButton" title="Negrito">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>
+        </button>
+        <button id="italicButton" title="Itálico">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+        </button>
+        <button id="underlineButton" title="Sublinhado">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="icons">
+            <div class="icon icon-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            </div>
+            <div class="icon icon-alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell-ring"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+            </div>
+        </div>
+        <div class="dots">•••</div>
+        <div class="title" id="notice-title" contenteditable="true">Comunicado</div>
+        <div class="text" id="notice-content" contenteditable="true">
+            <strong>Prezado cliente,</strong><br>
+            Informamos que, no momento, há instabilidade nos serviços de TV e Internet na região de <strong>Santa Rita 2 (Centro)</strong>.<br>
+            Nossa equipe já está no local e a previsão de normalização é hoje, <strong>20/05/2025, às 12h30</strong>.
+            <br><br>
+            Agradecemos sua compreensão.<br>
+            <strong>Maxx Internet</strong>
+        </div>
+
+        <div class="footer">
+            <div class="logo">MAXX</div>
+            <div class="instagram">@sejamaxx</div>
+        </div>
+    </div>
+
+    <button id="downloadPngButton" class="action-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        <span>Baixar Imagem</span>
+    </button>
+
+    <button id="generateAIBtn" class="action-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles"><path d="M9.9 10.9 2.7 18.1c-.3.3-.8.5-1.3.5C.5 18.6 0 18.1 0 17.4s.2-1 .5-1.3l7.2-7.2c.4-.4 1-.4 1.4 0 .4.4.4 1 0 1.4ZM21.5 2.1c-.4-.4-1-.4-1.4 0l-7.2 7.2c-.4.4-.4 1 0 1.4.4.4 1 .4 1.4 0l7.2-7.2c.4-.4.4-1 0-1.4ZM10.9 9.9 18.1 2.7c.3-.3.5-.8.5-1.3C18.6.5 18.1 0 17.4 0s-1 .2-1.3.5L9.9 7.7c-.4.4-.4 1 0 1.4.4.4 1 .4 1.4 0ZM2.1 21.5c-.4-.4-.4-1 0-1.4l7.2-7.2c.4-.4 1-.4 1.4 0 .4.4.4 1 0 1.4l-7.2 7.2c-.4.4-1 .4-1.4 0Z"/></svg>
+        <span>Gerar com IA</span>
+    </button>
+
+    <div id="aiGeneratorModal" class="ai-modal-overlay">
+        <div class="ai-modal-content">
+            <div class="ai-modal-header">
+                <h3>Gerar Comunicado com IA</h3>
+                <span class="ai-modal-close" id="closeAiModal">&times;</span>
+            </div>
+            <div class="ai-modal-body">
+                <textarea id="aiPromptInput" placeholder="Descreva o comunicado que você deseja gerar (ex: 'Um aviso sobre manutenção na rede amanhã às 10h')."></textarea>
+                <div class="ai-output-display" id="aiOutputDisplay" style="display: none;"></div>
+            </div>
+            <div class="ai-modal-footer">
+                <button id="generateAiTextBtn" class="btn-primary">Gerar</button>
+                <button id="useAiTextBtn" class="btn-primary" style="display: none;">Usar este Comunicado</button>
+                <button id="cancelAiBtn" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        Gerando comunicado...
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const card = document.querySelector('.card');
+            const downloadPngButton = document.getElementById('downloadPngButton');
+            const noticeTitle = document.getElementById('notice-title');
+            const noticeContent = document.getElementById('notice-content');
+            const textEditorToolbar = document.getElementById('textEditorToolbar');
+            const boldButton = document.getElementById('boldButton');
+            const italicButton = document.getElementById('italicButton');
+            const underlineButton = document.getElementById('underlineButton');
+
+            const generateAIBtn = document.getElementById('generateAIBtn');
+            const aiGeneratorModal = document.getElementById('aiGeneratorModal');
+            const closeAiModal = document.getElementById('closeAiModal');
+            const aiPromptInput = document.getElementById('aiPromptInput');
+            const generateAiTextBtn = document.getElementById('generateAiTextBtn');
+            const useAiTextBtn = document.getElementById('useAiTextBtn');
+            const cancelAiBtn = document.getElementById('cancelAiBtn');
+            const aiOutputDisplay = document.getElementById('aiOutputDisplay');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Habilita a edição do título e do conteúdo
+            noticeTitle.contentEditable = "true";
+            noticeContent.contentEditable = "true";
+
+            // --- Lógica para o botão de download (captura) ---
+            downloadPngButton.addEventListener('click', () => {
+                // Esconde a barra de ferramentas e botões temporariamente antes de capturar
+                textEditorToolbar.classList.remove('active');
+                downloadPngButton.style.opacity = '0';
+                downloadPngButton.style.pointerEvents = 'none';
+                generateAIBtn.style.opacity = '0';
+                generateAIBtn.style.pointerEvents = 'none';
+
+                // Captura o elemento body inteiro
+                html2canvas(document.body, {
+                    scale: 3, // Aumenta a escala para melhor qualidade
+                    useCORS: true,
+                    logging: false
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'comunicado_maxx_internet.png';
+
+                    // Dimensões para Instagram (proporção 4:5)
+                    const instagramWidth = 1080;
+                    const instagramHeight = 1350;
+
+                    const finalCanvas = document.createElement('canvas');
+                    const ctx = finalCanvas.getContext('2d');
+
+                    finalCanvas.width = instagramWidth;
+                    finalCanvas.height = instagramHeight;
+
+                    const capturedAspectRatio = canvas.width / canvas.height;
+                    const instagramAspectRatio = instagramWidth / instagramHeight;
+
+                    let sx, sy, sWidth, sHeight; // Source x, y, width, height
+                    // Calcula as dimensões para centralizar e cortar a imagem capturada
+                    if (capturedAspectRatio > instagramAspectRatio) {
+                        sHeight = canvas.height;
+                        sWidth = sHeight * instagramAspectRatio;
+                        sx = (canvas.width - sWidth) / 2;
+                        sy = 0;
+                    } else {
+                        sWidth = canvas.width;
+                        sHeight = sWidth / instagramAspectRatio;
+                        sx = 0;
+                        sy = (canvas.height - sHeight) / 2;
+                    }
+
+                    // Desenha a imagem capturada no canvas final com as proporções do Instagram
+                    ctx.drawImage(canvas, sx, sy, sWidth, sHeight, 0, 0, instagramWidth, instagramHeight);
+
+                    link.href = finalCanvas.toDataURL('image/png');
+                    link.click();
+
+                    // Restaura a visibilidade dos botões e da barra de ferramentas após a captura
+                    downloadPngButton.style.opacity = '1';
+                    downloadPngButton.style.pointerEvents = 'auto';
+                    generateAIBtn.style.opacity = '1';
+                    generateAIBtn.style.pointerEvents = 'auto';
+                }).catch(error => {
+                    console.error('Erro ao gerar a imagem:', error);
+                    // Restaura a visibilidade dos botões e da barra de ferramentas em caso de erro
+                    downloadPngButton.style.opacity = '1';
+                    downloadPngButton.style.pointerEvents = 'auto';
+                    generateAIBtn.style.opacity = '1';
+                    generateAIBtn.style.pointerEvents = 'auto';
+                });
+            });
+
+            // --- Lógica para a barra de ferramentas de edição de texto ---
+            let currentEditableElement = null;
+
+            // Função para mostrar a barra de ferramentas
+            function showToolbar() {
+                textEditorToolbar.classList.add('active');
+            }
+
+            // Função para esconder a barra de ferramentas
+            function hideToolbar() {
+                textEditorToolbar.classList.remove('active');
+            }
+
+            // Event listener para quando um elemento editável ganha foco
+            noticeTitle.addEventListener('focus', () => {
+                currentEditableElement = noticeTitle;
+                showToolbar();
+            });
+            noticeContent.addEventListener('focus', () => {
+                currentEditableElement = noticeContent;
+                showToolbar();
+            });
+
+            // Event listener para quando um elemento perde o foco
+            document.addEventListener('focusout', (event) => {
+                const isLeavingEditable = (event.target === noticeTitle || event.target === noticeContent);
+                const isGoingToToolbar = textEditorToolbar.contains(event.relatedTarget);
+
+                if (isLeavingEditable && !isGoingToToolbar) {
+                    // Pequeno atraso para permitir cliques na toolbar antes de escondê-la
+                    setTimeout(hideToolbar, 100);
+                    currentEditableElement = null;
+                }
+            });
+
+            // Event listener para cliques em qualquer lugar do documento para esconder a toolbar
+            document.addEventListener('click', (event) => {
+                const isClickInsideEditable = noticeTitle.contains(event.target) || noticeContent.contains(event.target);
+                const isClickInsideToolbar = textEditorToolbar.contains(event.target);
+                const isClickInsideModal = aiGeneratorModal.contains(event.target);
+                const isClickOnActionButton = event.target === generateAIBtn || event.target === downloadPngButton || generateAIBtn.contains(event.target) || downloadPngButton.contains(event.target);
+
+                if (!isClickInsideEditable && !isClickInsideToolbar && !isClickInsideModal && !isClickOnActionButton) {
+                    hideToolbar();
+                    currentEditableElement = null;
+                }
+            });
+
+            // Comandos de edição de texto
+            boldButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                document.execCommand('bold', false, null);
+            });
+
+            italicButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                document.execCommand('italic', false, null);
+            });
+
+            underlineButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                document.execCommand('underline', false, null);
+            });
+
+            // --- Lógica para a Geração AI ---
+            generateAIBtn.addEventListener('click', () => {
+                aiGeneratorModal.style.display = 'flex';
+                // Adiciona a classe 'active' para iniciar a transição
+                setTimeout(() => aiGeneratorModal.classList.add('active'), 10);
+                aiPromptInput.value = '';
+                aiOutputDisplay.style.display = 'none';
+                generateAiTextBtn.style.display = 'block';
+                useAiTextBtn.style.display = 'none';
+                loadingOverlay.classList.remove('active'); // Garante que o loading não esteja ativo
+                loadingOverlay.style.display = 'none';
+            });
+
+            closeAiModal.addEventListener('click', () => {
+                aiGeneratorModal.classList.remove('active');
+                // Esconde o modal após a transição
+                setTimeout(() => aiGeneratorModal.style.display = 'none', 300);
+            });
+
+            cancelAiBtn.addEventListener('click', () => {
+                aiGeneratorModal.classList.remove('active');
+                setTimeout(() => aiGeneratorModal.style.display = 'none', 300);
+            });
+
+            generateAiTextBtn.addEventListener('click', async () => {
+                const promptText = aiPromptInput.value.trim();
+                if (!promptText) {
+                    // Substitui alert() por um modal de mensagem simples
+                    showCustomMessage('Por favor, digite um prompt para gerar o comunicado.');
+                    return;
+                }
+
+                loadingOverlay.style.display = 'flex';
+                setTimeout(() => loadingOverlay.classList.add('active'), 10); // Inicia a transição do loading
+                aiPromptInput.disabled = true;
+                generateAiTextBtn.disabled = true;
+                cancelAiBtn.disabled = true;
+
+                const prompt = `Gere um comunicado formal e conciso para uma empresa de internet com base na seguinte descrição: "${promptText}". Inclua uma saudação, o corpo da mensagem e uma despedida com o nome da empresa "Maxx Internet". Formate o texto com quebras de linha e use tags <strong> para destacar informações importantes.`;
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // A API key será fornecida pelo ambiente Canvas
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const generatedText = result.candidates[0].content.parts[0].text;
+                        aiOutputDisplay.innerHTML = generatedText.replace(/\n/g, '<br>');
+                        aiOutputDisplay.style.display = 'block';
+                        useAiTextBtn.style.display = 'block';
+                        generateAiTextBtn.style.display = 'none';
+                    } else {
+                        console.error("Estrutura de resposta inesperada ou conteúdo ausente.");
+                        showCustomMessage("Erro ao gerar comunicado: Resposta inválida da IA.");
+                    }
+                } catch (error) {
+                    console.error("Erro ao chamar a API Gemini para geração:", error);
+                    showCustomMessage("Erro ao gerar comunicado: Verifique sua conexão ou tente novamente.");
+                } finally {
+                    loadingOverlay.classList.remove('active');
+                    setTimeout(() => loadingOverlay.style.display = 'none', 300); // Esconde após a transição
+                    aiPromptInput.disabled = false;
+                    generateAiTextBtn.disabled = false;
+                    cancelAiBtn.disabled = false;
+                }
+            });
+
+            useAiTextBtn.addEventListener('click', () => {
+                const generatedTextHtml = aiOutputDisplay.innerHTML;
+                let newTitle = "Comunicado"; // O título padrão é "Comunicado"
+                let newContent = generatedTextHtml;
+
+                // Tenta remover o título "Comunicado" se ele estiver no início do texto gerado
+                let titleMatch = generatedTextHtml.match(/<strong>Comunicado<\/strong>|<br>Comunicado<br>|Comunicado<br>/i);
+                if (titleMatch) {
+                    let parts = generatedTextHtml.split(titleMatch[0]);
+                    if (parts.length > 1) {
+                        newContent = parts[1].trim();
+                    }
+                }
+                
+                // Remove qualquer "Comunicado<br>" ou "Comunicado</strong><br>" remanescente no início
+                if (newContent.startsWith("Comunicado<br>")) {
+                    newContent = newContent.substring("Comunicado<br>".length).trim();
+                } else if (newContent.startsWith("Comunicado</strong><br>")) {
+                    newContent = newContent.substring("Comunicado</strong><br>".length).trim();
+                }
+
+                noticeTitle.innerHTML = newTitle;
+                noticeContent.innerHTML = newContent;
+
+                aiGeneratorModal.classList.remove('active');
+                setTimeout(() => aiGeneratorModal.style.display = 'none', 300);
+            });
+
+            // Função para exibir mensagens personalizadas (substitui alert)
+            function showCustomMessage(message) {
+                const messageModal = document.createElement('div');
+                messageModal.className = 'fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-[1001] opacity-0 transition-opacity duration-300';
+                messageModal.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center transform scale-90 transition-transform duration-300">
+                        <h4 class="text-xl font-bold text-red-600 mb-4">Atenção!</h4>
+                        <p class="text-gray-700 mb-6">${message}</p>
+                        <button class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200" onclick="this.closest('.fixed').classList.remove('opacity-0', 'scale-90'); setTimeout(() => this.closest('.fixed').remove(), 300);">OK</button>
+                    </div>
+                `;
+                document.body.appendChild(messageModal);
+                setTimeout(() => messageModal.classList.add('opacity-100', 'scale-100'), 10);
+            }
+        });
+    </script>
+</body>
+</html>
