@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <link rel="icon" type="image/svg+xml" href="icofile.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comunicado Maxx Internet</title>
@@ -166,7 +167,7 @@
             display: flex;
             gap: 10px;
             z-index: 100;
-            opacity: 0;
+            opacity: 0; /* Escondido por padrão */
             transition: opacity 0.3s ease-in-out;
         }
 
@@ -436,8 +437,8 @@
             const loadingOverlay = document.getElementById('loadingOverlay');
 
             // Habilita a edição do título e do conteúdo
-            noticeTitle.contentEditable = "true";
-            noticeContent.contentEditable = "true";
+            noticeTitle.contentEditable = "true"; // Título editável
+            noticeContent.contentEditable = "true"; // Conteúdo editável
 
             // --- Lógica para o botão de download (captura) ---
 
@@ -529,6 +530,7 @@
             }
 
             // Event listener para quando um elemento editável ganha foco
+            // O foco pode ser no título ou no conteúdo
             noticeTitle.addEventListener('focus', () => {
                 currentEditableElement = noticeTitle;
                 showToolbar();
@@ -539,10 +541,12 @@
             });
 
             // Event listener para quando um elemento perde o foco
-            document.body.addEventListener('focusout', (event) => {
-                // Verifica se o foco está saindo de um elemento editável e não indo para a toolbar
-                if ((event.target === noticeTitle || event.target === noticeContent) &&
-                    !textEditorToolbar.contains(event.relatedTarget)) {
+            // Verifica se o foco está saindo de um elemento editável e não indo para a toolbar
+            document.addEventListener('focusout', (event) => {
+                const isLeavingEditable = (event.target === noticeTitle || event.target === noticeContent);
+                const isGoingToToolbar = textEditorToolbar.contains(event.relatedTarget);
+
+                if (isLeavingEditable && !isGoingToToolbar) {
                     hideToolbar();
                     currentEditableElement = null;
                 }
@@ -550,16 +554,17 @@
 
             // Event listener para cliques em qualquer lugar do documento para esconder a toolbar
             document.addEventListener('click', (event) => {
-                if (!noticeTitle.contains(event.target) &&
-                    !noticeContent.contains(event.target) &&
-                    !textEditorToolbar.contains(event.target) &&
-                    !aiGeneratorModal.contains(event.target) &&
-                    event.target !== generateAIBtn &&
-                    event.target !== downloadPngButton) {
+                const isClickInsideEditable = noticeTitle.contains(event.target) || noticeContent.contains(event.target);
+                const isClickInsideToolbar = textEditorToolbar.contains(event.target);
+                const isClickInsideModal = aiGeneratorModal.contains(event.target);
+                const isClickOnActionButton = event.target === generateAIBtn || event.target === downloadPngButton;
+
+                if (!isClickInsideEditable && !isClickInsideToolbar && !isClickInsideModal && !isClickOnActionButton) {
                     hideToolbar();
                     currentEditableElement = null;
                 }
             });
+
 
             boldButton.addEventListener('click', (event) => {
                 event.preventDefault();
