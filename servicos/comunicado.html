@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunicado Maxx Internet</title>
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FF9300 0%, #FF7000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative; /* Necessário para posicionar o botão de download fixo */
+        }
+
+        .card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .icons {
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .icon-warning {
+            background: #FFC200;
+        }
+
+        .icon-alert {
+            background: #FF6A00;
+        }
+
+        .dots {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            color: #FFFFFF;
+            font-size: 24px;
+            letter-spacing: 4px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #FF7000;
+            margin-bottom: 12px;
+            cursor: text;
+        }
+
+        .text {
+            font-size: 14px;
+            color: #333333;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            cursor: text;
+        }
+
+        /* Estilos para o conteúdo editável */
+        .text[contenteditable="true"]:focus,
+        .title[contenteditable="true"]:focus {
+            outline: none;
+            border: 1px dashed #FF7000;
+            padding: 2px;
+            border-radius: 4px;
+        }
+
+        .footer {
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .footer .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF7000;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer .instagram {
+            font-size: 14px;
+            color: #333333;
+        }
+
+        /* Estilo para o botão de download (agora fixo na esquerda) */
+        .download-button {
+            position: fixed;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            z-index: 10;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Estilos para a barra de ferramentas de edição de texto */
+        .text-editor-toolbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .text-editor-toolbar button {
+            background-color: #FF7000;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+
+        .text-editor-toolbar button:hover {
+            background-color: #FF9300;
+        }
+
+        /* Estilos para o modal de geração AI */
+        .ai-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200; /* Acima de tudo */
+            display: none; /* Escondido por padrão */
+        }
+
+        .ai-modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .ai-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .ai-modal-header h3 {
+            font-size: 24px;
+            color: #FF7000;
+            margin: 0;
+        }
+
+        .ai-modal-close {
+            font-size: 30px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .ai-modal-close:hover {
+            color: #666;
+        }
+
+        .ai-modal-body textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 14px;
+        }
+
+        .ai-modal-body .ai-output-display {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+            color: #555;
+            white-space: pre-wrap; /* Preserva quebras de linha */
+            word-wrap: break-word; /* Quebra palavras longas */
+        }
+
+        .ai-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .ai-modal-footer button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+
+        .ai-modal-footer .btn-primary {
+            background-color: #FF7000;
+            color: white;
+        }
+
+        .ai-modal-footer .btn-primary:hover {
+            background-color: #FF9300;
+        }
+
+        .ai-modal-footer .btn-secondary {
+            background-color: #ccc;
+            color: #333;
+        }
+
+        .ai-modal-footer .btn-secondary:hover {
+            background-color: #bbb;
+        }
+
+        /* Overlay de carregamento */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-size: 1.5rem;
+            display: none; /* Escondido por padrão */
+        }
+    </style>
+</head>
+<body>
+    <div id="textEditorToolbar" class="text-editor-toolbar">
+        <button id="boldButton">B</button>
+        <button id="italicButton">I</button>
+        <button id="underlineButton">U</button>
+    </div>
+
+    <div class="card">
+        <button id="downloadPngButton" class="download-button">
+            ⬇️ Baixar PNG
+        </button>
+
+        <div class="icons">
+            <div class="icon icon-warning">!</div>
+            <div class="icon icon-alert">!</div>
+        </div>
+        <div class="dots">•••</div>
+        <div class="title" id="notice-title" contenteditable="true">Comunicado</div>
+        <div class="text" id="notice-content" contenteditable="true">
+            <strong>Prezado cliente,</strong><br>
+            Informamos que, no momento, há instabilidade nos serviços de TV e Internet na região de <strong>Santa Rita 2 (Centro)</strong>.<br>
+            Nossa equipe já está no local e a previsão de normalização é hoje, <strong>20/05/2025, às 12h30</strong>.
+            <br><br>
+            Agradecemos sua compreensão.<br>
+            <strong>Maxx Internet</strong>
+        </div>
+
+        <div class="footer">
+            <div class="logo">MAXX</div>
+            <div class="instagram">@sejamaxx</div>
+        </div>
+    </div>
+
+    <button id="generateAIBtn" class="download-button" style="top: calc(50% + 60px); opacity: 1; pointer-events: auto;">
+        ✨ Gerar com IA
+    </button>
+
+    <div id="aiGeneratorModal" class="ai-modal-overlay">
+        <div class="ai-modal-content">
+            <div class="ai-modal-header">
+                <h3>Gerar Comunicado com IA</h3>
+                <span class="ai-modal-close" id="closeAiModal">&times;</span>
+            </div>
+            <div class="ai-modal-body">
+                <textarea id="aiPromptInput" placeholder="Descreva o comunicado que você deseja gerar (ex: 'Um aviso sobre manutenção na rede amanhã às 10h')."></textarea>
+                <div class="ai-output-display" id="aiOutputDisplay" style="display: none;"></div>
+            </div>
+            <div class="ai-modal-footer">
+                <button id="generateAiTextBtn" class="btn-primary">Gerar</button>
+                <button id="useAiTextBtn" class="btn-primary" style="display: none;">Usar este Comunicado</button>
+                <button id="cancelAiBtn" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        Gerando comunicado...
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const card = document.querySelector('.card');
+            const downloadPngButton = document.getElementById('downloadPngButton');
+            const noticeTitle = document.getElementById('notice-title');
+            const noticeContent = document.getElementById('notice-content');
+            const textEditorToolbar = document.getElementById('textEditorToolbar');
+            const boldButton = document.getElementById('boldButton');
+            const italicButton = document.getElementById('italicButton');
+            const underlineButton = document.getElementById('underlineButton');
+
+            const generateAIBtn = document.getElementById('generateAIBtn');
+            const aiGeneratorModal = document.getElementById('aiGeneratorModal');
+            const closeAiModal = document.getElementById('closeAiModal');
+            const aiPromptInput = document.getElementById('aiPromptInput');
+            const generateAiTextBtn = document.getElementById('generateAiTextBtn');
+            const useAiTextBtn = document.getElementById('useAiTextBtn');
+            const cancelAiBtn = document.getElementById('cancelAiBtn');
+            const aiOutputDisplay = document.getElementById('aiOutputDisplay');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+
+            let hideButtonTimeout; // Timeout para esconder o botão de download
+
+            // Habilita a edição do título e do conteúdo
+            noticeTitle.contentEditable = "true";
+            noticeContent.contentEditable = "true";
+
+            // --- Lógica para o botão de download (visibilidade e captura) ---
+
+            // Mostra o botão ao passar o mouse sobre o corpo da página
+            document.body.addEventListener('mouseenter', () => {
+                clearTimeout(hideButtonTimeout); // Limpa qualquer timeout existente para esconder o botão
+                downloadPngButton.style.opacity = '1';
+                downloadPngButton.style.pointerEvents = 'auto';
+            });
+
+            // Esconde o botão ao sair o mouse do corpo da página após um tempo
+            document.body.addEventListener('mouseleave', () => {
+                hideButtonTimeout = setTimeout(() => {
+                    downloadPngButton.style.opacity = '0';
+                    downloadPngButton.style.pointerEvents = 'none';
+                }, 3000); // 3 segundos
+            });
+
+            // Impede que o botão desapareça se o mouse entrar nele
+            downloadPngButton.addEventListener('mouseenter', () => {
+                clearTimeout(hideButtonTimeout);
+            });
+
+            // Reinicia o timeout para esconder o botão se o mouse sair dele
+            downloadPngButton.addEventListener('mouseleave', () => {
+                hideButtonTimeout = setTimeout(() => {
+                    downloadPngButton.style.opacity = '0';
+                    downloadPngButton.style.pointerEvents = 'none';
+                }, 3000);
+            });
+
+
+            // Função para capturar e baixar o PNG
+            downloadPngButton.addEventListener('click', () => {
+                // Esconde o botão de download e a barra de ferramentas temporariamente antes de capturar
+                downloadPngButton.style.opacity = '0';
+                downloadPngButton.style.pointerEvents = 'none';
+                textEditorToolbar.style.opacity = '0'; // Esconde a toolbar
+                textEditorToolbar.style.pointerEvents = 'none';
+                generateAIBtn.style.opacity = '0'; // Esconde o botão de gerar IA
+                generateAIBtn.style.pointerEvents = 'none';
+
+                // Captura o elemento body inteiro
+                html2canvas(document.body, { // Altera o alvo para document.body
+                    scale: 3, // Aumenta a escala para uma melhor resolução (e.g., 3x a resolução original do elemento)
+                    useCORS: true, // Necessário se houver imagens externas
+                    logging: false // Desabilita logs no console
+                }).then(canvas => {
+                    // Cria um link para download
+                    const link = document.createElement('a');
+                    link.download = 'comunicado_maxx_internet.png';
+
+                    // Define as dimensões para post de Instagram (e.g., 1080x1350 para retrato)
+                    const instagramWidth = 1080;
+                    const instagramHeight = 1350; // Proporção 4:5 para retrato
+
+                    // Cria um novo canvas para redimensionar e cortar a imagem capturada
+                    const finalCanvas = document.createElement('canvas');
+                    const ctx = finalCanvas.getContext('2d');
+
+                    finalCanvas.width = instagramWidth;
+                    finalCanvas.height = instagramHeight;
+
+                    // Calcula a proporção de aspecto do canvas capturado e do alvo
+                    const capturedAspectRatio = canvas.width / canvas.height;
+                    const instagramAspectRatio = instagramWidth / instagramHeight;
+
+                    let sx, sy, sWidth, sHeight; // Source (recorte do canvas original)
+                    let dx, dy, dWidth, dHeight; // Destination (onde desenhar no canvas final)
+
+                    if (capturedAspectRatio > instagramAspectRatio) {
+                        // O canvas capturado é mais largo que o Instagram. Corta as laterais.
+                        sHeight = canvas.height;
+                        sWidth = sHeight * instagramAspectRatio;
+                        sx = (canvas.width - sWidth) / 2;
+                        sy = 0;
+                    } else {
+                        // O canvas capturado é mais alto que o Instagram. Corta o topo/base.
+                        sWidth = canvas.width;
+                        sHeight = sWidth / instagramAspectRatio;
+                        sx = 0;
+                        sy = (canvas.height - sHeight) / 2;
+                    }
+
+                    // Desenha a parte recortada do canvas original no canvas final, preenchendo-o
+                    ctx.drawImage(canvas, sx, sy, sWidth, sHeight, 0, 0, instagramWidth, instagramHeight);
+
+                    // Converte o canvas final para URL de dados PNG
+                    link.href = finalCanvas.toDataURL('image/png');
+                    link.click(); // Simula o clique para iniciar o download
+
+                    // Restaura a visibilidade do botão e da barra de ferramentas após a captura
+                    downloadPngButton.style.opacity = '1';
+                    downloadPngButton.style.pointerEvents = 'auto';
+                    textEditorToolbar.style.opacity = '1';
+                    textEditorToolbar.style.pointerEvents = 'auto';
+                    generateAIBtn.style.opacity = '1';
+                    generateAIBtn.style.pointerEvents = 'auto';
+                }).catch(error => {
+                    console.error('Erro ao gerar a imagem:', error);
+                    // Restaura a visibilidade do botão e da barra de ferramentas em caso de erro
+                    downloadPngButton.style.opacity = '1';
+                    downloadPngButton.style.pointerEvents = 'auto';
+                    textEditorToolbar.style.opacity = '1';
+                    textEditorToolbar.style.pointerEvents = 'auto';
+                    generateAIBtn.style.opacity = '1';
+                    generateAIBtn.style.pointerEvents = 'auto';
+                    // Você pode adicionar um modal de erro aqui, se desejar
+                });
+            });
+
+            // --- Lógica para a barra de ferramentas de edição de texto ---
+
+            let currentEditableElement = null; // Para rastrear qual elemento está sendo editado
+
+            // Mostra a barra de ferramentas ao focar em um elemento editável
+            noticeTitle.addEventListener('focus', () => {
+                currentEditableElement = noticeTitle;
+                textEditorToolbar.style.opacity = '1';
+            });
+            noticeContent.addEventListener('focus', () => {
+                currentEditableElement = noticeContent;
+                textEditorToolbar.style.opacity = '1';
+            });
+
+            // Esconde a barra de ferramentas ao perder o foco, a menos que o foco esteja na própria barra
+            document.addEventListener('selectionchange', () => {
+                const selection = window.getSelection();
+                if (!selection.isCollapsed && currentEditableElement) {
+                    textEditorToolbar.style.opacity = '1';
+                } else if (!textEditorToolbar.contains(document.activeElement)) {
+                    // Esconde se não houver seleção e o foco não estiver na toolbar
+                    textEditorToolbar.style.opacity = '0';
+                }
+            });
+
+            // Esconde a barra de ferramentas se o foco sair dos elementos editáveis e da própria barra
+            document.addEventListener('click', (event) => {
+                if (!noticeTitle.contains(event.target) &&
+                    !noticeContent.contains(event.target) &&
+                    !textEditorToolbar.contains(event.target) &&
+                    !aiGeneratorModal.contains(event.target) && // Não esconde se o clique for no modal AI
+                    event.target !== generateAIBtn) { // Não esconde se o clique for no botão de gerar IA
+                    textEditorToolbar.style.opacity = '0';
+                    currentEditableElement = null;
+                }
+            });
+
+            // Botões de formatação
+            boldButton.addEventListener('click', (event) => {
+                event.preventDefault(); // Impede que o foco saia do contenteditable
+                document.execCommand('bold', false, null);
+            });
+
+            italicButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                document.execCommand('italic', false, null);
+            });
+
+            underlineButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                document.execCommand('underline', false, null);
+            });
+
+            // --- Lógica para a Geração AI ---
+
+            generateAIBtn.addEventListener('click', () => {
+                aiGeneratorModal.style.display = 'flex';
+                aiPromptInput.value = ''; // Limpa o input
+                aiOutputDisplay.style.display = 'none'; // Esconde o display de saída
+                generateAiTextBtn.style.display = 'block'; // Mostra o botão Gerar
+                useAiTextBtn.style.display = 'none'; // Esconde o botão Usar
+                loadingOverlay.style.display = 'none'; // Garante que o loading esteja escondido
+            });
+
+            closeAiModal.addEventListener('click', () => {
+                aiGeneratorModal.style.display = 'none';
+            });
+
+            cancelAiBtn.addEventListener('click', () => {
+                aiGeneratorModal.style.display = 'none';
+            });
+
+            generateAiTextBtn.addEventListener('click', async () => {
+                const promptText = aiPromptInput.value.trim();
+                if (!promptText) {
+                    alert('Por favor, digite um prompt para gerar o comunicado.'); // Substituir por modal personalizado
+                    return;
+                }
+
+                loadingOverlay.style.display = 'flex'; // Mostra o overlay de carregamento
+                aiPromptInput.disabled = true; // Desabilita o input
+                generateAiTextBtn.disabled = true; // Desabilita o botão Gerar
+                cancelAiBtn.disabled = true; // Desabilita o botão Cancelar
+
+                const prompt = `Gere um comunicado formal e conciso para uma empresa de internet com base na seguinte descrição: "${promptText}". Inclua uma saudação, o corpo da mensagem e uma despedida com o nome da empresa "Maxx Internet". Formate o texto com quebras de linha e use tags <strong> para destacar informações importantes.`;
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+                const payload = { contents: chatHistory };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const generatedText = result.candidates[0].content.parts[0].text;
+                        aiOutputDisplay.innerHTML = generatedText.replace(/\n/g, '<br>'); // Converte quebras de linha para HTML
+                        aiOutputDisplay.style.display = 'block'; // Mostra o texto gerado
+                        useAiTextBtn.style.display = 'block'; // Mostra o botão para usar o texto
+                        generateAiTextBtn.style.display = 'none'; // Esconde o botão Gerar
+                    } else {
+                        console.error("Estrutura de resposta inesperada ou conteúdo ausente.");
+                        alert("Erro ao gerar comunicado: Resposta inválida da IA."); // Substituir por modal personalizado
+                    }
+                } catch (error) {
+                    console.error("Erro ao chamar a API Gemini para geração:", error);
+                    alert("Erro ao gerar comunicado: Verifique sua conexão ou tente novamente."); // Substituir por modal personalizado
+                } finally {
+                    loadingOverlay.style.display = 'none'; // Esconde o overlay de carregamento
+                    aiPromptInput.disabled = false; // Habilita o input
+                    generateAiTextBtn.disabled = false; // Habilita o botão Gerar
+                    cancelAiBtn.disabled = false; // Habilita o botão Cancelar
+                }
+            });
+
+            useAiTextBtn.addEventListener('click', () => {
+                const generatedTextHtml = aiOutputDisplay.innerHTML;
+                // Extrai o título e o corpo do comunicado gerado
+                // Uma abordagem simples é procurar por "Comunicado" e assumir o resto como conteúdo
+                let titleMatch = generatedTextHtml.match(/<strong>Comunicado<\/strong>|<br>Comunicado<br>/i);
+                let newTitle = "Comunicado"; // Default
+                let newContent = generatedTextHtml;
+
+                if (titleMatch) {
+                    // Se "Comunicado" estiver no texto, tenta extrair o título e o corpo
+                    let parts = generatedTextHtml.split(titleMatch[0]);
+                    if (parts.length > 1) {
+                        newContent = parts[1].trim();
+                        // Se o título for parte do texto, podemos tentar extrair um título mais específico se a IA gerar um
+                        // Por simplicidade, vamos manter "Comunicado" como título fixo por agora
+                    }
+                }
+                
+                // Remove o título do conteúdo se ele for o primeiro elemento
+                if (newContent.startsWith("Comunicado<br>")) {
+                    newContent = newContent.substring("Comunicado<br>".length).trim();
+                } else if (newContent.startsWith("Comunicado</strong><br>")) {
+                    newContent = newContent.substring("Comunicado</strong><br>".length).trim();
+                }
+
+
+                noticeTitle.innerHTML = newTitle; // Define o título
+                noticeContent.innerHTML = newContent; // Define o conteúdo
+
+                aiGeneratorModal.style.display = 'none'; // Esconde o modal
+            });
+        });
+    </script>
+</body>
+</html>
