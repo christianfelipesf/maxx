@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Chamada API</title>
+</head>
+<body>
+  <h2>Chamada Simples à API</h2>
+  <button onclick="chamarAPI()">Enviar Dados</button>
+
+  <script>
+    function chamarAPI() {
+      const formData = new FormData();
+      formData.append('info', '185599');
+
+      fetch('http://192.168.0.3/Osiris/process/main.php', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Erro HTTP: ' + response.status);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Resposta da API:', data);
+        alert(JSON.stringify(data, null, 2));
+      })
+      .catch(error => {
+        console.error('Erro ao chamar a API:', error);
+        alert('Erro na chamada à API: ' + error.message);
+      });
+    }
+  </script>
+</body>
+</html>
