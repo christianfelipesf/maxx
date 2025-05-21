@@ -15,6 +15,7 @@ app.use(express.json());
 
 const crypto = require("crypto");
 
+app.use(express.urlencoded({ extended: true })); //novo
 
 // Middleware CORS — permite requisições do domínio do frontend
 app.use(cors({ origin: "*" }));
@@ -162,6 +163,29 @@ app.post('/gerar-pdf-wifi', async (req, res) => {
   }
 });
 
+// Endpoint proxy para encaminhar requisição para API local HTTP
+app.post('/api/proxy-osiris', async (req, res) => {
+  try {
+    const response = await fetch('http://192.168.0.3/Osiris/process/main.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams(req.body).toString()
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).send(await response.text());
+    }
+
+    const data = await response.json();
+    res.json(data);
+
+  } catch (error) {
+    console.error('Erro no proxy:', error);
+    res.status(500).json({ message: 'Erro no proxy', error: error.message });
+  }
+});
 
 
 // Inicia o servidor
