@@ -120,17 +120,25 @@
             color: #333333;
         }
 
-        /* Estilo para os botões de ação (sempre visíveis e alinhados à esquerda) */
-        .action-button {
+        /* Contêiner para os botões de ação */
+        #action-buttons-container {
             position: fixed;
-            left: 20px; /* Alinhado à esquerda */
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Espaço entre os botões */
+            z-index: 10;
+        }
+
+        .action-button {
             background-color: rgba(0, 0, 0, 0.5); /* Semi-transparente */
             color: white;
             padding: 8px 12px;
             border-radius: 8px;
             border: none;
             cursor: pointer;
-            z-index: 10;
             font-size: 14px;
             display: flex;
             flex-direction: column; /* Para quebra de linha no texto do botão */
@@ -143,24 +151,6 @@
 
         .action-button:hover {
             background-color: rgba(0, 0, 0, 0.7);
-        }
-
-        /* Posição específica para o botão de download */
-        #downloadPngButton {
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        /* Posição específica para o botão de gerar IA */
-        #generateAIBtn {
-            top: calc(50% + 60px); /* Posiciona abaixo do botão de download */
-            transform: translateY(-50%);
-        }
-
-        /* Posição específica para o botão de reset */
-        #resetButton {
-            top: calc(50% + 120px); /* Posiciona abaixo do botão de gerar IA */
-            transform: translateY(-50%);
         }
 
         /* Estilos para a barra de ferramentas de edição de texto */
@@ -322,25 +312,16 @@
 
         /* Media queries para responsividade em telas menores */
         @media (max-width: 600px) {
-            .action-button {
+            #action-buttons-container {
                 left: 10px; /* Ajusta a posição na esquerda para telas menores */
-                padding: 6px 10px; /* Reduz o padding */
-                font-size: 12px; /* Reduz o tamanho da fonte */
-            }
-
-            #downloadPngButton {
                 top: 20px; /* Move para o topo para evitar sobreposição no centro */
                 transform: translateY(0);
+                gap: 5px; /* Reduz o espaçamento entre os botões */
             }
 
-            #generateAIBtn {
-                top: 70px; /* Posiciona abaixo do botão de download no topo */
-                transform: translateY(0);
-            }
-
-            #resetButton {
-                top: 120px; /* Posiciona abaixo do botão de gerar IA no topo */
-                transform: translateY(0);
+            .action-button {
+                padding: 6px 10px; /* Reduz o padding */
+                font-size: 12px; /* Reduz o tamanho da fonte */
             }
 
             .text-editor-toolbar {
@@ -397,17 +378,19 @@
         </div>
     </div>
 
-    <button id="downloadPngButton" class="action-button">
-        ⬇️ Baixar Imagem
-    </button>
+    <div id="action-buttons-container">
+        <button id="downloadPngButton" class="action-button">
+            ⬇️ Baixar Imagem
+        </button>
 
-    <button id="generateAIBtn" class="action-button">
-        ✨ Gerar<br>com inteligência artificial
-    </button>
+        <button id="generateAIBtn" class="action-button">
+            ✨ Gerar<br>com inteligência artificial
+        </button>
 
-    <button id="resetButton" class="action-button">
-        🔄 Resetar Textos<br>e LocalStorage
-    </button>
+        <button id="resetButton" class="action-button">
+            🔄 Resetar Textos<br>e LocalStorage
+        </button>
+    </div>
 
     <div id="aiGeneratorModal" class="ai-modal-overlay">
         <div class="ai-modal-content">
@@ -454,6 +437,7 @@
             const cancelAiBtn = document.getElementById('cancelAiBtn');
             const aiOutputDisplay = document.getElementById('aiOutputDisplay');
             const loadingOverlay = document.getElementById('loadingOverlay');
+            const actionButtonsContainer = document.getElementById('action-buttons-container'); // O novo contêiner
 
             // Define os limites de caracteres
             const MAX_TITLE_LENGTH = 100;
@@ -493,24 +477,18 @@
                 // Validação para o título
                 if (titleText === '' || titleText.length > MAX_TITLE_LENGTH) {
                     console.warn('Título inválido: vazio ou muito longo.');
-                    // Opcional: exibir uma mensagem de erro para o usuário
-                    // alert('O título não pode estar vazio e deve ter no máximo ' + MAX_TITLE_LENGTH + ' caracteres.');
                     return;
                 }
 
                 // Validação para o nome Maxx
                 if (maxxNameText === '' || maxxNameText.length > MAX_MAXX_NAME_LENGTH) {
                     console.warn('Nome Maxx inválido: vazio ou muito longo.');
-                    // Opcional: exibir uma mensagem de erro para o usuário
-                    // alert('O nome da empresa não pode estar vazio e deve ter no máximo ' + MAX_MAXX_NAME_LENGTH + ' caracteres.');
                     return;
                 }
 
                 // Validação para o conteúdo
                 if (contentText === '' || contentText.length > MAX_CONTENT_LENGTH) {
                     console.warn('Conteúdo inválido: vazio ou muito longo.');
-                    // Opcional: exibir uma mensagem de erro para o usuário
-                    // alert('O conteúdo não pode estar vazio e deve ter no máximo ' + MAX_CONTENT_LENGTH + ' caracteres.');
                     return;
                 }
 
@@ -536,13 +514,9 @@
                 textEditorToolbar.style.opacity = '0'; // Esconde a toolbar
                 textEditorToolbar.style.pointerEvents = 'none';
 
-                // Temporariamente esconde os botões de ação para a captura
-                downloadPngButton.style.opacity = '0';
-                downloadPngButton.style.pointerEvents = 'none';
-                generateAIBtn.style.opacity = '0';
-                generateAIBtn.style.pointerEvents = 'none';
-                resetButton.style.opacity = '0'; // Esconde o botão de reset
-                resetButton.style.pointerEvents = 'none';
+                // Temporariamente esconde o contêiner dos botões de ação para a captura
+                actionButtonsContainer.style.opacity = '0';
+                actionButtonsContainer.style.pointerEvents = 'none';
 
 
                 // Captura o elemento body inteiro
@@ -587,23 +561,15 @@
                     // Restaura a visibilidade dos botões e da barra de ferramentas após a captura
                     textEditorToolbar.style.opacity = '1';
                     textEditorToolbar.style.pointerEvents = 'auto';
-                    downloadPngButton.style.opacity = '1';
-                    downloadPngButton.style.pointerEvents = 'auto';
-                    generateAIBtn.style.opacity = '1';
-                    generateAIBtn.style.pointerEvents = 'auto';
-                    resetButton.style.opacity = '1'; // Restaura o botão de reset
-                    resetButton.style.pointerEvents = 'auto';
+                    actionButtonsContainer.style.opacity = '1';
+                    actionButtonsContainer.style.pointerEvents = 'auto';
                 }).catch(error => {
                     console.error('Erro ao gerar a imagem:', error);
                     // Restaura a visibilidade dos botões e da barra de ferramentas em caso de erro
                     textEditorToolbar.style.opacity = '1';
                     textEditorToolbar.style.pointerEvents = 'auto';
-                    downloadPngButton.style.opacity = '1';
-                    downloadPngButton.style.pointerEvents = 'auto';
-                    generateAIBtn.style.opacity = '1';
-                    generateAIBtn.style.pointerEvents = 'auto';
-                    resetButton.style.opacity = '1'; // Restaura o botão de reset
-                    resetButton.style.pointerEvents = 'auto';
+                    actionButtonsContainer.style.opacity = '1';
+                    actionButtonsContainer.style.pointerEvents = 'auto';
                 });
             });
 
@@ -655,7 +621,7 @@
                 const isClickInsideEditable = noticeTitle.contains(event.target) || noticeContent.contains(event.target) || maxxName.contains(event.target);
                 const isClickInsideToolbar = textEditorToolbar.contains(event.target);
                 const isClickInsideModal = aiGeneratorModal.contains(event.target);
-                const isClickOnActionButton = event.target === generateAIBtn || event.target === downloadPngButton || event.target === resetButton;
+                const isClickOnActionButton = actionButtonsContainer.contains(event.target); // Verifica se o clique foi dentro do contêiner de botões
 
                 if (!isClickInsideEditable && !isClickInsideToolbar && !isClickInsideModal && !isClickOnActionButton) {
                     hideToolbar();
@@ -722,7 +688,6 @@
             generateAiTextBtn.addEventListener('click', async () => {
                 const promptText = aiPromptInput.value.trim();
                 if (!promptText) {
-                    // Substituindo alert() por uma mensagem na console ou um modal customizado
                     console.warn('Por favor, digite um prompt para gerar o comunicado.');
                     return;
                 }
@@ -758,12 +723,10 @@
                         generateAiTextBtn.style.display = 'none';
                     } else {
                         console.error("Estrutura de resposta inesperada ou conteúdo ausente.");
-                        // Substituindo alert() por uma mensagem na console ou um modal customizado
                         console.warn("Erro ao gerar comunicado: Resposta inválida da IA.");
                     }
                 } catch (error) {
                     console.error("Erro ao chamar a API Gemini para geração:", error);
-                    // Substituindo alert() por uma mensagem na console ou um modal customizado
                     console.warn("Erro ao gerar comunicado: Verifique sua conexão ou tente novamente.");
                 } finally {
                     loadingOverlay.style.display = 'none';
