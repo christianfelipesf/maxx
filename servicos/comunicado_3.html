@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <link rel="icon" type="image/svg+xml" href="icofile.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunicado Maxx Internet</title>
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FF9300 0%, #FF7000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative; /* Necessário para posicionar o botão de download fixo */
+        }
+
+        .card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .icons {
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .icon-warning {
+            background: #FFC200;
+        }
+
+        .icon-alert {
+            background: #FF6A00;
+        }
+
+        .dots {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            color: #FFFFFF;
+            font-size: 24px;
+            letter-spacing: 4px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #FF7000;
+            margin-bottom: 12px;
+            cursor: text;
+        }
+
+        .text {
+            font-size: 14px;
+            color: #333333;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            cursor: text;
+        }
+
+        /* Estilos para o conteúdo editável */
+        .text[contenteditable="true"]:focus,
+        .title[contenteditable="true"]:focus,
+        .editable-maxx[contenteditable="true"]:focus {
+            outline: none;
+            border: 1px dashed #FF7000;
+            padding: 2px;
+            border-radius: 4px;
+        }
+
+        .footer {
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .footer .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF7000;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            cursor: text; /* Torna o logo editável */
+        }
+
+        .footer .instagram {
+            font-size: 14px;
+            color: #333333;
+        }
+
+        /* Estilo para os botões de ação (sempre visíveis e alinhados à esquerda) */
+        .action-button {
+            position: fixed;
+            left: 20px; /* Alinhado à esquerda */
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparente */
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column; /* Para quebra de linha no texto do botão */
+            align-items: flex-start; /* Alinha o texto à esquerda */
+            justify-content: center;
+            gap: 2px; /* Espaçamento entre as linhas do texto */
+            text-align: left; /* Alinha o texto à esquerda */
+            transition: background-color 0.3s ease-in-out; /* Transição para hover */
+        }
+
+        .action-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Posição específica para o botão de download */
+        #downloadPngButton {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Posição específica para o botão de gerar IA */
+        #generateAIBtn {
+            top: calc(50% + 60px); /* Posiciona abaixo do botão de download */
+            transform: translateY(-50%);
+        }
+
+        /* Posição específica para o botão de reset */
+        #resetButton {
+            top: calc(50% + 120px); /* Posiciona abaixo do botão de gerar IA */
+            transform: translateY(-50%);
+        }
+
+        /* Estilos para a barra de ferramentas de edição de texto */
+        .text-editor-toolbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            opacity: 0; /* Escondido por padrão */
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .text-editor-toolbar button {
+            background-color: #FF7000;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+
+        .text-editor-toolbar button:hover {
+            background-color: #FF9300;
+        }
+
+        /* Estilos para o modal de geração AI */
+        .ai-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200; /* Acima de tudo */
+            display: none; /* Escondido por padrão */
+        }
+
+        .ai-modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .ai-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .ai-modal-header h3 {
+            font-size: 24px;
+            color: #FF7000;
+            margin: 0;
+        }
+
+        .ai-modal-close {
+            font-size: 30px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .ai-modal-close:hover {
+            color: #666;
+        }
+
+        .ai-modal-body textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 14px;
+        }
+
+        .ai-modal-body .ai-output-display {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+            color: #555;
+            white-space: pre-wrap; /* Preserva quebras de linha */
+            word-wrap: break-word; /* Quebra palavras longas */
+        }
+
+        .ai-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .ai-modal-footer button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+
+        .ai-modal-footer .btn-primary {
+            background-color: #FF7000;
+            color: white;
+        }
+
+        .ai-modal-footer .btn-primary:hover {
+            background-color: #FF9300;
+        }
+
+        .ai-modal-footer .btn-secondary {
+            background-color: #ccc;
+            color: #333;
+        }
+
+        .ai-modal-footer .btn-secondary:hover {
+            background-color: #bbb;
+        }
+
+        /* Overlay de carregamento */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-size: 1.5rem;
+            display: none; /* Escondido por padrão */
+        }
+
+        /* Media queries para responsividade em telas menores */
+        @media (max-width: 600px) {
+            .action-button {
+                left: 10px; /* Ajusta a posição na esquerda para telas menores */
+                padding: 6px 10px; /* Reduz o padding */
+                font-size: 12px; /* Reduz o tamanho da fonte */
+            }
+
+            #downloadPngButton {
+                top: 20px; /* Move para o topo para evitar sobreposição no centro */
+                transform: translateY(0);
+            }
+
+            #generateAIBtn {
+                top: 70px; /* Posiciona abaixo do botão de download no topo */
+                transform: translateY(0);
+            }
+
+            #resetButton {
+                top: 120px; /* Posiciona abaixo do botão de gerar IA no topo */
+                transform: translateY(0);
+            }
+
+            .text-editor-toolbar {
+                top: 10px; /* Ajusta a posição da toolbar */
+                padding: 5px 10px;
+                gap: 5px;
+            }
+
+            .text-editor-toolbar button {
+                padding: 4px 8px;
+                font-size: 12px;
+            }
+
+            .ai-modal-content {
+                padding: 20px;
+            }
+
+            .ai-modal-header h3 {
+                font-size: 20px;
+            }
+
+            .ai-modal-close {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="textEditorToolbar" class="text-editor-toolbar">
+        <button id="boldButton">B</button>
+        <button id="italicButton">I</button>
+        <button id="underlineButton">U</button>
+    </div>
+
+    <div class="card">
+        <div class="icons">
+            <div class="icon icon-warning">!</div>
+            <div class="icon icon-alert">!</div>
+        </div>
+        <div class="dots">•••</div>
+        <div class="title" id="notice-title" contenteditable="true">Comunicado</div>
+        <div class="text" id="notice-content" contenteditable="true">
+            <strong>Prezado cliente,</strong><br>
+            Informamos que, no momento, há instabilidade nos serviços de TV e Internet na região de <strong>Santa Rita 2 (Centro)</strong>.<br>
+            Nossa equipe já está no local e a previsão de normalização é hoje, <strong>20/05/2025, às 12h30</strong>.
+            <br><br>
+            Agradecemos sua compreensão.<br>
+            <strong>Maxx Internet</strong>
+        </div>
+
+        <div class="footer">
+            <div class="logo editable-maxx" id="maxx-name" contenteditable="true">MAXX</div>
+            <div class="instagram">@sejamaxx</div>
+        </div>
+    </div>
+
+    <button id="downloadPngButton" class="action-button">
+        ⬇️ Baixar Imagem
+    </button>
+
+    <button id="generateAIBtn" class="action-button">
+        ✨ Gerar<br>com inteligência artificial
+    </button>
+
+    <button id="resetButton" class="action-button">
+        🔄 Resetar Textos<br>e LocalStorage
+    </button>
+
+    <div id="aiGeneratorModal" class="ai-modal-overlay">
+        <div class="ai-modal-content">
+            <div class="ai-modal-header">
+                <h3>Gerar Comunicado com IA</h3>
+                <span class="ai-modal-close" id="closeAiModal">&times;</span>
+            </div>
+            <div class="ai-modal-body">
+                <textarea id="aiPromptInput" placeholder="Descreva o comunicado que você deseja gerar (ex: 'Um aviso sobre manutenção na rede amanhã às 10h')."></textarea>
+                <div class="ai-output-display" id="aiOutputDisplay" style="display: none;"></div>
+            </div>
+            <div class="ai-modal-footer">
+                <button id="generateAiTextBtn" class="btn-primary">Gerar</button>
+                <button id="useAiTextBtn" class="btn-primary" style="display: none;">Usar este Comunicado</button>
+                <button id="cancelAiBtn" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        Gerando comunicado...
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const card = document.querySelector('.card');
+            const downloadPngButton = document.getElementById('downloadPngButton');
+            const noticeTitle = document.getElementById('notice-title');
+            const noticeContent = document.getElementById('notice-content');
+            const maxxName = document.getElementById('maxx-name'); // Novo elemento para o nome Maxx
+            const textEditorToolbar = document.getElementById('textEditorToolbar');
+            const boldButton = document.getElementById('boldButton');
+            const italicButton = document.getElementById('italicButton');
+            const underlineButton = document.getElementById('underlineButton');
+
+            const generateAIBtn = document.getElementById('generateAIBtn');
+            const resetButton = document.getElementById('resetButton'); // Novo botão de reset
+            const aiGeneratorModal = document.getElementById('aiGeneratorModal');
+            const closeAiModal = document.getElementById('closeAiModal');
+            const aiPromptInput = document.getElementById('aiPromptInput');
+            const generateAiTextBtn = document.getElementById('generateAiTextBtn');
+            const useAiTextBtn = document.getElementById('useAiTextBtn');
+            const cancelAiBtn = document.getElementById('cancelAiBtn');
+            const aiOutputDisplay = document.getElementById('aiOutputDisplay');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Define os limites de caracteres
+            const MAX_TITLE_LENGTH = 100;
+            const MAX_MAXX_NAME_LENGTH = 100;
+            const MAX_CONTENT_LENGTH = 2000;
+
+            // Habilita a edição do título, conteúdo e nome Maxx
+            noticeTitle.contentEditable = "true";
+            noticeContent.contentEditable = "true";
+            maxxName.contentEditable = "true"; // Torna o nome Maxx editável
+
+            // --- Funções de LocalStorage e Validação ---
+
+            // Função para carregar o conteúdo do LocalStorage
+            function loadContent() {
+                const savedTitle = localStorage.getItem('noticeTitle');
+                const savedContent = localStorage.getItem('noticeContent');
+                const savedMaxxName = localStorage.getItem('maxxName');
+
+                if (savedTitle) {
+                    noticeTitle.innerHTML = savedTitle;
+                }
+                if (savedContent) {
+                    noticeContent.innerHTML = savedContent;
+                }
+                if (savedMaxxName) {
+                    maxxName.innerHTML = savedMaxxName;
+                }
+            }
+
+            // Função para salvar o conteúdo no LocalStorage com validação
+            function saveContent() {
+                const titleText = noticeTitle.innerHTML.trim();
+                const contentText = noticeContent.innerHTML.trim();
+                const maxxNameText = maxxName.innerHTML.trim();
+
+                // Validação para o título
+                if (titleText === '' || titleText.length > MAX_TITLE_LENGTH) {
+                    console.warn('Título inválido: vazio ou muito longo.');
+                    // Opcional: exibir uma mensagem de erro para o usuário
+                    // alert('O título não pode estar vazio e deve ter no máximo ' + MAX_TITLE_LENGTH + ' caracteres.');
+                    return;
+                }
+
+                // Validação para o nome Maxx
+                if (maxxNameText === '' || maxxNameText.length > MAX_MAXX_NAME_LENGTH) {
+                    console.warn('Nome Maxx inválido: vazio ou muito longo.');
+                    // Opcional: exibir uma mensagem de erro para o usuário
+                    // alert('O nome da empresa não pode estar vazio e deve ter no máximo ' + MAX_MAXX_NAME_LENGTH + ' caracteres.');
+                    return;
+                }
+
+                // Validação para o conteúdo
+                if (contentText === '' || contentText.length > MAX_CONTENT_LENGTH) {
+                    console.warn('Conteúdo inválido: vazio ou muito longo.');
+                    // Opcional: exibir uma mensagem de erro para o usuário
+                    // alert('O conteúdo não pode estar vazio e deve ter no máximo ' + MAX_CONTENT_LENGTH + ' caracteres.');
+                    return;
+                }
+
+                localStorage.setItem('noticeTitle', titleText);
+                localStorage.setItem('noticeContent', contentText);
+                localStorage.setItem('maxxName', maxxNameText);
+                console.log('Conteúdo salvo no LocalStorage.');
+            }
+
+            // Carrega o conteúdo ao iniciar a página
+            loadContent();
+
+            // Adiciona event listeners para salvar o conteúdo ao editar
+            noticeTitle.addEventListener('input', saveContent);
+            noticeContent.addEventListener('input', saveContent);
+            maxxName.addEventListener('input', saveContent);
+
+            // --- Lógica para o botão de download (captura) ---
+
+            // Função para capturar e baixar o PNG
+            downloadPngButton.addEventListener('click', () => {
+                // Esconde a barra de ferramentas temporariamente antes de capturar
+                textEditorToolbar.style.opacity = '0'; // Esconde a toolbar
+                textEditorToolbar.style.pointerEvents = 'none';
+
+                // Temporariamente esconde os botões de ação para a captura
+                downloadPngButton.style.opacity = '0';
+                downloadPngButton.style.pointerEvents = 'none';
+                generateAIBtn.style.opacity = '0';
+                generateAIBtn.style.pointerEvents = 'none';
+                resetButton.style.opacity = '0'; // Esconde o botão de reset
+                resetButton.style.pointerEvents = 'none';
+
+
+                // Captura o elemento body inteiro
+                html2canvas(document.body, {
+                    scale: 3,
+                    useCORS: true,
+                    logging: false
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'comunicado_maxx_internet.png';
+
+                    const instagramWidth = 1080;
+                    const instagramHeight = 1350;
+
+                    const finalCanvas = document.createElement('canvas');
+                    const ctx = finalCanvas.getContext('2d');
+
+                    finalCanvas.width = instagramWidth;
+                    finalCanvas.height = instagramHeight;
+
+                    const capturedAspectRatio = canvas.width / canvas.height;
+                    const instagramAspectRatio = instagramWidth / instagramHeight;
+
+                    let sx, sy, sWidth, sHeight;
+                    if (capturedAspectRatio > instagramAspectRatio) {
+                        sHeight = canvas.height;
+                        sWidth = sHeight * instagramAspectRatio;
+                        sx = (canvas.width - sWidth) / 2;
+                        sy = 0;
+                    } else {
+                        sWidth = canvas.width;
+                        sHeight = sWidth / instagramAspectRatio;
+                        sx = 0;
+                        sy = (canvas.height - sHeight) / 2;
+                    }
+
+                    ctx.drawImage(canvas, sx, sy, sWidth, sHeight, 0, 0, instagramWidth, instagramHeight);
+
+                    link.href = finalCanvas.toDataURL('image/png');
+                    link.click();
+
+                    // Restaura a visibilidade dos botões e da barra de ferramentas após a captura
+                    textEditorToolbar.style.opacity = '1';
+                    textEditorToolbar.style.pointerEvents = 'auto';
+                    downloadPngButton.style.opacity = '1';
+                    downloadPngButton.style.pointerEvents = 'auto';
+                    generateAIBtn.style.opacity = '1';
+                    generateAIBtn.style.pointerEvents = 'auto';
+                    resetButton.style.opacity = '1'; // Restaura o botão de reset
+                    resetButton.style.pointerEvents = 'auto';
+                }).catch(error => {
+                    console.error('Erro ao gerar a imagem:', error);
+                    // Restaura a visibilidade dos botões e da barra de ferramentas em caso de erro
+                    textEditorToolbar.style.opacity = '1';
+                    textEditorToolbar.style.pointerEvents = 'auto';
+                    downloadPngButton.style.opacity = '1';
+                    downloadPngButton.style.pointerEvents = 'auto';
+                    generateAIBtn.style.opacity = '1';
+                    generateAIBtn.style.pointerEvents = 'auto';
+                    resetButton.style.opacity = '1'; // Restaura o botão de reset
+                    resetButton.style.pointerEvents = 'auto';
+                });
+            });
+
+            // --- Lógica para a barra de ferramentas de edição de texto ---
+
+            let currentEditableElement = null;
+
+            // Função para mostrar a barra de ferramentas
+            function showToolbar() {
+                textEditorToolbar.style.opacity = '1';
+                textEditorToolbar.style.pointerEvents = 'auto';
+            }
+
+            // Função para esconder a barra de ferramentas
+            function hideToolbar() {
+                textEditorToolbar.style.opacity = '0';
+                textEditorToolbar.style.pointerEvents = 'none';
+            }
+
+            // Event listener para quando um elemento editável ganha foco
+            // O foco pode ser no título, no conteúdo ou no nome Maxx
+            noticeTitle.addEventListener('focus', () => {
+                currentEditableElement = noticeTitle;
+                showToolbar();
+            });
+            noticeContent.addEventListener('focus', () => {
+                currentEditableElement = noticeContent;
+                showToolbar();
+            });
+            maxxName.addEventListener('focus', () => {
+                currentEditableElement = maxxName;
+                showToolbar();
+            });
+
+            // Event listener para quando um elemento perde o foco
+            // Verifica se o foco está saindo de um elemento editável e não indo para a toolbar
+            document.addEventListener('focusout', (event) => {
+                const isLeavingEditable = (event.target === noticeTitle || event.target === noticeContent || event.target === maxxName);
+                const isGoingToToolbar = textEditorToolbar.contains(event.relatedTarget);
+
+                if (isLeavingEditable && !isGoingToToolbar) {
+                    hideToolbar();
+                    currentEditableElement = null;
+                }
+            });
+
+            // Event listener para cliques em qualquer lugar do documento para esconder a toolbar
+            document.addEventListener('click', (event) => {
+                const isClickInsideEditable = noticeTitle.contains(event.target) || noticeContent.contains(event.target) || maxxName.contains(event.target);
+                const isClickInsideToolbar = textEditorToolbar.contains(event.target);
+                const isClickInsideModal = aiGeneratorModal.contains(event.target);
+                const isClickOnActionButton = event.target === generateAIBtn || event.target === downloadPngButton || event.target === resetButton;
+
+                if (!isClickInsideEditable && !isClickInsideToolbar && !isClickInsideModal && !isClickOnActionButton) {
+                    hideToolbar();
+                    currentEditableElement = null;
+                }
+            });
+
+
+            boldButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                document.execCommand('bold', false, null);
+            });
+
+            italicButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                document.execCommand('italic', false, null);
+            });
+
+            underlineButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                document.execCommand('underline', false, null);
+            });
+
+            // --- Lógica para o botão de Reset ---
+            resetButton.addEventListener('click', () => {
+                // Define os textos padrão
+                noticeTitle.innerHTML = 'Comunicado';
+                noticeContent.innerHTML = `<strong>Prezado cliente,</strong><br>
+            Informamos que, no momento, há instabilidade nos serviços de TV e Internet na região de <strong>Santa Rita 2 (Centro)</strong>.<br>
+            Nossa equipe já está no local e a previsão de normalização é hoje, <strong>20/05/2025, às 12h30</strong>.
+            <br><br>
+            Agradecemos sua compreensão.<br>
+            <strong>Maxx Internet</strong>`;
+                maxxName.innerHTML = 'MAXX';
+
+                // Limpa o LocalStorage
+                localStorage.removeItem('noticeTitle');
+                localStorage.removeItem('noticeContent');
+                localStorage.removeItem('maxxName');
+
+                console.log('Textos resetados e LocalStorage limpo.');
+            });
+
+
+            // --- Lógica para a Geração AI ---
+
+            generateAIBtn.addEventListener('click', () => {
+                aiGeneratorModal.style.display = 'flex';
+                aiPromptInput.value = '';
+                aiOutputDisplay.style.display = 'none';
+                generateAiTextBtn.style.display = 'block';
+                useAiTextBtn.style.display = 'none';
+                loadingOverlay.style.display = 'none';
+            });
+
+            closeAiModal.addEventListener('click', () => {
+                aiGeneratorModal.style.display = 'none';
+            });
+
+            cancelAiBtn.addEventListener('click', () => {
+                aiGeneratorModal.style.display = 'none';
+            });
+
+            generateAiTextBtn.addEventListener('click', async () => {
+                const promptText = aiPromptInput.value.trim();
+                if (!promptText) {
+                    // Substituindo alert() por uma mensagem na console ou um modal customizado
+                    console.warn('Por favor, digite um prompt para gerar o comunicado.');
+                    return;
+                }
+
+                loadingOverlay.style.display = 'flex';
+                aiPromptInput.disabled = true;
+                generateAiTextBtn.disabled = true;
+                cancelAiBtn.disabled = true;
+
+                const prompt = `Gere um comunicado formal e conciso para uma empresa de internet com base na seguinte descrição: "${promptText}". Inclua uma saudação, o corpo da mensagem e uma despedida com o nome da empresa "Maxx Internet". Formate o texto com quebras de linha e use tags <strong> para destacar informações importantes.`;
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // API key will be provided by the Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const generatedText = result.candidates[0].content.parts[0].text;
+                        aiOutputDisplay.innerHTML = generatedText.replace(/\n/g, '<br>');
+                        aiOutputDisplay.style.display = 'block';
+                        useAiTextBtn.style.display = 'block';
+                        generateAiTextBtn.style.display = 'none';
+                    } else {
+                        console.error("Estrutura de resposta inesperada ou conteúdo ausente.");
+                        // Substituindo alert() por uma mensagem na console ou um modal customizado
+                        console.warn("Erro ao gerar comunicado: Resposta inválida da IA.");
+                    }
+                } catch (error) {
+                    console.error("Erro ao chamar a API Gemini para geração:", error);
+                    // Substituindo alert() por uma mensagem na console ou um modal customizado
+                    console.warn("Erro ao gerar comunicado: Verifique sua conexão ou tente novamente.");
+                } finally {
+                    loadingOverlay.style.display = 'none';
+                    aiPromptInput.disabled = false;
+                    generateAiTextBtn.disabled = false;
+                    cancelAiBtn.disabled = false;
+                }
+            });
+
+            useAiTextBtn.addEventListener('click', () => {
+                const generatedTextHtml = aiOutputDisplay.innerHTML;
+                let newTitle = "Comunicado";
+                let newContent = generatedTextHtml;
+
+                let titleMatch = generatedTextHtml.match(/<strong>Comunicado<\/strong>|<br>Comunicado<br>/i);
+                if (titleMatch) {
+                    let parts = generatedTextHtml.split(titleMatch[0]);
+                    if (parts.length > 1) {
+                        newContent = parts[1].trim();
+                    }
+                }
+                
+                if (newContent.startsWith("Comunicado<br>")) {
+                    newContent = newContent.substring("Comunicado<br>".length).trim();
+                } else if (newContent.startsWith("Comunicado</strong><br>")) {
+                    newContent = newContent.substring("Comunicado</strong><br>".length).trim();
+                }
+
+                noticeTitle.innerHTML = newTitle;
+                noticeContent.innerHTML = newContent;
+                saveContent(); // Salva o novo conteúdo gerado pela IA
+
+                aiGeneratorModal.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
