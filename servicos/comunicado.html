@@ -90,7 +90,8 @@
 
         /* Estilos para o conteúdo editável */
         .text[contenteditable="true"]:focus,
-        .title[contenteditable="true"]:focus {
+        .title[contenteditable="true"]:focus,
+        .editable-maxx[contenteditable="true"]:focus {
             outline: none;
             border: 1px dashed #FF7000;
             padding: 2px;
@@ -111,6 +112,7 @@
             font-weight: bold;
             color: #FF7000;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            cursor: text; /* Torna o logo editável */
         }
 
         .footer .instagram {
@@ -152,6 +154,12 @@
         /* Posição específica para o botão de gerar IA */
         #generateAIBtn {
             top: calc(50% + 60px); /* Posiciona abaixo do botão de download */
+            transform: translateY(-50%);
+        }
+
+        /* Posição específica para o botão de reset */
+        #resetButton {
+            top: calc(50% + 120px); /* Posiciona abaixo do botão de gerar IA */
             transform: translateY(-50%);
         }
 
@@ -330,6 +338,11 @@
                 transform: translateY(0);
             }
 
+            #resetButton {
+                top: 120px; /* Posiciona abaixo do botão de gerar IA no topo */
+                transform: translateY(0);
+            }
+
             .text-editor-toolbar {
                 top: 10px; /* Ajusta a posição da toolbar */
                 padding: 5px 10px;
@@ -379,7 +392,7 @@
         </div>
 
         <div class="footer">
-            <div class="logo">MAXX</div>
+            <div class="logo editable-maxx" id="maxx-name" contenteditable="true">MAXX</div>
             <div class="instagram">@sejamaxx</div>
         </div>
     </div>
@@ -390,6 +403,10 @@
 
     <button id="generateAIBtn" class="action-button">
         ✨ Gerar<br>com inteligência artificial
+    </button>
+
+    <button id="resetButton" class="action-button">
+        🔄 Resetar Textos<br>e LocalStorage
     </button>
 
     <div id="aiGeneratorModal" class="ai-modal-overlay">
@@ -421,12 +438,14 @@
             const downloadPngButton = document.getElementById('downloadPngButton');
             const noticeTitle = document.getElementById('notice-title');
             const noticeContent = document.getElementById('notice-content');
+            const maxxName = document.getElementById('maxx-name'); // Novo elemento para o nome Maxx
             const textEditorToolbar = document.getElementById('textEditorToolbar');
             const boldButton = document.getElementById('boldButton');
             const italicButton = document.getElementById('italicButton');
             const underlineButton = document.getElementById('underlineButton');
 
             const generateAIBtn = document.getElementById('generateAIBtn');
+            const resetButton = document.getElementById('resetButton'); // Novo botão de reset
             const aiGeneratorModal = document.getElementById('aiGeneratorModal');
             const closeAiModal = document.getElementById('closeAiModal');
             const aiPromptInput = document.getElementById('aiPromptInput');
@@ -436,9 +455,78 @@
             const aiOutputDisplay = document.getElementById('aiOutputDisplay');
             const loadingOverlay = document.getElementById('loadingOverlay');
 
-            // Habilita a edição do título e do conteúdo
-            noticeTitle.contentEditable = "true"; // Título editável
-            noticeContent.contentEditable = "true"; // Conteúdo editável
+            // Define os limites de caracteres
+            const MAX_TITLE_LENGTH = 100;
+            const MAX_MAXX_NAME_LENGTH = 100;
+            const MAX_CONTENT_LENGTH = 2000;
+
+            // Habilita a edição do título, conteúdo e nome Maxx
+            noticeTitle.contentEditable = "true";
+            noticeContent.contentEditable = "true";
+            maxxName.contentEditable = "true"; // Torna o nome Maxx editável
+
+            // --- Funções de LocalStorage e Validação ---
+
+            // Função para carregar o conteúdo do LocalStorage
+            function loadContent() {
+                const savedTitle = localStorage.getItem('noticeTitle');
+                const savedContent = localStorage.getItem('noticeContent');
+                const savedMaxxName = localStorage.getItem('maxxName');
+
+                if (savedTitle) {
+                    noticeTitle.innerHTML = savedTitle;
+                }
+                if (savedContent) {
+                    noticeContent.innerHTML = savedContent;
+                }
+                if (savedMaxxName) {
+                    maxxName.innerHTML = savedMaxxName;
+                }
+            }
+
+            // Função para salvar o conteúdo no LocalStorage com validação
+            function saveContent() {
+                const titleText = noticeTitle.innerHTML.trim();
+                const contentText = noticeContent.innerHTML.trim();
+                const maxxNameText = maxxName.innerHTML.trim();
+
+                // Validação para o título
+                if (titleText === '' || titleText.length > MAX_TITLE_LENGTH) {
+                    console.warn('Título inválido: vazio ou muito longo.');
+                    // Opcional: exibir uma mensagem de erro para o usuário
+                    // alert('O título não pode estar vazio e deve ter no máximo ' + MAX_TITLE_LENGTH + ' caracteres.');
+                    return;
+                }
+
+                // Validação para o nome Maxx
+                if (maxxNameText === '' || maxxNameText.length > MAX_MAXX_NAME_LENGTH) {
+                    console.warn('Nome Maxx inválido: vazio ou muito longo.');
+                    // Opcional: exibir uma mensagem de erro para o usuário
+                    // alert('O nome da empresa não pode estar vazio e deve ter no máximo ' + MAX_MAXX_NAME_LENGTH + ' caracteres.');
+                    return;
+                }
+
+                // Validação para o conteúdo
+                if (contentText === '' || contentText.length > MAX_CONTENT_LENGTH) {
+                    console.warn('Conteúdo inválido: vazio ou muito longo.');
+                    // Opcional: exibir uma mensagem de erro para o usuário
+                    // alert('O conteúdo não pode estar vazio e deve ter no máximo ' + MAX_CONTENT_LENGTH + ' caracteres.');
+                    return;
+                }
+
+                localStorage.setItem('noticeTitle', titleText);
+                localStorage.setItem('noticeContent', contentText);
+                localStorage.setItem('maxxName', maxxNameText);
+                console.log('Conteúdo salvo no LocalStorage.');
+            }
+
+            // Carrega o conteúdo ao iniciar a página
+            loadContent();
+
+            // Adiciona event listeners para salvar o conteúdo ao editar
+            noticeTitle.addEventListener('input', saveContent);
+            noticeContent.addEventListener('input', saveContent);
+            maxxName.addEventListener('input', saveContent);
 
             // --- Lógica para o botão de download (captura) ---
 
@@ -453,6 +541,8 @@
                 downloadPngButton.style.pointerEvents = 'none';
                 generateAIBtn.style.opacity = '0';
                 generateAIBtn.style.pointerEvents = 'none';
+                resetButton.style.opacity = '0'; // Esconde o botão de reset
+                resetButton.style.pointerEvents = 'none';
 
 
                 // Captura o elemento body inteiro
@@ -501,6 +591,8 @@
                     downloadPngButton.style.pointerEvents = 'auto';
                     generateAIBtn.style.opacity = '1';
                     generateAIBtn.style.pointerEvents = 'auto';
+                    resetButton.style.opacity = '1'; // Restaura o botão de reset
+                    resetButton.style.pointerEvents = 'auto';
                 }).catch(error => {
                     console.error('Erro ao gerar a imagem:', error);
                     // Restaura a visibilidade dos botões e da barra de ferramentas em caso de erro
@@ -510,6 +602,8 @@
                     downloadPngButton.style.pointerEvents = 'auto';
                     generateAIBtn.style.opacity = '1';
                     generateAIBtn.style.pointerEvents = 'auto';
+                    resetButton.style.opacity = '1'; // Restaura o botão de reset
+                    resetButton.style.pointerEvents = 'auto';
                 });
             });
 
@@ -530,7 +624,7 @@
             }
 
             // Event listener para quando um elemento editável ganha foco
-            // O foco pode ser no título ou no conteúdo
+            // O foco pode ser no título, no conteúdo ou no nome Maxx
             noticeTitle.addEventListener('focus', () => {
                 currentEditableElement = noticeTitle;
                 showToolbar();
@@ -539,11 +633,15 @@
                 currentEditableElement = noticeContent;
                 showToolbar();
             });
+            maxxName.addEventListener('focus', () => {
+                currentEditableElement = maxxName;
+                showToolbar();
+            });
 
             // Event listener para quando um elemento perde o foco
             // Verifica se o foco está saindo de um elemento editável e não indo para a toolbar
             document.addEventListener('focusout', (event) => {
-                const isLeavingEditable = (event.target === noticeTitle || event.target === noticeContent);
+                const isLeavingEditable = (event.target === noticeTitle || event.target === noticeContent || event.target === maxxName);
                 const isGoingToToolbar = textEditorToolbar.contains(event.relatedTarget);
 
                 if (isLeavingEditable && !isGoingToToolbar) {
@@ -554,10 +652,10 @@
 
             // Event listener para cliques em qualquer lugar do documento para esconder a toolbar
             document.addEventListener('click', (event) => {
-                const isClickInsideEditable = noticeTitle.contains(event.target) || noticeContent.contains(event.target);
+                const isClickInsideEditable = noticeTitle.contains(event.target) || noticeContent.contains(event.target) || maxxName.contains(event.target);
                 const isClickInsideToolbar = textEditorToolbar.contains(event.target);
                 const isClickInsideModal = aiGeneratorModal.contains(event.target);
-                const isClickOnActionButton = event.target === generateAIBtn || event.target === downloadPngButton;
+                const isClickOnActionButton = event.target === generateAIBtn || event.target === downloadPngButton || event.target === resetButton;
 
                 if (!isClickInsideEditable && !isClickInsideToolbar && !isClickInsideModal && !isClickOnActionButton) {
                     hideToolbar();
@@ -581,6 +679,27 @@
                 document.execCommand('underline', false, null);
             });
 
+            // --- Lógica para o botão de Reset ---
+            resetButton.addEventListener('click', () => {
+                // Define os textos padrão
+                noticeTitle.innerHTML = 'Comunicado';
+                noticeContent.innerHTML = `<strong>Prezado cliente,</strong><br>
+            Informamos que, no momento, há instabilidade nos serviços de TV e Internet na região de <strong>Santa Rita 2 (Centro)</strong>.<br>
+            Nossa equipe já está no local e a previsão de normalização é hoje, <strong>20/05/2025, às 12h30</strong>.
+            <br><br>
+            Agradecemos sua compreensão.<br>
+            <strong>Maxx Internet</strong>`;
+                maxxName.innerHTML = 'MAXX';
+
+                // Limpa o LocalStorage
+                localStorage.removeItem('noticeTitle');
+                localStorage.removeItem('noticeContent');
+                localStorage.removeItem('maxxName');
+
+                console.log('Textos resetados e LocalStorage limpo.');
+            });
+
+
             // --- Lógica para a Geração AI ---
 
             generateAIBtn.addEventListener('click', () => {
@@ -603,7 +722,8 @@
             generateAiTextBtn.addEventListener('click', async () => {
                 const promptText = aiPromptInput.value.trim();
                 if (!promptText) {
-                    alert('Por favor, digite um prompt para gerar o comunicado.');
+                    // Substituindo alert() por uma mensagem na console ou um modal customizado
+                    console.warn('Por favor, digite um prompt para gerar o comunicado.');
                     return;
                 }
 
@@ -617,7 +737,7 @@
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
                 const payload = { contents: chatHistory };
-                const apiKey = "AIzaSyCUw6FXegi5XkAK2dJUvRHbCN6PpEEpT3Y";
+                const apiKey = ""; // API key will be provided by the Canvas environment
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 try {
@@ -638,11 +758,13 @@
                         generateAiTextBtn.style.display = 'none';
                     } else {
                         console.error("Estrutura de resposta inesperada ou conteúdo ausente.");
-                        alert("Erro ao gerar comunicado: Resposta inválida da IA.");
+                        // Substituindo alert() por uma mensagem na console ou um modal customizado
+                        console.warn("Erro ao gerar comunicado: Resposta inválida da IA.");
                     }
                 } catch (error) {
                     console.error("Erro ao chamar a API Gemini para geração:", error);
-                    alert("Erro ao gerar comunicado: Verifique sua conexão ou tente novamente.");
+                    // Substituindo alert() por uma mensagem na console ou um modal customizado
+                    console.warn("Erro ao gerar comunicado: Verifique sua conexão ou tente novamente.");
                 } finally {
                     loadingOverlay.style.display = 'none';
                     aiPromptInput.disabled = false;
@@ -672,6 +794,7 @@
 
                 noticeTitle.innerHTML = newTitle;
                 noticeContent.innerHTML = newContent;
+                saveContent(); // Salva o novo conteúdo gerado pela IA
 
                 aiGeneratorModal.style.display = 'none';
             });
