@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comunicado Maxx Internet</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         /* Reset básico */
         * {
@@ -15,7 +14,7 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif; /* Usa a fonte Inter */
+            font-family: 'Arial', sans-serif; /* Revertido para a fonte original */
             background: linear-gradient(135deg, #FF9300 0%, #FF7000 100%);
             display: flex;
             align-items: center;
@@ -79,11 +78,11 @@
 
         .card {
             background: #FFFFFF;
-            border-radius: 20px; /* Bordas mais arredondadas */
+            border-radius: 16px; /* Original */
             width: 100%;
-            max-width: 420px; /* Levemente maior */
-            padding: 25px; /* Mais padding */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Sombra mais pronunciada */
+            max-width: 400px; /* Original */
+            padding: 20px; /* Original */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Original */
             position: relative;
             opacity: 0; /* Escondido para animação de entrada */
             animation: fadeIn 0.8s ease-out forwards;
@@ -92,23 +91,23 @@
 
         .icons {
             position: absolute;
-            top: -25px; /* Ajuste para borda mais arredondada */
-            left: 25px;
+            top: -20px; /* Original */
+            left: 20px; /* Original */
             display: flex;
-            gap: 10px; /* Mais espaço entre os ícones */
+            gap: 8px; /* Original */
         }
 
         .icon {
-            width: 40px; /* Ícones maiores */
-            height: 40px;
-            border-radius: 10px; /* Bordas mais arredondadas */
+            width: 36px; /* Original */
+            height: 36px; /* Original */
+            border-radius: 8px; /* Original */
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px; /* Fonte maior */
+            font-size: 20px; /* Original */
             color: #fff;
             font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil nos ícones */
+            /* box-shadow removido para o estilo original */
         }
 
         .icon-warning {
@@ -121,27 +120,27 @@
 
         .dots {
             position: absolute;
-            top: -15px; /* Ajuste para borda mais arredondada */
-            right: 25px;
+            top: -10px; /* Original */
+            right: 20px; /* Original */
             color: #FFFFFF;
-            font-size: 28px; /* Pontos maiores */
-            letter-spacing: 5px; /* Mais espaçamento */
+            font-size: 24px; /* Original */
+            letter-spacing: 4px; /* Original */
         }
 
         .title {
             text-align: center;
-            font-size: 32px; /* Título maior */
-            font-weight: 700; /* Mais negrito */
-            color: #FF5722; /* Laranja mais vibrante */
-            margin-bottom: 15px;
+            font-size: 28px; /* Original */
+            font-weight: bold; /* Original */
+            color: #FF7000; /* Original */
+            margin-bottom: 12px; /* Original */
             cursor: text;
         }
 
         .text {
-            font-size: 15px; /* Texto um pouco maior */
-            color: #444444; /* Cor de texto mais suave */
-            line-height: 1.6; /* Espaçamento de linha melhorado */
-            margin-bottom: 20px;
+            font-size: 14px; /* Original */
+            color: #333333; /* Original */
+            line-height: 1.5; /* Original */
+            margin-bottom: 16px; /* Original */
             cursor: text;
         }
 
@@ -150,31 +149,31 @@
         .title[contenteditable="true"]:focus,
         .editable-maxx[contenteditable="true"]:focus {
             outline: none;
-            border: 2px dashed #FF7000; /* Borda mais visível */
-            padding: 3px;
-            border-radius: 6px;
+            border: 1px dashed #FF7000; /* Original */
+            padding: 2px; /* Original */
+            border-radius: 4px; /* Original */
         }
 
         .footer {
-            margin-top: 20px;
+            margin-top: 16px; /* Original */
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-direction: column;
-            gap: 8px; /* Mais espaço no rodapé */
+            gap: 5px; /* Original */
         }
 
         .footer .logo {
-            font-size: 28px; /* Logo maior */
-            font-weight: 700; /* Mais negrito */
-            color: #FF5722;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25); /* Sombra mais suave */
+            font-size: 24px; /* Original */
+            font-weight: bold; /* Original */
+            color: #FF7000; /* Original */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* Original */
             cursor: text;
         }
 
         .footer .instagram {
-            font-size: 15px; /* Instagram um pouco maior */
-            color: #555555;
+            font-size: 14px; /* Original */
+            color: #333333; /* Original */
         }
 
         /* Contêiner para os botões de ação */
@@ -185,7 +184,7 @@
             transform: translateY(-50%);
             display: flex;
             flex-direction: column;
-            gap: 12px; /* Mais espaço entre os botões */
+            gap: 12px; /* Mantido para bom espaçamento */
             z-index: 10;
             opacity: 0; /* Escondido para animação de entrada */
             animation: fadeIn 0.8s ease-out forwards;
@@ -193,26 +192,26 @@
         }
 
         .action-button {
-            background-color: rgba(0, 0, 0, 0.6); /* Mais escuro */
+            background-color: rgba(0, 0, 0, 0.6); /* Mantido para visibilidade */
             color: white;
-            padding: 10px 15px; /* Mais padding */
-            border-radius: 10px; /* Bordas mais arredondadas */
+            padding: 10px 15px; /* Mantido para bom toque */
+            border-radius: 10px; /* Mantido para bom visual */
             border: none;
             cursor: pointer;
-            font-size: 15px; /* Fonte maior */
+            font-size: 15px; /* Mantido para legibilidade */
             display: flex;
             flex-direction: column;
             align-items: flex-start;
             justify-content: center;
             gap: 3px;
             text-align: left;
-            transition: background-color 0.3s ease-in-out, transform 0.2s ease-out, box-shadow 0.2s ease-out; /* Transições para hover */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Mantido para profundidade */
         }
 
         .action-button:hover {
             background-color: rgba(0, 0, 0, 0.8);
-            transform: translateY(-3px); /* Efeito de "levantar" */
+            transform: translateY(-3px);
             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
         }
 
@@ -222,8 +221,8 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.8); /* Mais escuro */
-            padding: 10px 20px; /* Mais padding */
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
             border-radius: 10px;
             display: flex;
             gap: 12px;
@@ -237,17 +236,17 @@
             background-color: #FF7000;
             color: white;
             border: none;
-            padding: 8px 15px; /* Mais padding */
+            padding: 8px 15px;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: 600; /* Mais negrito */
+            font-weight: 600;
             transition: background-color 0.2s ease, transform 0.1s ease;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .text-editor-toolbar button:hover {
             background-color: #FF9300;
-            transform: translateY(-2px); /* Efeito de "levantar" */
+            transform: translateY(-2px);
         }
 
         /* Estilos para o modal de geração AI */
@@ -257,13 +256,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.75); /* Mais escuro */
+            background-color: rgba(0, 0, 0, 0.75);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 200;
-            opacity: 0; /* Escondido para transição */
-            visibility: hidden; /* Escondido para transição */
+            opacity: 0;
+            visibility: hidden;
             transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         }
 
@@ -274,16 +273,16 @@
 
         .ai-modal-content {
             background-color: white;
-            padding: 35px; /* Mais padding */
+            padding: 35px;
             border-radius: 20px;
             width: 90%;
-            max-width: 650px; /* Maior */
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra mais forte */
+            max-width: 650px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 20px; /* Mais espaço */
-            transform: translateY(20px); /* Para animação de entrada */
+            gap: 20px;
+            transform: translateY(20px);
             transition: transform 0.3s ease-out;
         }
 
@@ -299,14 +298,14 @@
         }
 
         .ai-modal-header h3 {
-            font-size: 26px; /* Título maior */
+            font-size: 26px;
             color: #FF7000;
             margin: 0;
             font-weight: 600;
         }
 
         .ai-modal-close {
-            font-size: 35px; /* Ícone de fechar maior */
+            font-size: 35px;
             cursor: pointer;
             color: #999;
             transition: color 0.2s ease;
@@ -318,9 +317,9 @@
 
         .ai-modal-body textarea {
             width: 100%;
-            min-height: 150px; /* Altura maior */
+            min-height: 150px;
             padding: 12px;
-            border: 1px solid #ccc; /* Borda mais suave */
+            border: 1px solid #ccc;
             border-radius: 10px;
             resize: vertical;
             font-size: 15px;
@@ -328,7 +327,7 @@
         }
 
         .ai-modal-body .ai-output-display {
-            background-color: #f0f0f0; /* Fundo mais claro */
+            background-color: #f0f0f0;
             border: 1px solid #e0e0e0;
             padding: 18px;
             border-radius: 10px;
@@ -350,7 +349,7 @@
         }
 
         .ai-modal-footer button {
-            padding: 12px 25px; /* Mais padding */
+            padding: 12px 25px;
             border-radius: 10px;
             border: none;
             cursor: pointer;
@@ -370,7 +369,7 @@
         }
 
         .ai-modal-footer .btn-secondary {
-            background-color: #e0e0e0; /* Cinza mais claro */
+            background-color: #e0e0e0;
             color: #555;
         }
 
@@ -386,13 +385,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6); /* Mais escuro */
+            background-color: rgba(0, 0, 0, 0.6);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             color: white;
-            font-size: 1.6rem; /* Fonte maior */
+            font-size: 1.6rem;
             font-weight: 600;
             display: none;
         }
