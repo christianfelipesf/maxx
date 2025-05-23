@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/webp" href="logorounded.webp">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plataforma Serviços</title>
+
+  <meta property="og:title" content="Plataforma Serviços" />
+  <meta property="og:description" content="Serviços para usuário contact center." />
+  <meta property="og:image" content="https://christianfelipesf.github.io/maxx/simples.jpg" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Define a fonte Inter para todo o corpo e garante que a altura seja 100% */
+    body {
+      font-family: 'Inter', sans-serif;
+      height: 100vh; /* Altura total da viewport */
+      margin: 0;
+      display: flex; /* Usa flexbox para centralizar o conteúdo */
+      justify-content: center; /* Centraliza horizontalmente */
+      align-items: center; /* Centraliza verticalmente */
+      /* Gradiente de fundo azul para um visual moderno */
+      background: linear-gradient(to bottom right, #4A90E2, #50C878); /* Azul claro para verde esmeralda */
+      overflow: hidden; /* Evita scroll desnecessário */
+    }
+
+    /* Estilos para os links do menu */
+    .menu-list a {
+      display: block;
+      padding: 16px 24px; /* Aumenta o padding para melhor toque */
+      border-radius: 12px; /* Aumenta o arredondamento das bordas */
+      margin-bottom: 12px; /* Espaçamento entre os itens */
+      font-size: 1.1rem;
+      font-weight: 600; /* Semibold */
+      text-decoration: none;
+      color: #333; /* Cor do texto mais escura */
+      background-color: #FFFFFF; /* Fundo branco para os serviços */
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Sombra mais suave */
+      opacity: 0; /* Começa invisível para a animação */
+      transform: translateY(20px); /* Começa um pouco abaixo para a animação */
+      transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+
+    /* Classe para tornar os itens visíveis com animação */
+    .menu-list a.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Efeito hover para os links do menu */
+    .menu-list a:hover {
+      transform: translateY(-3px); /* Leve movimento para cima */
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); /* Sombra mais pronunciada no hover */
+      background-color: #f9f9f9; /* Leve alteração de cor no hover */
+    }
+
+    /* Estilo para o título do menu */
+    .menu-label {
+      font-size: 1.35rem; /* Aumenta o tamanho da fonte */
+      margin-bottom: 15px;
+      color: #333; /* Cor do texto mais escura */
+      font-weight: 700; /* Bold */
+    }
+
+    /* Container principal para centralizar o menu */
+    .container {
+      max-width: 500px; /* Largura máxima para o menu */
+      width: 90%; /* Responsividade */
+      padding: 25px; /* Padding interno */
+    }
+
+    /* Estilos para o bloco do menu principal */
+    #services-menu {
+      background-color: rgba(255, 255, 255, 0.95); /* Fundo branco semi-transparente */
+      border-radius: 15px; /* Bordas mais arredondadas */
+      padding: 30px; /* Padding maior */
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Sombra mais proeminente */
+      opacity: 0; /* Começa invisível para a animação de entrada */
+      transform: scale(0.95); /* Começa um pouco menor para a animação */
+      transition: opacity 0.8s ease, transform 0.8s ease; /* Transição mais longa */
+      max-height: 90vh; /* Altura máxima para o menu */
+      overflow-y: auto; /* Adiciona scroll se o conteúdo for muito grande */
+    }
+
+    /* Classe para tornar o menu visível com animação */
+    #services-menu.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Estilos para a mensagem de carregamento e spinner */
+    #loading-message {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 20px 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .fade-out {
+      opacity: 0;
+    }
+
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 0;
+    }
+
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #4A90E2; /* Cor do spinner combinando com o fundo */
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Oculta o botão de alternar estilo que não será mais usado */
+    .is-style-toggle {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <section class="section">
+    <div class="container">
+      <div class="has-text-centered is-style-toggle">
+        <button id="toggle-style" class="button is-link is-small">Alternar Estilo</button>
+      </div>
+
+      <div class="menu" id="services-menu">
+        <h1 class="title has-text-centered text-2xl font-bold mb-6 text-gray-800">Plataforma de Serviços</h1>
+        <p class="menu-label">Serviços Disponíveis</p>
+        <ul class="menu-list" id="services-list">
+          <li id="loading-message">Carregando serviços...</li>
+        </ul>
+        <div id="loading-spinner" class="loading-spinner" style="display: none;">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Este é um mapa de exemplo para os serviços.
+    // Em um ambiente real, 'serviceMap' viria de um arquivo JS externo ou de uma API.
+    // Para este exemplo, ele está embutido para demonstração.
+    const serviceMap = {
+      'servico1.html': { name: 'Serviço de Atendimento', icon: '📞' },
+      'servico2.html': { name: 'Consulta de Dados', icon: '📊' },
+      'servico3.html': { name: 'Suporte Técnico', icon: '🔧' },
+      'servico4.html': { name: 'FAQ e Ajuda', icon: '❓' },
+      'servico5.html': { name: 'Relatórios', icon: '📈' },
+      'servico6.html': { name: 'Configurações', icon: '⚙️' },
+      'servico7.html': { name: 'Chat Online', icon: '💬' },
+      'servico8.html': { name: 'Agendamento', icon: '📅' },
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const servicesEndpoint1 = '/api/services';
+      const servicesEndpoint2 = 'http://localhost:3000/api/services';
+      const servicesDirectory = 'servicos';
+      const listContainer = document.getElementById('services-list');
+      const loadingMessage = document.getElementById('loading-message');
+      const loadingSpinner = document.getElementById('loading-spinner');
+      const servicesMenu = document.getElementById('services-menu');
+
+      // Função para buscar os serviços de um endpoint
+      async function fetchServices(endpoint) {
+        try {
+          const response = await fetch(endpoint);
+          if (!response.ok) throw new Error("Erro ao buscar serviços.");
+          return await response.json();
+        } catch (error) {
+          console.error(`Erro ao buscar serviços do endpoint ${endpoint}:`, error);
+          return null;
+        }
+      }
+
+      // Função para renderizar os serviços na lista
+      async function renderServicos() {
+        listContainer.innerHTML = ''; // Limpa a lista antes de renderizar
+        loadingMessage.classList.remove('fade-out'); // Mostra a mensagem de carregamento
+        loadingSpinner.style.display = 'flex'; // Mostra o spinner
+
+        let services = await fetchServices(servicesEndpoint1);
+        if (!services) {
+          console.log("Tentando o segundo endpoint para serviços...");
+          services = await fetchServices(servicesEndpoint2);
+        }
+
+        loadingSpinner.style.display = 'none'; // Esconde o spinner
+        loadingMessage.classList.add('fade-out'); // Esconde a mensagem de carregamento
+
+        if (!services) {
+          listContainer.innerHTML = `<li class="text-red-500">Erro ao carregar os serviços. Por favor, tente novamente mais tarde.</li>`;
+          return;
+        }
+
+        if (!Array.isArray(services) || services.length === 0) {
+          listContainer.innerHTML = `<li><em class="text-gray-500">Nenhum serviço encontrado.</em></li>`;
+          return;
+        }
+
+        // Itera sobre os serviços e cria os elementos HTML
+        services.forEach((filename, index) => {
+          const item = serviceMap[filename];
+          if (!item) {
+            console.warn(`Serviço '${filename}' não encontrado no serviceMap.`);
+            return;
+          }
+
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = `${servicesDirectory}/${filename}`;
+          a.innerHTML = `${item.icon} ${item.name}`;
+
+          li.appendChild(a);
+          listContainer.appendChild(li);
+
+          // Adiciona a classe 'visible' com um pequeno atraso para a animação sequencial
+          setTimeout(() => {
+            a.classList.add('visible');
+          }, 100 * index);
+        });
+      }
+
+      // Renderiza os serviços ao carregar a página
+      renderServicos();
+      // Ativa a animação de entrada do bloco principal do menu
+      servicesMenu.classList.add('visible');
+    });
+  </script>
+</body>
+</html>
