@@ -7,66 +7,24 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
-    textarea {
-      width: 300px;
-      height: 10px;
-    }
+    textarea { width: 300px; height: 10px; }
     .popup {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #4CAF50;
-      color: white;
-      padding: 10px;
-      border-radius: 5px;
-      display: none;
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: #4CAF50; color: white; padding: 10px; border-radius: 5px; display: none;
     }
-    .bottom-button {
-      margin-top: 30px;
-      text-align: center;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    #history {
-      margin-top: 20px;
-      background: #f5f5f5;
-      padding: 15px;
-      border-radius: 5px;
-    }
+    .bottom-button { margin-top: 30px; text-align: center; display: flex; justify-content: center; align-items: center; }
+    #history { margin-top: 20px; background: #f5f5f5; padding: 15px; border-radius: 5px; }
     .history-item {
-      opacity: 0;
-      animation: fadeIn 0.5s forwards;
-      border-bottom: 1px solid #ccc;
-      padding: 5px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      opacity: 0; animation: fadeIn 0.5s forwards; border-bottom: 1px solid #ccc;
+      padding: 5px 0; display: flex; justify-content: space-between; align-items: center;
       transition: all 0.3s ease;
     }
-    .history-item span {
-      flex-grow: 1;
-      transition: all 0.3s ease;
-    }
-    .history-item:hover {
-      background-color: #e6f7ff;
-      transform: translateX(5px);
-    }
-    .history-item:hover span {
-      font-weight: bold;
-    }
-    .history-item:last-child {
-      border-bottom: none;
-    }
-    .copy-btn {
-      margin-left: 15px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    .history-item:hover .copy-btn {
-      opacity: 1;
-    }
+    .history-item span { flex-grow: 1; transition: all 0.3s ease; }
+    .history-item:hover { background-color: #e6f7ff; transform: translateX(5px); }
+    .history-item:hover span { font-weight: bold; }
+    .history-item:last-child { border-bottom: none; }
+    .copy-btn { margin-left: 15px; opacity: 0; transition: opacity 0.3s ease; }
+    .history-item:hover .copy-btn { opacity: 1; }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -83,12 +41,26 @@
         <textarea id="inputData" class="textarea textarea has-fixed-size is-link" placeholder="Cole os dados aqui..."></textarea>
       </div>
     </div>
+
+    <div class="field">
+      <label class="label">Formato de Saída</label>
+      <div class="control">
+        <div class="select">
+          <select id="caseStyle" onchange="processData()">
+            <option value="lower">lower case</option>
+            <option value="sentence">Sentence case</option>
+            <option value="upper">UPPER CASE</option>
+            <option value="capitalized">Capitalized Case</option>
+            <option value="title">Title Case</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <div class="field mt-4">
       <label class="label">Resultado</label>
       <div class="control is-loading">
-        <!--<input type="text" id="outputData" class="input" readonly> -->
         <textarea id="outputData" class="textarea textarea has-fixed-size is-link" readonly></textarea>
-
       </div>
     </div>
     <div class="control mt-2">
@@ -117,7 +89,6 @@
   }
 
   function parseONUData(data) {
-    console.log(data)
     const lines = data.split('\n');
     let formattedData = {};
     for (let i = 0; i < lines.length; i++) {
@@ -156,11 +127,22 @@
       .join(', ');
   }
 
+  function applyCaseStyle(text, style) {
+    switch (style) {
+      case 'lower': return text.toLowerCase();
+      case 'upper': return text.toUpperCase();
+      case 'sentence': return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+      case 'capitalized': return text.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      case 'title': return text.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+      default: return text;
+    }
+  }
+
   function animateOutput(text, duration = 3000, style = 'typewriter') {
     const inputField = document.getElementById('inputData');
     const outputField = document.getElementById('outputData');
     const copyButton = document.getElementById('copyButton');
-    copyButton.disabled = true; // desativa antes de começar
+    copyButton.disabled = true;
     const originalInput = inputField.value;
 
     if (style === 'none') {
@@ -179,18 +161,20 @@
         i++;
       } else {
         clearInterval(interval);
-        copyButton.disabled = false; // habilita após animação
+        copyButton.disabled = false;
       }
     }, delay);
   }
 
   function processData() {
     const inputText = document.getElementById('inputData').value;
+    const caseStyle = document.getElementById('caseStyle')?.value || 'lower';
     const parsedData = parseONUData(inputText);
     if (Object.keys(parsedData).length > 0) {
       const timestamp = new Date().toLocaleString();
-      const formattedText = `Osiris: ${formatInline(parsedData)} (${timestamp})`;
-      const style = document.getElementById('animationStyle')?.value ?? 'typewriter';
+      let formattedText = `Osiris: ${formatInline(parsedData)} (${timestamp})`;
+      formattedText = applyCaseStyle(formattedText, caseStyle);
+      const style = 'typewriter';
       animateOutput(formattedText, 50, style);
     }
   }
@@ -201,12 +185,9 @@
       showError("Nenhum texto formatado recentemente!");
       return;
     }
-    const timestamp = new Date().toLocaleString();
-    //const textWithTimestamp = `${text} (${timestamp})`; // tirar timestanp 2 vezes seguidas...
-    const textWithTimestamp = `${text}`;
-    navigator.clipboard.writeText(textWithTimestamp).then(() => {
+    navigator.clipboard.writeText(text).then(() => {
       showPopup("Copiado para a área de transferência!", "#4CAF50");
-    }).catch(err => console.error('Erro ao copiar:', err));
+    });
   }
 
   function showPopup(message, color) {
@@ -260,7 +241,6 @@
 
   function voltar() {
     const hostname = window.location.hostname;
-    
     if (hostname.includes("onrender.com")) {
       window.location.href = "../indexnewst.html";
     } else {
