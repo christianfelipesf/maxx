@@ -131,9 +131,17 @@
 
         <!-- Seção de Produtos -->
         <h5>Produtos</h5>
+        
+        <!-- NOVO: Campo de texto para inserção em massa -->
+        <div class="mb-3">
+            <label for="bulkProductInput" class="form-label"><b>Inserção Rápida de Produtos</b></label>
+            <textarea class="form-control" id="bulkProductInput" rows="5" placeholder="Cole sua lista de produtos aqui. Formato por linha: Nome do Produto, Quantidade, Valor Unitário&#10;Exemplo:&#10;Maçã, 10, 2.50&#10;Banana, 15, 1.99&#10;Leite, 5, 4.00"></textarea>
+            <button type="button" class="btn btn-info mt-2" onclick="processarListaProdutos()">Processar Lista</button>
+        </div>
+        
         <div id="products"></div>
         <button type="button" class="btn btn-secondary my-2" onclick="addProduct()">
-          Adicionar Produto
+          Adicionar Produto Manualmente
         </button>
 
         <hr class="my-4" />
@@ -239,6 +247,7 @@
         localStorage.removeItem(LOCAL_STORAGE_KEY);
         document.getElementById("expenseForm").reset();
         document.getElementById("products").innerHTML = "";
+        document.getElementById("bulkProductInput").value = ""; // Limpa a área de texto também
         productCount = 0;
         
         const today = new Date().toISOString().split("T")[0];
@@ -250,6 +259,45 @@
       }
 
       // --- Funções de Manipulação do DOM (Produtos) ---
+      
+      // NOVO: Função para processar a lista de produtos colada
+      function processarListaProdutos() {
+        const bulkInput = document.getElementById("bulkProductInput");
+        const lines = bulkInput.value.trim().split('\n');
+        
+        if (lines.length === 0 || (lines.length === 1 && lines[0] === '')) {
+            showModal("A área de texto está vazia. Cole os produtos para processar.", "error", false);
+            setTimeout(closeModal, 3000);
+            return;
+        }
+
+        // Limpa produtos existentes
+        document.getElementById("products").innerHTML = "";
+        productCount = 0;
+
+        lines.forEach(line => {
+            // Tenta extrair os dados. Permite separadores como vírgula, espaço ou tabulação.
+            // Pega o último valor como preço, o penúltimo como quantidade, e o resto como nome.
+            const parts = line.split(/[\s,;\t]+/).filter(Boolean);
+            if (parts.length >= 3) {
+                const valorStr = parts.pop().replace(',', '.');
+                const quantidadeStr = parts.pop().replace(',', '.');
+                const nome = parts.join(' ');
+
+                const productData = {
+                    nome: nome,
+                    quantidade: parseFloat(quantidadeStr) || 1,
+                    valor: parseFloat(valorStr) || 0
+                };
+                addProduct(productData);
+            }
+        });
+        
+        // Limpa o campo de texto após o processamento
+        bulkInput.value = "";
+        showModal(`${lines.length} produtos processados e adicionados à lista!`, "success", false);
+        setTimeout(closeModal, 2500);
+      }
 
       function addProduct(productData = {}) {
         const id = productCount;
@@ -295,7 +343,8 @@
 
         productCount++;
         updateTotal(id);
-        if(!productData.nome) {
+        // Salva apenas se for uma adição manual, a inserção em massa salva no final
+        if(!productData.nome) { 
             saveData();
         }
       }
@@ -377,8 +426,6 @@
       // --- Funções de Validação e Exportação (Lógica mantida) ---
 
       function validateAndExport() {
-        // A sua lógica de validação original pode ser mantida aqui.
-        // Certifique-se de incluir o campo 'valorAdiantamento' na validação.
         showModal("Validação e exportação acionadas. O download começará em breve.", "success", false);
         startCountdown(3);
       }
