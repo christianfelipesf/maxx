@@ -1,53 +1,22 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <link rel="icon" type="image/webp" href="logorounded.webp">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma Serviços</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <meta property="og:title" content="Plataforma Serviços" />
+    <meta property="og:description" content="Serviços para usuário contact center." />
+    <meta property="og:image" content="https://christianfelipesf.github.io/maxx/simples.jpg" />
+    <!-- Carrega o Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos CSS */
-        .card-link {
-            display: block;
-            text-decoration: none;
-            color: inherit;
+        /* Define a fonte Inter para todo o corpo */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Cor de fundo suave */
         }
-        .card {
-            transition: transform 0.3s, box-shadow 0.3s;
-            border-radius: 10px;
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-            min-height: 150px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .card.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .card:hover {
-            transform: scale(1.08);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-        }
-        .columns.is-centered {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        @media screen and (max-width: 768px) {
-            .columns {
-                flex-direction: column;
-                align-items: center;
-            }
-            .column {
-                width: 100%;
-                max-width: 400px;
-            }
-        }
+
         /* Estilos para a animação de carregamento */
         .loading-animation {
             display: flex;
@@ -58,7 +27,7 @@
         .spinner {
             border: 5px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
-            border-top-color: #007bff; /* Cor azul Bootstrap */
+            border-top-color: #041461; /* Cor do spinner baseada na paleta */
             width: 50px;
             height: 50px;
             animation: spin 1s linear infinite;
@@ -66,19 +35,29 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Animação para os itens da lista */
+        .service-item-enter {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .service-item-enter-active {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
     </style>
 </head>
-<body>
-    <section class="section">
-        <div class="container has-text-centered">
-            <h1 class="title">Plataforma Serviços</h1>
-            <div id="cards-container" class="columns is-centered is-multiline">
-                <div id="loading-message" class="loading-animation">
-                    <div class="spinner"></div>
-                </div>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center py-10">
+    <div class="container mx-auto px-4 max-w-3xl">
+        <h1 class="text-4xl font-bold text-center mb-8 text-[]">Serviços</h1>
+
+        <div id="service-list-container" class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div id="loading-message" class="loading-animation">
+                <div class="spinner"></div>
             </div>
         </div>
-    </section>
+    </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -88,35 +67,23 @@
             const repo = 'maxx';
             // ***************************
 
-            // --- DEFINIÇÃO DE CORES NO SCRIPT ---
-            const colorPairs = [
-                { bg: '#209cee', text: 'white' },
-                { bg: '#ffdd57', text: 'black' },
-                { bg: '#48c78e', text: 'white' },
-                { bg: '#ff3860', text: 'white' },
-                { bg: '#d2dae2', text: 'white' },
-                { bg: '#00d1b2', text: 'white' },
-                { bg: '#f14668', text: 'white' },
-                { bg: '#3273dc', text: 'white' },
-                { bg: '#23d160', text: 'white' },
-                { bg: '#ff6b6b', text: 'white' },
-                { bg: '#ff9f43', text: 'black' },
-                { bg: '#6c5ce7', text: 'white' },
-                { bg: '#00cec9', text: 'black' },
-                { bg: '#e17055', text: 'white' },
-                { bg: '#0984e3', text: 'white' },
-                { bg: '#fd79a8', text: 'white' },
-                { bg: '#ffeaa7', text: 'black' },
-                { bg: '#fab1a0', text: 'black' },
-                { bg: '#a29bfe', text: 'black' },
-                { bg: '#81ecec', text: 'black' },
-            ];
-
-            const path = 'servicos';
+            const path = 'servicos'; // Caminho para a pasta de serviços
             const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-            const container = document.getElementById('cards-container');
+            const container = document.getElementById('service-list-container');
             const loadingMessage = document.getElementById('loading-message');
 
+            // Lista de emojis para usar
+            const emojis = [
+                '📄', '🔗', '💡', '🚀', '⭐', '✨', '🛠️', '📊', '💬', '🔍',
+                '🌐', '⚙️', '✅', '🔔', '📧', '🧑‍💻', '📚', '🏠', '📈', '🧩'
+            ];
+
+            /**
+             * Formata o nome do arquivo para um título legível.
+             * Ex: "meu-servico.html" -> "Meu Servico"
+             * @param {string} filename - O nome do arquivo.
+             * @returns {string} O título formatado.
+             */
             function formatTitle(filename) {
                 let title = filename.replace('.html', '');
                 title = title.replace(/[-_]/g, ' ');
@@ -126,89 +93,94 @@
                 return title;
             }
 
-            async function fetchAndGenerateCards() {
-                let currentColorIndex = 0;
-
+            /**
+             * Busca os arquivos HTML do GitHub e gera a lista de serviços.
+             */
+            async function fetchAndGenerateServiceList() {
                 try {
                     const response = await fetch(apiUrl);
                     if (!response.ok) {
                         let errorMsg = `Erro na API do GitHub: ${response.status} ${response.statusText}`;
-                        try { const errorData = await response.json(); errorMsg += ` - ${errorData.message || JSON.stringify(errorData)}`; } catch (e) { /* Ignora */ }
+                        try {
+                            const errorData = await response.json();
+                            errorMsg += ` - ${errorData.message || JSON.stringify(errorData)}`;
+                        } catch (e) {
+                            /* Ignora erros ao tentar parsear a mensagem de erro */
+                        }
                         throw new Error(errorMsg);
                     }
                     const files = await response.json();
 
                     console.log("Dados recebidos da API:", files);
 
+                    // Remove a mensagem de carregamento
                     if (loadingMessage) { loadingMessage.remove(); }
-                    if (!Array.isArray(files)) { throw new Error("Formato inesperado na resposta da API."); }
 
+                    if (!Array.isArray(files)) {
+                        throw new Error("Formato inesperado na resposta da API.");
+                    }
+
+                    // Filtra apenas arquivos HTML
                     const htmlFiles = files.filter(file => file.type === 'file' && file.name.endsWith('.html'));
 
                     console.log("Arquivos HTML filtrados:", htmlFiles);
 
                     if (htmlFiles.length === 0) {
-                        container.innerHTML = '<p>Nenhum serviço (arquivo .html) encontrado diretamente na pasta `servicos`.</p>';
+                        container.innerHTML = '<p class="text-center text-gray-600 p-6">Nenhum serviço (arquivo .html) encontrado diretamente na pasta `servicos`.</p>';
                         return;
                     }
 
-                    htmlFiles.forEach((file, loopIndex) => {
-                        const cardColumn = document.createElement('div');
-                        cardColumn.className = 'column is-4';
+                    // Gera os itens da lista para cada arquivo HTML
+                    htmlFiles.forEach((file, index) => {
+                        const serviceLink = document.createElement('a');
+                        serviceLink.href = `${path}/${file.name}`;
+                        // Adiciona classes Tailwind para estilização e hover
+                        serviceLink.className = 'flex items-center p-4 border-b border-gray-200 hover:bg-gray-50 transition duration-300 ease-in-out transform hover:translate-x-1 no-underline text-current group service-item-enter';
+                        serviceLink.style.animationDelay = `${index * 0.1}s`; // Atraso para animação de entrada
 
-                        const cardLink = document.createElement('a');
-                        cardLink.href = `${path}/${file.name}`;
-                        cardLink.className = 'card-link';
+                        // Adiciona a classe para iniciar a animação após um pequeno atraso
+                        setTimeout(() => {
+                            serviceLink.classList.add('service-item-enter-active');
+                        }, 10); // Pequeno atraso para garantir que a classe 'enter' seja aplicada primeiro
 
-                        const cardDiv = document.createElement('div');
-                        cardDiv.className = 'card';
+                        // Seleciona um emoji diferente para cada item
+                        const selectedEmoji = emojis[index % emojis.length];
 
-                        const selectedColor = colorPairs[currentColorIndex];
-                        cardDiv.style.backgroundColor = selectedColor.bg;
-                        cardDiv.style.color = selectedColor.text;
+                        const serviceIcon = document.createElement('span');
+                        serviceIcon.className = 'text-3xl mr-4'; // Tamanho maior para o emoji e margem
+                        serviceIcon.textContent = selectedEmoji; // Define o emoji como texto do span
 
-                        console.log(`File: ${file.name}, SequentialIndex: ${currentColorIndex}, Applied BG: ${selectedColor.bg}, Applied Text: ${selectedColor.text}`);
-
-                        currentColorIndex = (currentColorIndex + 1) % colorPairs.length;
-
-                        const cardContent = document.createElement('div');
-                        cardContent.className = 'card-content';
+                        const serviceContent = document.createElement('div');
+                        serviceContent.className = 'flex-grow'; // Permite que o conteúdo ocupe o espaço disponível
 
                         const titleP = document.createElement('p');
-                        titleP.className = 'title is-4';
+                        titleP.className = 'text-lg font-semibold text-[] group-hover:text-blue-700'; // Cor do título e hover
                         titleP.textContent = formatTitle(file.name);
 
                         const subtitleP = document.createElement('p');
-                        subtitleP.className = 'subtitle is-6';
-                        subtitleP.style.color = `${selectedColor.text}b3`;
+                        subtitleP.className = 'text-sm text-gray-600'; // Cor do subtítulo
                         subtitleP.textContent = `Acessar ${formatTitle(file.name)}`;
 
-                        cardContent.appendChild(titleP);
-                        cardContent.appendChild(subtitleP);
-                        cardDiv.appendChild(cardContent);
-                        cardLink.appendChild(cardDiv);
-                        cardColumn.appendChild(cardLink);
-                        container.appendChild(cardColumn);
-
-                        // Aplica animação de entrada com atraso e opacidade
-                        setTimeout(() => {
-                            cardDiv.classList.add("visible");
-                        }, loopIndex * 100); // Atraso aumentado para melhor visualização
+                        serviceContent.appendChild(titleP);
+                        serviceContent.appendChild(subtitleP);
+                        serviceLink.appendChild(serviceIcon);
+                        serviceLink.appendChild(serviceContent);
+                        container.appendChild(serviceLink);
                     });
 
                 } catch (error) {
-                    console.error('Falha ao buscar ou gerar cards:', error);
+                    console.error('Falha ao buscar ou gerar a lista de serviços:', error);
                     if (loadingMessage) { loadingMessage.remove(); }
                     container.innerHTML = `
-                        <div class="notification is-danger">
-                            <p><strong>Erro ao carregar os serviços.</strong></p>
+                        <div class="p-6 bg-red-100 border border-red-400 text-red-700 rounded-lg" role="alert">
+                            <p class="font-bold">Erro ao carregar os serviços.</p>
                             <p>Verifique o console (F12) para detalhes técnicos.</p>
-                            <p><small>Mensagem: ${error.message}</small></p>
+                            <p class="text-sm">Mensagem: ${error.message}</p>
                         </div>`;
                 }
             }
 
-            fetchAndGenerateCards();
+            fetchAndGenerateServiceList();
         });
     </script>
 </body>
