@@ -5,147 +5,365 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comunicado Maxx Internet</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-orange-light': '#FF9300',
-                        'primary-orange-dark': '#FF7000',
-                        'text-dark-gray': '#333333',
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        /* Define a fonte Inter para todo o corpo */
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Animação de fade out para a tela de carregamento */
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; visibility: hidden; }
-        }
-
-        /* Animação de fade in para elementos */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Animação de rotação para o spinner */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Estilos da tela de carregamento */
-        #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #FF7000; /* Cor primária da sua paleta */
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FF9300 0%, #FF7000 100%);
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            z-index: 9999;
-            color: white;
-            font-size: 1.5rem;
-            opacity: 1;
-            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative; /* Necessário para posicionar o botão de download fixo */
         }
 
-        #loading-screen.hidden {
-            animation: fadeOut 0.5s forwards;
+        .card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
         }
 
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+        .icons {
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .icon-warning {
+            background: #FFC200;
+        }
+
+        .icon-alert {
+            background: #FF6A00;
+        }
+
+        .dots {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            color: #FFFFFF;
+            font-size: 24px;
+            letter-spacing: 4px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #FF7000;
+            margin-bottom: 12px;
+            cursor: text;
+        }
+
+        .text {
+            font-size: 14px;
+            color: #333333;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            cursor: text;
         }
 
         /* Estilos para o conteúdo editável */
-        [contenteditable="true"]:focus {
+        .text[contenteditable="true"]:focus,
+        .title[contenteditable="true"]:focus,
+        .editable-maxx[contenteditable="true"]:focus {
             outline: none;
             border: 1px dashed #FF7000;
             padding: 2px;
             border-radius: 4px;
         }
 
-        /* Overlay de carregamento para a IA */
+        .footer {
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .footer .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF7000;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            cursor: text; /* Torna o logo editável */
+        }
+
+        .footer .instagram {
+            font-size: 14px;
+            color: #333333;
+        }
+
+        /* Contêiner para os botões de ação */
+        #action-buttons-container {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Espaço entre os botões */
+            z-index: 10;
+        }
+
+        .action-button {
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparente */
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column; /* Para quebra de linha no texto do botão */
+            align-items: flex-start; /* Alinha o texto à esquerda */
+            justify-content: center;
+            gap: 2px; /* Espaçamento entre as linhas do texto */
+            text-align: left; /* Alinha o texto à esquerda */
+            transition: background-color 0.3s ease-in-out; /* Transição para hover */
+        }
+
+        .action-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        /* Estilos para a barra de ferramentas de edição de texto */
+        .text-editor-toolbar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+            opacity: 0; /* Escondido por padrão */
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .text-editor-toolbar button {
+            background-color: #FF7000;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+
+        .text-editor-toolbar button:hover {
+            background-color: #FF9300;
+        }
+
+        /* Estilos para o modal de geração AI */
+        .ai-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200; /* Acima de tudo */
+            display: none; /* Escondido por padrão */
+        }
+
+        .ai-modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .ai-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .ai-modal-header h3 {
+            font-size: 24px;
+            color: #FF7000;
+            margin: 0;
+        }
+
+        .ai-modal-close {
+            font-size: 30px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .ai-modal-close:hover {
+            color: #666;
+        }
+
+        .ai-modal-body textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 14px;
+        }
+
+        .ai-modal-body .ai-output-display {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+            color: #555;
+            white-space: pre-wrap; /* Preserva quebras de linha */
+            word-wrap: break-word; /* Quebra palavras longas */
+        }
+
+        .ai-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .ai-modal-footer button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+
+        .ai-modal-footer .btn-primary {
+            background-color: #FF7000;
+            color: white;
+        }
+
+        .ai-modal-footer .btn-primary:hover {
+            background-color: #FF9300;
+        }
+
+        .ai-modal-footer .btn-secondary {
+            background-color: #ccc;
+            color: #333;
+        }
+
+        .ai-modal-footer .btn-secondary:hover {
+            background-color: #bbb;
+        }
+
+        /* Overlay de carregamento */
         .loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             color: white;
-            font-size: 1.6rem;
-            font-weight: 600;
+            font-size: 1.5rem;
             display: none; /* Escondido por padrão */
+        }
+
+        /* Media queries para responsividade em telas menores */
+        @media (max-width: 600px) {
+            #action-buttons-container {
+                left: 10px; /* Ajusta a posição na esquerda para telas menores */
+                top: 20px; /* Move para o topo para evitar sobreposição no centro */
+                transform: translateY(0);
+                gap: 5px; /* Reduz o espaçamento entre os botões */
+            }
+
+            .action-button {
+                padding: 6px 10px; /* Reduz o padding */
+                font-size: 12px; /* Reduz o tamanho da fonte */
+            }
+
+            .text-editor-toolbar {
+                top: 10px; /* Ajusta a posição da toolbar */
+                padding: 5px 10px;
+                gap: 5px;
+            }
+
+            .text-editor-toolbar button {
+                padding: 4px 8px;
+                font-size: 12px;
+            }
+
+            .ai-modal-content {
+                padding: 20px;
+            }
+
+            .ai-modal-header h3 {
+                font-size: 20px;
+            }
+
+            .ai-modal-close {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-primary-orange-light to-primary-orange-dark flex items-center justify-center min-h-screen p-5 relative overflow-hidden">
-    <!-- Tela de carregamento inicial -->
-    <div id="loading-screen">
-        <div class="spinner"></div>
-        Carregando...
+<body>
+    <div id="textEditorToolbar" class="text-editor-toolbar">
+        <button id="boldButton">B</button>
+        <button id="italicButton">I</button>
+        <button id="underlineButton">U</button>
     </div>
 
-    <!-- Barra de ferramentas de edição de texto -->
-    <div id="textEditorToolbar" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 bg-opacity-80 p-3 rounded-xl flex gap-3 z-50 opacity-0 transition-opacity duration-300 shadow-lg">
-        <button id="boldButton" class="bg-primary-orange-dark hover:bg-primary-orange-light text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:-translate-y-1">B</button>
-        <button id="italicButton" class="bg-primary-orange-dark hover:bg-primary-orange-light text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:-translate-y-1">I</button>
-        <button id="underlineButton" class="bg-primary-orange-dark hover:bg-primary-orange-light text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:-translate-y-1">U</button>
-    </div>
-
-    <!-- Card principal do comunicado -->
-    <div class="card bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl relative opacity-0 animate-[fadeIn_0.8s_ease-out_forwards_0.6s]">
-        <!-- Ícones de aviso/alerta -->
-        <div class="absolute -top-5 left-5 flex gap-2">
-            <div class="icon bg-yellow-400 w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
-                <!-- Ícone de Aviso (Triângulo) -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
-                    <path d="M12 9v4"/>
-                    <path d="M12 17h.01"/>
-                </svg>
-            </div>
-            <div class="icon bg-orange-500 w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
-                <!-- Ícone de Alerta (Sino) -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell">
-                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-                </svg>
-            </div>
+    <div class="card">
+        <div class="icons">
+            <div class="icon icon-warning">!</div>
+            <div class="icon icon-alert">!</div>
         </div>
-        <!-- Pontos decorativos -->
-        <div class="absolute -top-2 right-5 text-white text-3xl tracking-widest">•••</div>
-
-        <!-- Título do comunicado -->
-        <div class="title text-center text-3xl font-bold text-primary-orange-dark mb-3 cursor-text" id="notice-title" contenteditable="true">Comunicado</div>
-        
-        <!-- Conteúdo do comunicado -->
-        <div class="text text-sm text-text-dark-gray leading-relaxed mb-4 cursor-text" id="notice-content" contenteditable="true">
+        <div class="dots">•••</div>
+        <div class="title" id="notice-title" contenteditable="true">Comunicado</div>
+        <div class="text" id="notice-content" contenteditable="true">
             <strong>Prezado cliente,</strong><br>
             Informamos que, no momento, há instabilidade nos serviços de TV e Internet na região de <strong>Santa Rita 2 (Centro)</strong>.<br>
             Nossa equipe já está no local e a previsão de normalização é hoje, <strong>20/05/2025, às 12h30</strong>.
@@ -154,69 +372,63 @@
             <strong>Maxx Internet</strong>
         </div>
 
-        <!-- Rodapé com logo e Instagram -->
-        <div class="footer mt-4 flex flex-col items-center gap-1">
-            <div class="logo text-3xl font-bold text-primary-orange-dark drop-shadow-md cursor-text" id="maxx-name" contenteditable="true">MAXX</div>
-            <div class="instagram text-sm text-text-dark-gray">@sejamaxx</div>
+        <div class="footer">
+            <div class="logo editable-maxx" id="maxx-name" contenteditable="true">MAXX</div>
+            <div class="instagram">@sejamaxx</div>
         </div>
     </div>
 
-    <!-- Contêiner para os botões de ação -->
-    <div id="action-buttons-container" class="fixed left-5 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-10 opacity-0 animate-[fadeIn_0.8s_ease-out_forwards_0.8s] md:flex-row md:bottom-5 md:top-auto md:left-1/2 md:-translate-x-1/2 md:translate-y-0">
-        <button id="downloadPngButton" class="action-button bg-gray-800 bg-opacity-60 hover:bg-opacity-80 text-white py-2 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-start justify-center gap-1 text-left md:flex-row md:items-center">
+    <div id="action-buttons-container">
+        <button id="downloadPngButton" class="action-button">
             ⬇️ Baixar Imagem
         </button>
 
-        <button id="generateAIBtn" class="action-button bg-gray-800 bg-opacity-60 hover:bg-opacity-80 text-white py-2 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-start justify-center gap-1 text-left md:flex-row md:items-center">
-            ✨ Gerar<br class="md:hidden">com IA
+        <button id="generateAIBtn" class="action-button">
+            ✨ Gerar<br>com inteligência artificial
         </button>
 
-        <button id="resetButton" class="action-button bg-gray-800 bg-opacity-60 hover:bg-opacity-80 text-white py-2 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-start justify-center gap-1 text-left md:flex-row md:items-center">
-            🔄 Resetar Textos
+        <button id="resetButton" class="action-button">
+            🔄 Resetar Textos<br>e LocalStorage
         </button>
     </div>
 
-    <!-- Modal de Geração de IA -->
-    <div id="aiGeneratorModal" class="ai-modal-overlay fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-[200] opacity-0 invisible transition-all duration-300">
-        <div class="ai-modal-content bg-white p-8 rounded-3xl w-11/12 max-w-2xl shadow-2xl relative flex flex-col gap-5 transform translate-y-5 transition-transform duration-300">
-            <div class="ai-modal-header flex justify-between items-center mb-4">
-                <h3 class="text-3xl text-primary-orange-dark font-semibold">Gerar Comunicado com IA</h3>
-                <span class="ai-modal-close text-4xl cursor-pointer text-gray-400 hover:text-gray-600 transition-colors duration-200" id="closeAiModal">&times;</span>
+    <div id="aiGeneratorModal" class="ai-modal-overlay">
+        <div class="ai-modal-content">
+            <div class="ai-modal-header">
+                <h3>Gerar Comunicado com IA</h3>
+                <span class="ai-modal-close" id="closeAiModal">&times;</span>
             </div>
-            <div class="ai-modal-body flex flex-col gap-4">
-                <textarea id="aiPromptInput" class="w-full min-h-[150px] p-3 border border-gray-300 rounded-lg resize-y text-base font-sans focus:outline-none focus:ring-2 focus:ring-primary-orange-dark" placeholder="Descreva o comunicado que você deseja gerar (ex: 'Um aviso sobre manutenção na rede amanhã às 10h')."></textarea>
-                <div class="ai-output-display bg-gray-100 border border-gray-200 p-4 rounded-lg min-h-[120px] max-h-[350px] overflow-y-auto text-base text-gray-600 whitespace-pre-wrap break-words shadow-inner" id="aiOutputDisplay" style="display: none;"></div>
+            <div class="ai-modal-body">
+                <textarea id="aiPromptInput" placeholder="Descreva o comunicado que você deseja gerar (ex: 'Um aviso sobre manutenção na rede amanhã às 10h')."></textarea>
+                <div class="ai-output-display" id="aiOutputDisplay" style="display: none;"></div>
             </div>
-            <div class="ai-modal-footer flex justify-end gap-3 mt-5 flex-col sm:flex-row-reverse">
-                <button id="generateAiTextBtn" class="btn-primary bg-primary-orange-dark hover:bg-primary-orange-light text-white py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:-translate-y-1 shadow-md">Gerar</button>
-                <button id="useAiTextBtn" class="btn-primary bg-primary-orange-dark hover:bg-primary-orange-light text-white py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:-translate-y-1 shadow-md" style="display: none;">Usar este Comunicado</button>
-                <button id="cancelAiBtn" class="btn-secondary bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:-translate-y-1 shadow-md">Cancelar</button>
+            <div class="ai-modal-footer">
+                <button id="generateAiTextBtn" class="btn-primary">Gerar</button>
+                <button id="useAiTextBtn" class="btn-primary" style="display: none;">Usar este Comunicado</button>
+                <button id="cancelAiBtn" class="btn-secondary">Cancelar</button>
             </div>
         </div>
     </div>
 
-    <!-- Overlay de carregamento para a geração de IA -->
     <div id="loadingOverlay" class="loading-overlay">
-        <div class="spinner"></div>
         Gerando comunicado...
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const loadingScreen = document.getElementById('loading-screen');
             const card = document.querySelector('.card');
             const downloadPngButton = document.getElementById('downloadPngButton');
             const noticeTitle = document.getElementById('notice-title');
             const noticeContent = document.getElementById('notice-content');
-            const maxxName = document.getElementById('maxx-name');
+            const maxxName = document.getElementById('maxx-name'); // Novo elemento para o nome Maxx
             const textEditorToolbar = document.getElementById('textEditorToolbar');
             const boldButton = document.getElementById('boldButton');
             const italicButton = document.getElementById('italicButton');
             const underlineButton = document.getElementById('underlineButton');
 
             const generateAIBtn = document.getElementById('generateAIBtn');
-            const resetButton = document.getElementById('resetButton');
+            const resetButton = document.getElementById('resetButton'); // Novo botão de reset
             const aiGeneratorModal = document.getElementById('aiGeneratorModal');
             const closeAiModal = document.getElementById('closeAiModal');
             const aiPromptInput = document.getElementById('aiPromptInput');
@@ -225,9 +437,9 @@
             const cancelAiBtn = document.getElementById('cancelAiBtn');
             const aiOutputDisplay = document.getElementById('aiOutputDisplay');
             const loadingOverlay = document.getElementById('loadingOverlay');
-            const actionButtonsContainer = document.getElementById('action-buttons-container');
+            const actionButtonsContainer = document.getElementById('action-buttons-container'); // O novo contêiner
 
-            // Define os limites de caracteres para validação
+            // Define os limites de caracteres
             const MAX_TITLE_LENGTH = 100;
             const MAX_MAXX_NAME_LENGTH = 100;
             const MAX_CONTENT_LENGTH = 2000;
@@ -235,7 +447,7 @@
             // Habilita a edição do título, conteúdo e nome Maxx
             noticeTitle.contentEditable = "true";
             noticeContent.contentEditable = "true";
-            maxxName.contentEditable = "true";
+            maxxName.contentEditable = "true"; // Torna o nome Maxx editável
 
             // --- Funções de LocalStorage e Validação ---
 
@@ -298,62 +510,50 @@
 
             // Função para capturar e baixar o PNG
             downloadPngButton.addEventListener('click', () => {
-                // Salva os estilos originais do card
-                const originalCardOpacity = card.style.opacity;
-                const originalCardAnimation = card.style.animation;
-
-                // Temporariamente define a opacidade do card para 1 e remove a animação
-                card.style.opacity = '1';
-                card.style.animation = 'none';
-
                 // Esconde a barra de ferramentas temporariamente antes de capturar
-                textEditorToolbar.style.opacity = '0';
+                textEditorToolbar.style.opacity = '0'; // Esconde a toolbar
                 textEditorToolbar.style.pointerEvents = 'none';
 
                 // Temporariamente esconde o contêiner dos botões de ação para a captura
                 actionButtonsContainer.style.opacity = '0';
                 actionButtonsContainer.style.pointerEvents = 'none';
 
+
                 // Captura o elemento body inteiro
                 html2canvas(document.body, {
-                    scale: 3, // Aumenta a escala para melhor qualidade
+                    scale: 3,
                     useCORS: true,
                     logging: false
                 }).then(canvas => {
                     const link = document.createElement('a');
                     link.download = 'comunicado_maxx_internet.png';
 
-                    // Define as dimensões para resolução de celular (Instagram Stories/Reels)
-                    const targetWidth = 1080;
-                    const targetHeight = 1350;
+                    const instagramWidth = 1080;
+                    const instagramHeight = 1350;
 
                     const finalCanvas = document.createElement('canvas');
                     const ctx = finalCanvas.getContext('2d');
 
-                    finalCanvas.width = targetWidth;
-                    finalCanvas.height = targetHeight;
+                    finalCanvas.width = instagramWidth;
+                    finalCanvas.height = instagramHeight;
 
-                    // Calcula as proporções para centralizar e cortar a imagem se necessário
                     const capturedAspectRatio = canvas.width / canvas.height;
-                    const targetAspectRatio = targetWidth / targetHeight;
+                    const instagramAspectRatio = instagramWidth / instagramHeight;
 
-                    let sx, sy, sWidth, sHeight; // Source X, Y, Width, Height
-                    if (capturedAspectRatio > targetAspectRatio) {
-                        // A imagem capturada é mais larga que o alvo, corta as laterais
+                    let sx, sy, sWidth, sHeight;
+                    if (capturedAspectRatio > instagramAspectRatio) {
                         sHeight = canvas.height;
-                        sWidth = sHeight * targetAspectRatio;
+                        sWidth = sHeight * instagramAspectRatio;
                         sx = (canvas.width - sWidth) / 2;
                         sy = 0;
                     } else {
-                        // A imagem capturada é mais alta que o alvo, corta em cima/baixo
                         sWidth = canvas.width;
-                        sHeight = sWidth / targetAspectRatio;
+                        sHeight = sWidth / instagramAspectRatio;
                         sx = 0;
                         sy = (canvas.height - sHeight) / 2;
                     }
 
-                    // Desenha a imagem capturada no canvas final com as dimensões desejadas
-                    ctx.drawImage(canvas, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
+                    ctx.drawImage(canvas, sx, sy, sWidth, sHeight, 0, 0, instagramWidth, instagramHeight);
 
                     link.href = finalCanvas.toDataURL('image/png');
                     link.click();
@@ -363,11 +563,6 @@
                     textEditorToolbar.style.pointerEvents = 'auto';
                     actionButtonsContainer.style.opacity = '1';
                     actionButtonsContainer.style.pointerEvents = 'auto';
-
-                    // Restaura os estilos originais do card
-                    card.style.opacity = originalCardOpacity;
-                    card.style.animation = originalCardAnimation;
-
                 }).catch(error => {
                     console.error('Erro ao gerar a imagem:', error);
                     // Restaura a visibilidade dos botões e da barra de ferramentas em caso de erro
@@ -375,10 +570,6 @@
                     textEditorToolbar.style.pointerEvents = 'auto';
                     actionButtonsContainer.style.opacity = '1';
                     actionButtonsContainer.style.pointerEvents = 'auto';
-
-                    // Restaura os estilos originais do card em caso de erro
-                    card.style.opacity = originalCardOpacity;
-                    card.style.animation = originalCardAnimation;
                 });
             });
 
@@ -399,6 +590,7 @@
             }
 
             // Event listener para quando um elemento editável ganha foco
+            // O foco pode ser no título, no conteúdo ou no nome Maxx
             noticeTitle.addEventListener('focus', () => {
                 currentEditableElement = noticeTitle;
                 showToolbar();
@@ -413,6 +605,7 @@
             });
 
             // Event listener para quando um elemento perde o foco
+            // Verifica se o foco está saindo de um elemento editável e não indo para a toolbar
             document.addEventListener('focusout', (event) => {
                 const isLeavingEditable = (event.target === noticeTitle || event.target === noticeContent || event.target === maxxName);
                 const isGoingToToolbar = textEditorToolbar.contains(event.relatedTarget);
@@ -428,7 +621,7 @@
                 const isClickInsideEditable = noticeTitle.contains(event.target) || noticeContent.contains(event.target) || maxxName.contains(event.target);
                 const isClickInsideToolbar = textEditorToolbar.contains(event.target);
                 const isClickInsideModal = aiGeneratorModal.contains(event.target);
-                const isClickOnActionButton = actionButtonsContainer.contains(event.target);
+                const isClickOnActionButton = actionButtonsContainer.contains(event.target); // Verifica se o clique foi dentro do contêiner de botões
 
                 if (!isClickInsideEditable && !isClickInsideToolbar && !isClickInsideModal && !isClickOnActionButton) {
                     hideToolbar();
@@ -436,7 +629,7 @@
                 }
             });
 
-            // Comandos de formatação de texto
+
             boldButton.addEventListener('click', (event) => {
                 event.preventDefault();
                 document.execCommand('bold', false, null);
@@ -476,7 +669,7 @@
             // --- Lógica para a Geração AI ---
 
             generateAIBtn.addEventListener('click', () => {
-                aiGeneratorModal.classList.add('show'); // Adiciona classe para transição
+                aiGeneratorModal.style.display = 'flex';
                 aiPromptInput.value = '';
                 aiOutputDisplay.style.display = 'none';
                 generateAiTextBtn.style.display = 'block';
@@ -485,11 +678,11 @@
             });
 
             closeAiModal.addEventListener('click', () => {
-                aiGeneratorModal.classList.remove('show'); // Remove classe para transição
+                aiGeneratorModal.style.display = 'none';
             });
 
             cancelAiBtn.addEventListener('click', () => {
-                aiGeneratorModal.classList.remove('show'); // Remove classe para transição
+                aiGeneratorModal.style.display = 'none';
             });
 
             generateAiTextBtn.addEventListener('click', async () => {
@@ -499,7 +692,7 @@
                     return;
                 }
 
-                loadingOverlay.style.display = 'flex'; // Mostra o overlay de carregamento
+                loadingOverlay.style.display = 'flex';
                 aiPromptInput.disabled = true;
                 generateAiTextBtn.disabled = true;
                 cancelAiBtn.disabled = true;
@@ -509,7 +702,7 @@
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
                 const payload = { contents: chatHistory };
-                const apiKey = ""; // A chave da API será fornecida pelo ambiente Canvas
+                const apiKey = "AIzaSyCUw6FXegi5XkAK2dJUvRHbCN6PpEEpT3Y"; // API key will be provided by the Canvas environment
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 try {
@@ -524,7 +717,7 @@
                         result.candidates[0].content && result.candidates[0].content.parts &&
                         result.candidates[0].content.parts.length > 0) {
                         const generatedText = result.candidates[0].content.parts[0].text;
-                        aiOutputDisplay.innerHTML = generatedText.replace(/\n/g, '<br>'); // Substitui quebras de linha por <br> para HTML
+                        aiOutputDisplay.innerHTML = generatedText.replace(/\n/g, '<br>');
                         aiOutputDisplay.style.display = 'block';
                         useAiTextBtn.style.display = 'block';
                         generateAiTextBtn.style.display = 'none';
@@ -536,7 +729,7 @@
                     console.error("Erro ao chamar a API Gemini para geração:", error);
                     console.warn("Erro ao gerar comunicado: Verifique sua conexão ou tente novamente.");
                 } finally {
-                    loadingOverlay.style.display = 'none'; // Esconde o overlay de carregamento
+                    loadingOverlay.style.display = 'none';
                     aiPromptInput.disabled = false;
                     generateAiTextBtn.disabled = false;
                     cancelAiBtn.disabled = false;
@@ -545,10 +738,9 @@
 
             useAiTextBtn.addEventListener('click', () => {
                 const generatedTextHtml = aiOutputDisplay.innerHTML;
-                let newTitle = "Comunicado"; // Título padrão
+                let newTitle = "Comunicado";
                 let newContent = generatedTextHtml;
 
-                // Tenta extrair o título "Comunicado" e o remove do conteúdo se presente
                 let titleMatch = generatedTextHtml.match(/<strong>Comunicado<\/strong>|<br>Comunicado<br>/i);
                 if (titleMatch) {
                     let parts = generatedTextHtml.split(titleMatch[0]);
@@ -557,7 +749,6 @@
                     }
                 }
                 
-                // Remove "Comunicado<br>" ou "Comunicado</strong><br>" do início do conteúdo se ainda estiver lá
                 if (newContent.startsWith("Comunicado<br>")) {
                     newContent = newContent.substring("Comunicado<br>".length).trim();
                 } else if (newContent.startsWith("Comunicado</strong><br>")) {
@@ -568,16 +759,7 @@
                 noticeContent.innerHTML = newContent;
                 saveContent(); // Salva o novo conteúdo gerado pela IA
 
-                aiGeneratorModal.classList.remove('show'); // Remove classe para transição
-            });
-
-            // Esconde a tela de carregamento quando a página estiver completamente carregada
-            window.addEventListener('load', () => {
-                loadingScreen.classList.add('hidden');
-                // Remove a tela de carregamento do DOM após a animação
-                loadingScreen.addEventListener('animationend', () => {
-                    loadingScreen.remove();
-                });
+                aiGeneratorModal.style.display = 'none';
             });
         });
     </script>
