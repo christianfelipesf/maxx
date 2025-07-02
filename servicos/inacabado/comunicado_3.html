@@ -7,7 +7,8 @@
     <title>Comunicado Maxx Internet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Google Material Symbols: Link CDN para ícones -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         /* Reset básico e fontes */
         * {
@@ -36,18 +37,24 @@
             max-width: 450px; /* Aumenta um pouco a largura máxima */
             padding: 24px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            position: relative;
+            position: relative; /* Mantém para outros elementos se necessário */
             overflow: hidden; /* Garante que elementos filhos não vazem */
+        }
+
+        /* Novo contêiner para ícones e pontos */
+        .card-header-elements {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px; /* Espaço entre os ícones/pontos e o título */
+            padding-top: 5px; /* Pequeno padding para afastar do topo do card */
         }
 
         /* Ícones de alerta e aviso */
         .icons {
-            position: absolute;
-            top: 20px;
-            left: 24px;
             display: flex;
             gap: 10px;
-            z-index: 10;
+            /* Removido position: absolute, top, left, z-index, transform */
         }
 
         .icon {
@@ -73,13 +80,10 @@
 
         /* Pontos decorativos */
         .dots {
-            position: absolute;
-            top: 20px;
-            right: 24px;
             color: #ccc; /* Cor mais suave */
             font-size: 28px;
             letter-spacing: 6px;
-            z-index: 10;
+            /* Removido position: absolute, top, right, z-index, transform */
         }
 
         /* Título do comunicado */
@@ -89,7 +93,7 @@
             font-weight: 700; /* Bold */
             color: #FF7000;
             margin-bottom: 16px;
-            margin-top: 60px; /* Espaço para os ícones */
+            /* margin-top será controlado pelo margin-bottom do .card-header-elements */
             cursor: text;
             line-height: 1.2;
         }
@@ -412,9 +416,12 @@
                 padding: 20px;
             }
 
+            .card-header-elements {
+                margin-bottom: 15px;
+            }
+
             .title {
                 font-size: 28px;
-                margin-top: 50px;
             }
 
             .text {
@@ -489,9 +496,12 @@
                 border-radius: 12px;
             }
 
+            .card-header-elements {
+                margin-bottom: 10px;
+                padding-top: 0;
+            }
+
             .icons {
-                top: 15px;
-                left: 18px;
                 gap: 8px;
             }
 
@@ -502,14 +512,11 @@
             }
 
             .dots {
-                top: 15px;
-                right: 18px;
                 font-size: 24px;
             }
 
             .title {
                 font-size: 24px;
-                margin-top: 45px;
             }
 
             .text {
@@ -585,26 +592,31 @@
 <body>
     <div id="textEditorToolbar" class="text-editor-toolbar">
         <button id="boldButton" title="Negrito">
-            <i class="fa-solid fa-bold"></i>
+            <i class="material-symbols-outlined">format_bold</i>
         </button>
         <button id="italicButton" title="Itálico">
-            <i class="fa-solid fa-italic"></i>
+            <i class="material-symbols-outlined">format_italic</i>
         </button>
         <button id="underlineButton" title="Sublinhado">
-            <i class="fa-solid fa-underline"></i>
+            <i class="material-symbols-outlined">format_underline</i>
         </button>
     </div>
 
     <div class="card">
-        <div class="icons">
-            <div class="icon icon-warning">
-                <i class="fa-solid fa-circle-exclamation"></i>
+        <!-- Novo contêiner para os elementos do cabeçalho do cartão -->
+        <div class="card-header-elements">
+            <div class="icons">
+                <div class="icon icon-warning">
+                    <!-- Ícone de aviso Material Symbols -->
+                    <i class="material-symbols-outlined">warning</i>
+                </div>
+                <div class="icon icon-alert">
+                    <!-- Ícone de alerta Material Symbols -->
+                    <i class="material-symbols-outlined">notifications</i>
+                </div>
             </div>
-            <div class="icon icon-alert">
-                <i class="fa-solid fa-bell"></i>
-            </div>
+            <div class="dots">•••</div>
         </div>
-        <div class="dots">•••</div>
         <div class="title" id="notice-title" contenteditable="true">Comunicado</div>
         <div class="text" id="notice-content" contenteditable="true">
             <strong>Prezado cliente,</strong><br>
@@ -622,17 +634,20 @@
     </div>
 
     <button id="resetButton" class="action-button">
-        <i class="fa-solid fa-arrows-rotate"></i>
+        <!-- Ícone de reset Material Symbols -->
+        <i class="material-symbols-outlined">refresh</i>
         <span>Restaurar Padrão</span>
     </button>
 
     <button id="downloadPngButton" class="action-button">
-        <i class="fa-solid fa-download"></i>
+        <!-- Ícone de download Material Symbols -->
+        <i class="material-symbols-outlined">download</i>
         <span>Baixar Imagem</span>
     </button>
 
     <button id="generateAIBtn" class="action-button">
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <!-- Ícone de IA Material Symbols -->
+        <i class="material-symbols-outlined">auto_awesome</i>
         <span>Gerar com IA</span>
     </button>
 
@@ -761,8 +776,8 @@
                 resetButton.style.opacity = '0'; // Esconde o botão de reset
                 resetButton.style.pointerEvents = 'none';
 
-                // Captura o elemento body inteiro
-                html2canvas(document.body, {
+                // Captura APENAS o elemento .card
+                html2canvas(card, {
                     scale: 3, // Aumenta a escala para melhor qualidade
                     useCORS: true,
                     logging: false
@@ -780,25 +795,29 @@
                     finalCanvas.width = instagramWidth;
                     finalCanvas.height = instagramHeight;
 
-                    const capturedAspectRatio = canvas.width / canvas.height;
-                    const instagramAspectRatio = instagramWidth / instagramHeight;
+                    // Desenha o fundo laranja diretamente no canvas final
+                    const gradient = ctx.createLinearGradient(0, 0, finalCanvas.width, finalCanvas.height);
+                    gradient.addColorStop(0, '#FF9300');
+                    gradient.addColorStop(1, '#FF7000');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
 
-                    let sx, sy, sWidth, sHeight; // Source x, y, width, height
-                    // Calcula as dimensões para centralizar e cortar a imagem capturada
-                    if (capturedAspectRatio > instagramAspectRatio) {
-                        sHeight = canvas.height;
-                        sWidth = sHeight * instagramAspectRatio;
-                        sx = (canvas.width - sWidth) / 2;
-                        sy = 0;
-                    } else {
-                        sWidth = canvas.width;
-                        sHeight = sWidth / instagramAspectRatio;
-                        sx = 0;
-                        sy = (canvas.height - sHeight) / 2;
-                    }
+                    // Calcula as dimensões para centralizar o cartão capturado no canvas final
+                    const capturedCardWidth = canvas.width;
+                    const capturedCardHeight = canvas.height;
 
-                    // Desenha a imagem capturada no canvas final com as proporções do Instagram
-                    ctx.drawImage(canvas, sx, sy, sWidth, sHeight, 0, 0, instagramWidth, instagramHeight);
+                    const scaleX = instagramWidth / capturedCardWidth;
+                    const scaleY = instagramHeight / capturedCardHeight;
+                    const scale = Math.min(scaleX, scaleY); // Para garantir que o cartão caiba
+
+                    const drawWidth = capturedCardWidth * scale;
+                    const drawHeight = capturedCardHeight * scale;
+
+                    const dx = (instagramWidth - drawWidth) / 2;
+                    const dy = (instagramHeight - drawHeight) / 2;
+
+                    // Desenha a imagem capturada do cartão no canvas final, centralizada
+                    ctx.drawImage(canvas, 0, 0, capturedCardWidth, capturedCardHeight, dx, dy, drawWidth, drawHeight);
 
                     link.href = finalCanvas.toDataURL('image/png');
                     link.click();

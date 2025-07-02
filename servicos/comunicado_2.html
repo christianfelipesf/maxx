@@ -5,27 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comunicado Maxx Internet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-orange-light': '#FF9300',
+                        'primary-orange-dark': '#FF7000',
+                        'text-dark-gray': '#333333',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* Reset básico */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* Define a fonte Inter para todo o corpo */
         body {
-            font-family: 'Arial', sans-serif; /* Revertido para a fonte original */
-            background: linear-gradient(135deg, #FF9300 0%, #FF7000 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            position: relative;
-            overflow: hidden; /* Evita scroll durante a animação de carregamento */
+            font-family: 'Inter', sans-serif;
         }
 
-        /* Animação de fade out para o carregamento */
+        /* Animação de fade out para a tela de carregamento */
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; visibility: hidden; }
@@ -43,7 +44,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Tela de carregamento */
+        /* Estilos da tela de carregamento */
         #loading-screen {
             position: fixed;
             top: 0;
@@ -55,7 +56,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 9999; /* Garante que fique acima de tudo */
+            z-index: 9999;
             color: white;
             font-size: 1.5rem;
             opacity: 1;
@@ -76,306 +77,12 @@
             margin-bottom: 20px;
         }
 
-        .card {
-            background: #FFFFFF;
-            border-radius: 16px; /* Original */
-            width: 100%;
-            max-width: 400px; /* Original */
-            padding: 20px; /* Original */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Original */
-            position: relative;
-            opacity: 0; /* Escondido para animação de entrada */
-            animation: fadeIn 0.8s ease-out forwards;
-            animation-delay: 0.6s; /* Atraso para aparecer após o loading */
-        }
-
-        .icons {
-            position: absolute;
-            top: -20px; /* Original */
-            left: 20px; /* Original */
-            display: flex;
-            gap: 8px; /* Original */
-        }
-
-        .icon {
-            width: 36px; /* Original */
-            height: 36px; /* Original */
-            border-radius: 8px; /* Original */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px; /* Original */
-            color: #fff;
-            font-weight: bold;
-            /* box-shadow removido para o estilo original */
-        }
-
-        .icon-warning {
-            background: #FFC200;
-        }
-
-        .icon-alert {
-            background: #FF6A00;
-        }
-
-        .dots {
-            position: absolute;
-            top: -10px; /* Original */
-            right: 20px; /* Original */
-            color: #FFFFFF;
-            font-size: 24px; /* Original */
-            letter-spacing: 4px; /* Original */
-        }
-
-        .title {
-            text-align: center;
-            font-size: 28px; /* Original */
-            font-weight: bold; /* Original */
-            color: #FF7000; /* Original */
-            margin-bottom: 12px; /* Original */
-            cursor: text;
-        }
-
-        .text {
-            font-size: 14px; /* Original */
-            color: #333333; /* Original */
-            line-height: 1.5; /* Original */
-            margin-bottom: 16px; /* Original */
-            cursor: text;
-        }
-
         /* Estilos para o conteúdo editável */
-        .text[contenteditable="true"]:focus,
-        .title[contenteditable="true"]:focus,
-        .editable-maxx[contenteditable="true"]:focus {
+        [contenteditable="true"]:focus {
             outline: none;
-            border: 1px dashed #FF7000; /* Original */
-            padding: 2px; /* Original */
-            border-radius: 4px; /* Original */
-        }
-
-        .footer {
-            margin-top: 16px; /* Original */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-direction: column;
-            gap: 5px; /* Original */
-        }
-
-        .footer .logo {
-            font-size: 24px; /* Original */
-            font-weight: bold; /* Original */
-            color: #FF7000; /* Original */
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* Original */
-            cursor: text;
-        }
-
-        .footer .instagram {
-            font-size: 14px; /* Original */
-            color: #333333; /* Original */
-        }
-
-        /* Contêiner para os botões de ação */
-        #action-buttons-container {
-            position: fixed;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 12px; /* Mantido para bom espaçamento */
-            z-index: 10;
-            opacity: 0; /* Escondido para animação de entrada */
-            animation: fadeIn 0.8s ease-out forwards;
-            animation-delay: 0.8s; /* Atraso para aparecer */
-        }
-
-        .action-button {
-            background-color: rgba(0, 0, 0, 0.6); /* Mantido para visibilidade */
-            color: white;
-            padding: 10px 15px; /* Mantido para bom toque */
-            border-radius: 10px; /* Mantido para bom visual */
-            border: none;
-            cursor: pointer;
-            font-size: 15px; /* Mantido para legibilidade */
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 3px;
-            text-align: left;
-            transition: background-color 0.3s ease-in-out, transform 0.2s ease-out, box-shadow 0.2s ease-out;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Mantido para profundidade */
-        }
-
-        .action-button:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Estilos para a barra de ferramentas de edição de texto */
-        .text-editor-toolbar {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 10px 20px;
-            border-radius: 10px;
-            display: flex;
-            gap: 12px;
-            z-index: 100;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .text-editor-toolbar button {
-            background-color: #FF7000;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .text-editor-toolbar button:hover {
-            background-color: #FF9300;
-            transform: translateY(-2px);
-        }
-
-        /* Estilos para o modal de geração AI */
-        .ai-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.75);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 200;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-        }
-
-        .ai-modal-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .ai-modal-content {
-            background-color: white;
-            padding: 35px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 650px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            transform: translateY(20px);
-            transition: transform 0.3s ease-out;
-        }
-
-        .ai-modal-overlay.show .ai-modal-content {
-            transform: translateY(0);
-        }
-
-        .ai-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .ai-modal-header h3 {
-            font-size: 26px;
-            color: #FF7000;
-            margin: 0;
-            font-weight: 600;
-        }
-
-        .ai-modal-close {
-            font-size: 35px;
-            cursor: pointer;
-            color: #999;
-            transition: color 0.2s ease;
-        }
-
-        .ai-modal-close:hover {
-            color: #666;
-        }
-
-        .ai-modal-body textarea {
-            width: 100%;
-            min-height: 150px;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            resize: vertical;
-            font-size: 15px;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .ai-modal-body .ai-output-display {
-            background-color: #f0f0f0;
-            border: 1px solid #e0e0e0;
-            padding: 18px;
-            border-radius: 10px;
-            min-height: 120px;
-            max-height: 350px;
-            overflow-y: auto;
-            font-size: 15px;
-            color: #555;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .ai-modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .ai-modal-footer button {
-            padding: 12px 25px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .ai-modal-footer .btn-primary {
-            background-color: #FF7000;
-            color: white;
-        }
-
-        .ai-modal-footer .btn-primary:hover {
-            background-color: #FF9300;
-            transform: translateY(-2px);
-        }
-
-        .ai-modal-footer .btn-secondary {
-            background-color: #e0e0e0;
-            color: #555;
-        }
-
-        .ai-modal-footer .btn-secondary:hover {
-            background-color: #d0d0d0;
-            transform: translateY(-2px);
+            border: 1px dashed #FF7000;
+            padding: 2px;
+            border-radius: 4px;
         }
 
         /* Overlay de carregamento para a IA */
@@ -393,148 +100,52 @@
             color: white;
             font-size: 1.6rem;
             font-weight: 600;
-            display: none;
-        }
-
-        /* Media queries para responsividade em telas menores */
-        @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-
-            .card {
-                padding: 20px;
-                max-width: 380px;
-            }
-
-            .icons {
-                top: -20px;
-                left: 20px;
-                gap: 8px;
-            }
-
-            .icon {
-                width: 36px;
-                height: 36px;
-                font-size: 20px;
-            }
-
-            .dots {
-                top: -10px;
-                right: 20px;
-                font-size: 24px;
-                letter-spacing: 4px;
-            }
-
-            .title {
-                font-size: 28px;
-                margin-bottom: 10px;
-            }
-
-            .text {
-                font-size: 14px;
-                margin-bottom: 15px;
-            }
-
-            .footer .logo {
-                font-size: 24px;
-            }
-
-            .footer .instagram {
-                font-size: 13px;
-            }
-
-            #action-buttons-container {
-                left: 10px;
-                top: 15px; /* Ajusta para o topo em telas menores */
-                transform: translateY(0);
-                flex-direction: row; /* Botões em linha no mobile */
-                width: calc(100% - 20px); /* Ocupa a largura total menos padding */
-                justify-content: center;
-                gap: 8px;
-                flex-wrap: wrap; /* Permite quebra de linha se muitos botões */
-                animation-delay: 0.8s; /* Mantém o atraso */
-            }
-
-            .action-button {
-                padding: 8px 12px;
-                font-size: 13px;
-                text-align: center; /* Centraliza o texto no botão */
-                flex-direction: row; /* Texto em linha */
-                gap: 5px;
-            }
-
-            .text-editor-toolbar {
-                top: auto; /* Remove o top fixo */
-                bottom: 10px; /* Fixa na parte inferior */
-                left: 50%;
-                transform: translateX(-50%);
-                padding: 8px 15px;
-                gap: 8px;
-                width: calc(100% - 40px); /* Ocupa a largura total menos padding */
-                justify-content: center;
-            }
-
-            .text-editor-toolbar button {
-                padding: 6px 10px;
-                font-size: 13px;
-            }
-
-            .ai-modal-content {
-                padding: 25px;
-                gap: 15px;
-            }
-
-            .ai-modal-header h3 {
-                font-size: 22px;
-            }
-
-            .ai-modal-close {
-                font-size: 28px;
-            }
-
-            .ai-modal-body textarea {
-                min-height: 100px;
-                font-size: 14px;
-            }
-
-            .ai-modal-body .ai-output-display {
-                min-height: 80px;
-                font-size: 14px;
-            }
-
-            .ai-modal-footer {
-                flex-direction: column-reverse; /* Inverte a ordem dos botões para melhor usabilidade no mobile */
-                gap: 8px;
-            }
-
-            .ai-modal-footer button {
-                width: 100%; /* Botões de largura total */
-                padding: 10px 20px;
-            }
+            display: none; /* Escondido por padrão */
         }
     </style>
 </head>
-<body>
+<body class="bg-gradient-to-br from-primary-orange-light to-primary-orange-dark flex items-center justify-center min-h-screen p-5 relative overflow-hidden">
+    <!-- Tela de carregamento inicial -->
     <div id="loading-screen">
         <div class="spinner"></div>
         Carregando...
     </div>
 
-    <div id="textEditorToolbar" class="text-editor-toolbar">
-        <button id="boldButton">B</button>
-        <button id="italicButton">I</button>
-        <button id="underlineButton">U</button>
+    <!-- Barra de ferramentas de edição de texto -->
+    <div id="textEditorToolbar" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 bg-opacity-80 p-3 rounded-xl flex gap-3 z-50 opacity-0 transition-opacity duration-300 shadow-lg">
+        <button id="boldButton" class="bg-primary-orange-dark hover:bg-primary-orange-light text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:-translate-y-1">B</button>
+        <button id="italicButton" class="bg-primary-orange-dark hover:bg-primary-orange-light text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:-translate-y-1">I</button>
+        <button id="underlineButton" class="bg-primary-orange-dark hover:bg-primary-orange-light text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:-translate-y-1">U</button>
     </div>
 
-    <div class="card">
-        <div class="icons">
-            <div class="icon icon-warning">!</div>
-            <div class="icon icon-alert">!</div>
+    <!-- Card principal do comunicado -->
+    <div class="card bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl relative opacity-0 animate-[fadeIn_0.8s_ease-out_forwards_0.6s]">
+        <!-- Ícones de aviso/alerta -->
+        <div class="absolute -top-5 left-5 flex gap-2">
+            <div class="icon bg-yellow-400 w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
+                <!-- Ícone de Aviso (Triângulo) -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+                    <path d="M12 9v4"/>
+                    <path d="M12 17h.01"/>
+                </svg>
+            </div>
+            <div class="icon bg-orange-500 w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
+                <!-- Ícone de Alerta (Sino) -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell">
+                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                </svg>
+            </div>
         </div>
-        <div class="dots">•••</div>
-        <div class="title" id="notice-title" contenteditable="true">Comunicado</div>
-        <div class="text" id="notice-content" contenteditable="true">
+        <!-- Pontos decorativos -->
+        <div class="absolute -top-2 right-5 text-white text-3xl tracking-widest">•••</div>
+
+        <!-- Título do comunicado -->
+        <div class="title text-center text-3xl font-bold text-primary-orange-dark mb-3 cursor-text" id="notice-title" contenteditable="true">Comunicado</div>
+        
+        <!-- Conteúdo do comunicado -->
+        <div class="text text-sm text-text-dark-gray leading-relaxed mb-4 cursor-text" id="notice-content" contenteditable="true">
             <strong>Prezado cliente,</strong><br>
             Informamos que, no momento, há instabilidade nos serviços de TV e Internet na região de <strong>Santa Rita 2 (Centro)</strong>.<br>
             Nossa equipe já está no local e a previsão de normalização é hoje, <strong>20/05/2025, às 12h30</strong>.
@@ -543,45 +154,50 @@
             <strong>Maxx Internet</strong>
         </div>
 
-        <div class="footer">
-            <div class="logo editable-maxx" id="maxx-name" contenteditable="true">MAXX</div>
-            <div class="instagram">@sejamaxx</div>
+        <!-- Rodapé com logo e Instagram -->
+        <div class="footer mt-4 flex flex-col items-center gap-1">
+            <div class="logo text-3xl font-bold text-primary-orange-dark drop-shadow-md cursor-text" id="maxx-name" contenteditable="true">MAXX</div>
+            <div class="instagram text-sm text-text-dark-gray">@sejamaxx</div>
         </div>
     </div>
 
-    <div id="action-buttons-container">
-        <button id="downloadPngButton" class="action-button">
+    <!-- Contêiner para os botões de ação -->
+    <div id="action-buttons-container" class="fixed left-5 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-10 opacity-0 animate-[fadeIn_0.8s_ease-out_forwards_0.8s] md:flex-row md:bottom-5 md:top-auto md:left-1/2 md:-translate-x-1/2 md:translate-y-0">
+        <button id="downloadPngButton" class="action-button bg-gray-800 bg-opacity-60 hover:bg-opacity-80 text-white py-2 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-start justify-center gap-1 text-left md:flex-row md:items-center">
             ⬇️ Baixar Imagem
         </button>
 
-        <button id="generateAIBtn" class="action-button">
-            ✨ Gerar<br>com IA
+        <button id="generateAIBtn" class="action-button bg-gray-800 bg-opacity-60 hover:bg-opacity-80 text-white py-2 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-start justify-center gap-1 text-left md:flex-row md:items-center">
+            ✨ Gerar<br class="md:hidden">com IA
         </button>
 
-        <button id="resetButton" class="action-button">
+        <button id="resetButton" class="action-button bg-gray-800 bg-opacity-60 hover:bg-opacity-80 text-white py-2 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-start justify-center gap-1 text-left md:flex-row md:items-center">
             🔄 Resetar Textos
         </button>
     </div>
 
-    <div id="aiGeneratorModal" class="ai-modal-overlay">
-        <div class="ai-modal-content">
-            <div class="ai-modal-header">
-                <h3>Gerar Comunicado com IA</h3>
-                <span class="ai-modal-close" id="closeAiModal">&times;</span>
+    <!-- Modal de Geração de IA -->
+    <div id="aiGeneratorModal" class="ai-modal-overlay fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-[200] opacity-0 invisible transition-all duration-300">
+        <div class="ai-modal-content bg-white p-8 rounded-3xl w-11/12 max-w-2xl shadow-2xl relative flex flex-col gap-5 transform translate-y-5 transition-transform duration-300">
+            <div class="ai-modal-header flex justify-between items-center mb-4">
+                <h3 class="text-3xl text-primary-orange-dark font-semibold">Gerar Comunicado com IA</h3>
+                <span class="ai-modal-close text-4xl cursor-pointer text-gray-400 hover:text-gray-600 transition-colors duration-200" id="closeAiModal">&times;</span>
             </div>
-            <div class="ai-modal-body">
-                <textarea id="aiPromptInput" placeholder="Descreva o comunicado que você deseja gerar (ex: 'Um aviso sobre manutenção na rede amanhã às 10h')."></textarea>
-                <div class="ai-output-display" id="aiOutputDisplay" style="display: none;"></div>
+            <div class="ai-modal-body flex flex-col gap-4">
+                <textarea id="aiPromptInput" class="w-full min-h-[150px] p-3 border border-gray-300 rounded-lg resize-y text-base font-sans focus:outline-none focus:ring-2 focus:ring-primary-orange-dark" placeholder="Descreva o comunicado que você deseja gerar (ex: 'Um aviso sobre manutenção na rede amanhã às 10h')."></textarea>
+                <div class="ai-output-display bg-gray-100 border border-gray-200 p-4 rounded-lg min-h-[120px] max-h-[350px] overflow-y-auto text-base text-gray-600 whitespace-pre-wrap break-words shadow-inner" id="aiOutputDisplay" style="display: none;"></div>
             </div>
-            <div class="ai-modal-footer">
-                <button id="generateAiTextBtn" class="btn-primary">Gerar</button>
-                <button id="useAiTextBtn" class="btn-primary" style="display: none;">Usar este Comunicado</button>
-                <button id="cancelAiBtn" class="btn-secondary">Cancelar</button>
+            <div class="ai-modal-footer flex justify-end gap-3 mt-5 flex-col sm:flex-row-reverse">
+                <button id="generateAiTextBtn" class="btn-primary bg-primary-orange-dark hover:bg-primary-orange-light text-white py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:-translate-y-1 shadow-md">Gerar</button>
+                <button id="useAiTextBtn" class="btn-primary bg-primary-orange-dark hover:bg-primary-orange-light text-white py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:-translate-y-1 shadow-md" style="display: none;">Usar este Comunicado</button>
+                <button id="cancelAiBtn" class="btn-secondary bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:-translate-y-1 shadow-md">Cancelar</button>
             </div>
         </div>
     </div>
 
+    <!-- Overlay de carregamento para a geração de IA -->
     <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
         Gerando comunicado...
     </div>
 
@@ -611,7 +227,7 @@
             const loadingOverlay = document.getElementById('loadingOverlay');
             const actionButtonsContainer = document.getElementById('action-buttons-container');
 
-            // Define os limites de caracteres
+            // Define os limites de caracteres para validação
             const MAX_TITLE_LENGTH = 100;
             const MAX_MAXX_NAME_LENGTH = 100;
             const MAX_CONTENT_LENGTH = 2000;
@@ -700,39 +316,44 @@
 
                 // Captura o elemento body inteiro
                 html2canvas(document.body, {
-                    scale: 3,
+                    scale: 3, // Aumenta a escala para melhor qualidade
                     useCORS: true,
                     logging: false
                 }).then(canvas => {
                     const link = document.createElement('a');
                     link.download = 'comunicado_maxx_internet.png';
 
-                    const instagramWidth = 1080;
-                    const instagramHeight = 1350;
+                    // Define as dimensões para resolução de celular (Instagram Stories/Reels)
+                    const targetWidth = 1080;
+                    const targetHeight = 1350;
 
                     const finalCanvas = document.createElement('canvas');
                     const ctx = finalCanvas.getContext('2d');
 
-                    finalCanvas.width = instagramWidth;
-                    finalCanvas.height = instagramHeight;
+                    finalCanvas.width = targetWidth;
+                    finalCanvas.height = targetHeight;
 
+                    // Calcula as proporções para centralizar e cortar a imagem se necessário
                     const capturedAspectRatio = canvas.width / canvas.height;
-                    const instagramAspectRatio = instagramWidth / instagramHeight;
+                    const targetAspectRatio = targetWidth / targetHeight;
 
-                    let sx, sy, sWidth, sHeight;
-                    if (capturedAspectRatio > instagramAspectRatio) {
+                    let sx, sy, sWidth, sHeight; // Source X, Y, Width, Height
+                    if (capturedAspectRatio > targetAspectRatio) {
+                        // A imagem capturada é mais larga que o alvo, corta as laterais
                         sHeight = canvas.height;
-                        sWidth = sHeight * instagramAspectRatio;
+                        sWidth = sHeight * targetAspectRatio;
                         sx = (canvas.width - sWidth) / 2;
                         sy = 0;
                     } else {
+                        // A imagem capturada é mais alta que o alvo, corta em cima/baixo
                         sWidth = canvas.width;
-                        sHeight = sWidth / instagramAspectRatio;
+                        sHeight = sWidth / targetAspectRatio;
                         sx = 0;
                         sy = (canvas.height - sHeight) / 2;
                     }
 
-                    ctx.drawImage(canvas, sx, sy, sWidth, sHeight, 0, 0, instagramWidth, instagramHeight);
+                    // Desenha a imagem capturada no canvas final com as dimensões desejadas
+                    ctx.drawImage(canvas, sx, sy, sWidth, sHeight, 0, 0, targetWidth, targetHeight);
 
                     link.href = finalCanvas.toDataURL('image/png');
                     link.click();
@@ -815,7 +436,7 @@
                 }
             });
 
-
+            // Comandos de formatação de texto
             boldButton.addEventListener('click', (event) => {
                 event.preventDefault();
                 document.execCommand('bold', false, null);
@@ -878,7 +499,7 @@
                     return;
                 }
 
-                loadingOverlay.style.display = 'flex';
+                loadingOverlay.style.display = 'flex'; // Mostra o overlay de carregamento
                 aiPromptInput.disabled = true;
                 generateAiTextBtn.disabled = true;
                 cancelAiBtn.disabled = true;
@@ -903,7 +524,7 @@
                         result.candidates[0].content && result.candidates[0].content.parts &&
                         result.candidates[0].content.parts.length > 0) {
                         const generatedText = result.candidates[0].content.parts[0].text;
-                        aiOutputDisplay.innerHTML = generatedText.replace(/\n/g, '<br>');
+                        aiOutputDisplay.innerHTML = generatedText.replace(/\n/g, '<br>'); // Substitui quebras de linha por <br> para HTML
                         aiOutputDisplay.style.display = 'block';
                         useAiTextBtn.style.display = 'block';
                         generateAiTextBtn.style.display = 'none';
@@ -915,7 +536,7 @@
                     console.error("Erro ao chamar a API Gemini para geração:", error);
                     console.warn("Erro ao gerar comunicado: Verifique sua conexão ou tente novamente.");
                 } finally {
-                    loadingOverlay.style.display = 'none';
+                    loadingOverlay.style.display = 'none'; // Esconde o overlay de carregamento
                     aiPromptInput.disabled = false;
                     generateAiTextBtn.disabled = false;
                     cancelAiBtn.disabled = false;
@@ -924,9 +545,10 @@
 
             useAiTextBtn.addEventListener('click', () => {
                 const generatedTextHtml = aiOutputDisplay.innerHTML;
-                let newTitle = "Comunicado";
+                let newTitle = "Comunicado"; // Título padrão
                 let newContent = generatedTextHtml;
 
+                // Tenta extrair o título "Comunicado" e o remove do conteúdo se presente
                 let titleMatch = generatedTextHtml.match(/<strong>Comunicado<\/strong>|<br>Comunicado<br>/i);
                 if (titleMatch) {
                     let parts = generatedTextHtml.split(titleMatch[0]);
@@ -935,6 +557,7 @@
                     }
                 }
                 
+                // Remove "Comunicado<br>" ou "Comunicado</strong><br>" do início do conteúdo se ainda estiver lá
                 if (newContent.startsWith("Comunicado<br>")) {
                     newContent = newContent.substring("Comunicado<br>".length).trim();
                 } else if (newContent.startsWith("Comunicado</strong><br>")) {
