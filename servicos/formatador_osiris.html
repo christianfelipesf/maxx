@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <link rel="icon" type="image/png" href="https://example.com/caminho/para/seu-favicon.png"> 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Formatador de ONU</title>
@@ -84,8 +83,10 @@
 </section>
 
 <script>
-  // Variável global para armazenar o último texto formatado
+  // Variável global para armazenar o último texto formatado (com estilo de caso aplicado)
   let lastFormattedText = '';
+  // Nova variável global para armazenar o texto base formatado (sem estilo de caso aplicado)
+  let currentBaseFormattedText = '';
 
   function clearHistory() {
     localStorage.removeItem('onuHistory');
@@ -185,30 +186,35 @@
   function processData(isInputChanged = true) {
     const inputText = document.getElementById('inputData').value;
     const caseStyle = document.getElementById('caseStyle')?.value || 'lower';
-    const parsedData = parseONUData(inputText);
     let formattedText = '';
 
-    if (Object.keys(parsedData).length > 0) {
-      const timestamp = new Date().toLocaleString();
-      // O texto base para formatação de caso é o mesmo, independentemente do estilo
-      const baseText = `Osiris: ${formatInline(parsedData)} (${timestamp})`;
-      formattedText = applyCaseStyle(baseText, caseStyle);
-
-      // Se o input mudou, ou se o último texto formatado é diferente do texto base (sem estilo de caso),
-      // então aplicamos a animação. Caso contrário, atualizamos instantaneamente.
-      // Isso evita a animação quando apenas o estilo de caso é alterado no mesmo input.
-      if (isInputChanged || lastFormattedText.split(' (')[0] !== baseText.split(' (')[0]) {
+    // Se o texto de entrada mudou ou é o processamento inicial com entrada
+    if (isInputChanged && inputText.trim() !== '') {
+      const parsedData = parseONUData(inputText);
+      if (Object.keys(parsedData).length > 0) {
+        const timestamp = new Date().toLocaleString();
+        currentBaseFormattedText = `Osiris: ${formatInline(parsedData)} (${timestamp})`;
+        formattedText = applyCaseStyle(currentBaseFormattedText, caseStyle);
         animateOutput(formattedText, 50, false); // Com animação
       } else {
-        animateOutput(formattedText, 0, true); // Sem animação (instantâneo)
+        // Se a entrada mudou mas é inválida/vazia, limpa a saída
+        document.getElementById('outputData').value = '';
+        document.getElementById('copyButton').disabled = true;
+        lastFormattedText = '';
+        currentBaseFormattedText = ''; // Limpa o texto base também
       }
-      lastFormattedText = formattedText; // Atualiza o último texto formatado
+    } else if (!isInputChanged && currentBaseFormattedText !== '') {
+      // Se apenas o estilo de caso mudou e há um texto base para reformatar
+      formattedText = applyCaseStyle(currentBaseFormattedText, caseStyle);
+      animateOutput(formattedText, 0, true); // Sem animação (instantâneo)
     } else {
-      // Limpa o campo de saída se não houver dados válidos e desabilita o botão de copiar
+      // Nenhuma entrada, ou entrada limpa, e nenhum texto base para reformatar
       document.getElementById('outputData').value = '';
       document.getElementById('copyButton').disabled = true;
       lastFormattedText = '';
+      currentBaseFormattedText = '';
     }
+    lastFormattedText = formattedText; // Atualiza o último texto formatado
   }
 
   function copyOutput() {

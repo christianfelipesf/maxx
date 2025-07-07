@@ -46,18 +46,33 @@
             transform: translateY(0);
             transition: opacity 0.5s ease-out, transform 0.5s ease-out;
         }
+
+        /* Estilos para o skeleton loader */
+        .skeleton-item {
+            background-color: #e2e8f0; /* gray-200 */
+            border-radius: 0.5rem; /* rounded-lg */
+            height: 72px; /* Altura similar ao item de serviço */
+            margin-bottom: 0.5rem; /* Espaçamento entre skeletons */
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center py-10">
     <div class="container mx-auto px-4 max-w-3xl">
-        <h1 class="text-4xl font-bold text-center mb-8 text-[]">Serviços</h1>
+        <h1 class="text-4xl font-bold text-center mb-8 text-gray-800">Serviços</h1>
 
         <div id="loading-message" class="loading-animation">
             <div class="spinner"></div>
         </div>
 
         <div id="service-list-container" class="bg-white rounded-xl shadow-lg overflow-hidden hidden">
-            <!-- O conteúdo será carregado aqui -->
+            <!-- O conteúdo será carregado aqui (skeletons ou lista de serviços) -->
         </div>
     </div>
 
@@ -96,9 +111,108 @@
             }
 
             /**
-             * Busca os arquivos HTML do GitHub e gera a lista de serviços.
+             * Gera os elementos HTML para a lista de serviços.
+             * @param {Array} files - Array de objetos de arquivo da API.
+             */
+            function renderServiceList(files) {
+                serviceListContainer.innerHTML = ''; // Limpa o conteúdo existente
+                if (files.length === 0) {
+                    serviceListContainer.innerHTML = '<p class="text-center text-gray-600 p-6">Nenhum serviço (arquivo .html) encontrado diretamente na pasta `servicos`.</p>';
+                } else {
+                    files.forEach((file, index) => {
+                        const serviceLink = document.createElement('a');
+                        serviceLink.href = `${path}/${file.name}`;
+                        // Adiciona classes Tailwind para estilização e hover
+                        serviceLink.className = 'flex items-center p-4 border-b border-gray-200 hover:bg-gray-50 transition duration-300 ease-in-out transform hover:translate-x-1 no-underline text-current group service-item-enter';
+                        serviceLink.style.animationDelay = `${index * 0.1}s`; // Atraso para animação de entrada
+
+                        // Adiciona a classe para iniciar a animação após um pequeno atraso
+                        setTimeout(() => {
+                            serviceLink.classList.add('service-item-enter-active');
+                        }, 10); // Pequeno atraso para garantir que a classe 'enter' seja aplicada primeiro
+
+                        // Seleciona um emoji diferente para cada item
+                        const selectedEmoji = emojis[index % emojis.length];
+
+                        const serviceIcon = document.createElement('span');
+                        serviceIcon.className = 'text-3xl mr-4'; // Tamanho maior para o emoji e margem
+                        serviceIcon.textContent = selectedEmoji; // Define o emoji como texto do span
+
+                        const serviceContent = document.createElement('div');
+                        serviceContent.className = 'flex-grow'; // Permite que o conteúdo ocupe o espaço disponível
+
+                        const titleP = document.createElement('p');
+                        titleP.className = 'text-lg font-semibold text-gray-800 group-hover:text-blue-700'; // Cor do título e hover
+                        titleP.textContent = formatTitle(file.name);
+
+                        const subtitleP = document.createElement('p');
+                        subtitleP.className = 'text-sm text-gray-600'; // Cor do subtítulo
+                        subtitleP.textContent = `Acessar ${formatTitle(file.name)}`;
+
+                        serviceContent.appendChild(titleP);
+                        serviceContent.appendChild(subtitleP);
+                        serviceLink.appendChild(serviceIcon);
+                        serviceLink.appendChild(serviceContent);
+                        serviceListContainer.appendChild(serviceLink);
+                    });
+                }
+                serviceListContainer.classList.remove('hidden');
+            }
+
+            /**
+             * Gera elementos de skeleton loader.
+             * @param {number} count - Número de skeletons a gerar.
+             * @returns {string} HTML string dos skeletons.
+             */
+            function generateSkeletonLoaders(count) {
+                let skeletonsHtml = '';
+                for (let i = 0; i < count; i++) {
+                    skeletonsHtml += `
+                        <div class="flex items-center p-4 border-b border-gray-200">
+                            <div class="skeleton-item w-10 h-10 rounded-full mr-4"></div>
+                            <div class="flex-grow">
+                                <div class="skeleton-item h-4 w-3/4 mb-2"></div>
+                                <div class="skeleton-item h-3 w-1/2"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+                return skeletonsHtml;
+            }
+
+            /**
+             * Busca os arquivos HTML do GitHub, compara com os dados salvos e atualiza a lista de serviços.
              */
             async function fetchAndGenerateServiceList() {
+                let cachedFiles = null;
+                const cacheKey = 'serviceListCache';
+                const minimumLoadingDelay = 500; // Tempo mínimo para exibir o estado de carregamento (ms)
+
+                // Tenta carregar do cache primeiro
+                try {
+                    const cachedData = localStorage.getItem(cacheKey);
+                    if (cachedData) {
+                        cachedFiles = JSON.parse(cachedData);
+                        console.log("Dados carregados do cache:", cachedFiles);
+                        // Remove o spinner e renderiza imediatamente os dados do cache
+                        if (loadingMessage) { loadingMessage.remove(); }
+                        renderServiceList(cachedFiles);
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar dados do localStorage:', error);
+                    // Se houver erro no cache, continua como se não houvesse cache
+                    cachedFiles = null;
+                }
+
+                // Se não houver dados em cache, exibe skeletons enquanto busca
+                if (!cachedFiles) {
+                    serviceListContainer.innerHTML = generateSkeletonLoaders(5); // Exibe 5 itens de skeleton
+                    serviceListContainer.classList.remove('hidden');
+                    if (loadingMessage) { loadingMessage.remove(); } // Remove o spinner, skeletons são mais informativos
+                }
+
+                const startTime = Date.now(); // Para garantir o tempo mínimo de carregamento
+
                 try {
                     const response = await fetch(apiUrl);
                     if (!response.ok) {
@@ -106,77 +220,53 @@
                         try {
                             const errorData = await response.json();
                             errorMsg += ` - ${errorData.message || JSON.stringify(errorData)}`;
-                        } catch (e) {
-                            /* Ignora erros ao tentar parsear a mensagem de erro */
-                        }
+                        } catch (e) { /* Ignora erros ao tentar parsear a mensagem de erro */ }
                         throw new Error(errorMsg);
                     }
                     const files = await response.json();
 
                     console.log("Dados recebidos da API:", files);
 
-                    // Remove a mensagem de carregamento
-                    if (loadingMessage) { loadingMessage.remove(); }
-
                     if (!Array.isArray(files)) {
                         throw new Error("Formato inesperado na resposta da API.");
                     }
 
-                    // Filtra apenas arquivos HTML
                     const htmlFiles = files.filter(file => file.type === 'file' && file.name.endsWith('.html'));
 
-                    console.log("Arquivos HTML filtrados:", htmlFiles);
+                    const newFilesString = JSON.stringify(htmlFiles);
+                    const cachedFilesString = JSON.stringify(cachedFiles);
 
-                    if (htmlFiles.length === 0) {
-                        serviceListContainer.innerHTML = '<p class="text-center text-gray-600 p-6">Nenhum serviço (arquivo .html) encontrado diretamente na pasta `servicos`.</p>';
-                    } else {
-                        // Gera os itens da lista para cada arquivo HTML
-                        htmlFiles.forEach((file, index) => {
-                            const serviceLink = document.createElement('a');
-                            serviceLink.href = `${path}/${file.name}`;
-                            // Adiciona classes Tailwind para estilização e hover
-                            serviceLink.className = 'flex items-center p-4 border-b border-gray-200 hover:bg-gray-50 transition duration-300 ease-in-out transform hover:translate-x-1 no-underline text-current group service-item-enter';
-                            serviceLink.style.animationDelay = `${index * 0.1}s`; // Atraso para animação de entrada
-
-                            // Adiciona a classe para iniciar a animação após um pequeno atraso
-                            setTimeout(() => {
-                                serviceLink.classList.add('service-item-enter-active');
-                            }, 10); // Pequeno atraso para garantir que a classe 'enter' seja aplicada primeiro
-
-                            // Seleciona um emoji diferente para cada item
-                            const selectedEmoji = emojis[index % emojis.length];
-
-                            const serviceIcon = document.createElement('span');
-                            serviceIcon.className = 'text-3xl mr-4'; // Tamanho maior para o emoji e margem
-                            serviceIcon.textContent = selectedEmoji; // Define o emoji como texto do span
-
-                            const serviceContent = document.createElement('div');
-                            serviceContent.className = 'flex-grow'; // Permite que o conteúdo ocupe o espaço disponível
-
-                            const titleP = document.createElement('p');
-                            titleP.className = 'text-lg font-semibold text-[] group-hover:text-blue-700'; // Cor do título e hover
-                            titleP.textContent = formatTitle(file.name);
-
-                            const subtitleP = document.createElement('p');
-                            subtitleP.className = 'text-sm text-gray-600'; // Cor do subtítulo
-                            subtitleP.textContent = `Acessar ${formatTitle(file.name)}`;
-
-                            serviceContent.appendChild(titleP);
-                            serviceContent.appendChild(subtitleP);
-                            serviceLink.appendChild(serviceIcon);
-                            serviceLink.appendChild(serviceContent);
-                            serviceListContainer.appendChild(serviceLink);
-                        });
+                    // Garante um tempo mínimo de carregamento para melhor UX
+                    const elapsedTime = Date.now() - startTime;
+                    if (elapsedTime < minimumLoadingDelay) {
+                        await new Promise(resolve => setTimeout(resolve, minimumLoadingDelay - elapsedTime));
                     }
+
+                    if (newFilesString !== cachedFilesString) {
+                        console.log("Dados da API são diferentes do cache. Atualizando layout...");
+                        localStorage.setItem(cacheKey, newFilesString); // Atualiza o cache
+                        renderServiceList(htmlFiles); // Renderiza com os novos dados
+                    } else {
+                        console.log("Dados da API são os mesmos do cache. Nenhuma atualização de layout necessária.");
+                        // Se os dados são os mesmos e inicialmente mostramos skeletons (sem cache),
+                        // ainda precisamos renderizar a lista real a partir dos dados da API.
+                        if (!cachedFiles) {
+                            renderServiceList(htmlFiles);
+                        }
+                    }
+
                 } catch (error) {
                     console.error('Falha ao buscar ou gerar a lista de serviços:', error);
                     if (loadingMessage) { loadingMessage.remove(); }
-                    serviceListContainer.innerHTML = `
-                        <div class="p-6 bg-red-100 border border-red-400 text-red-700 rounded-lg" role="alert">
-                            <p class="font-bold">Erro ao carregar os serviços.</p>
-                            <p>Verifique o console (F12) para detalhes técnicos.</p>
-                            <p class="text-sm">Mensagem: ${error.message}</p>
-                        </div>`;
+                    // Se houver um erro na busca da API e não houver dados em cache, exibe mensagem de erro
+                    if (!cachedFiles) {
+                        serviceListContainer.innerHTML = `
+                            <div class="p-6 bg-red-100 border border-red-400 text-red-700 rounded-lg" role="alert">
+                                <p class="font-bold">Erro ao carregar os serviços.</p>
+                                <p>Verifique o console (F12) para detalhes técnicos.</p>
+                                <p class="text-sm">Mensagem: ${error.message}</p>
+                            </div>`;
+                    }
                 } finally {
                     // Garante que o contêiner de serviços seja exibido após o carregamento,
                     // independentemente de sucesso ou erro.
